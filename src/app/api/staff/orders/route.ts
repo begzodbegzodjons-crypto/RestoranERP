@@ -160,7 +160,56 @@ export async function POST(req: NextRequest) {
       data: { status: 'occupied' }
     })
 
-    return NextResponse.json({ item: order })
+    // === AUTOMATIC PRINT JOB CREATION ===
+    // Group items by their category's printer station
+    // Each printer station gets its own print job
+    const printJobMap = new Map<string, any[]>()
+
+    for (const it of itemsData) {
+      // Get the product's category's printerStationId
+      const product = await db.product.findUnique({
+        where: { id: it.productId },
+        include: { category: true }
+      })
+
+      const printerStationId = product?.category?.printerStationId
+
+      if (printerStationId) {
+        if (!printJobMap.has(printerStationId)) {
+          printJobMap.set(printerStationId, [])
+        }
+        printJobMap.get(printerStationId)!.push({
+          productName: product!.name,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+          total: it.total,
+          notes: it.notes || null
+        })
+      }
+    }
+
+    // Create a print job for each printer station
+    for (const [printerStationId, stationItems] of printJobMap) {
+      const content = JSON.stringify({
+        orderNo: order.invoiceNo,
+        table: order.table.name,
+        waiter: order.waiter.name,
+        createdAt: order.createdAt,
+        items: stationItems
+      })
+
+      await db.printJob.create({
+        data: {
+          restaurantId: staff.restaurantId,
+          orderId: order.id,
+          printerStationId,
+          status: 'pending',
+          content
+        }
+      })
+    }
+
+    return NextResponse.json({ item: order, printJobsCreated: printJobMap.size })
   } catch (e: any) {
     console.error('Order create error:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })

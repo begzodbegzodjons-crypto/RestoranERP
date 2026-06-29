@@ -766,3 +766,70 @@ Stage Summary:
 - Database: Supabase PostgreSQL (production) / SQLite (local dev)
 - Ofitsiant va kassa alohida kompyuterda ishlay oladi (har ikkala Vercel+Supabase'ga ulanadi)
 - 25 ta modul yo'qotilmadi
+
+---
+Task ID: ERP-014
+Agent: Main agent (Super Z)
+Task: Printer routing tizimi - avtomatik print job yaratish (shashlik/oshpaz/bar printerlar)
+
+Work Log:
+- Mavjud funksiyalar yo'qotilmadi
+- Prisma schema'ga 2 ta yangi model qo'shildi:
+  1. PrinterStation: id, restaurantId, name, description, sortOrder, isActive
+  2. PrintJob: id, restaurantId, orderId, printerStationId, status (pending/printed/failed), content (JSON)
+  - Category ga printerStationId qo'shildi (kategoriya printerga bog'lanadi)
+  - Restaurant va Order ga printJobs relation qo'shildi
+  - Production schema (PostgreSQL) ham yangilandi
+
+- Yangi API endpointlar:
+  1. GET/POST /api/printers - printer stansiyalari CRUD
+  2. PUT/DELETE /api/printers/[id] - printer tahrirlash/o'chirish
+  3. GET /api/print-jobs - print navbati (printer bo'yicha guruhlangan)
+  4. POST /api/print-jobs/[id]/printed - print job ni "chop etilgan" deb belgilash
+  5. /api/categories yangilandi - printerStationId bilan (GET, POST, PUT)
+
+- staff/orders POST yangilandi - AVTOMATIK PRINT JOB YARATISH:
+  - Ofitsiant buyurtma bosganda, har taom kategoriyasining printer stansiyasiga qarab
+  - Avtomatik print job yaratiladi (har printer uchun alohida)
+  - Misol: 4 shashlik (Grill → Shashlik printer) + 2 cola (Ichimliklar → Bar printer)
+    → 2 ta print job: 1 ta Shashlik printerga, 1 ta Bar printerga
+
+- Yangi UI komponentlar:
+  1. PrintersView.tsx - printer stansiyalari sozlamalari:
+     - Printer qo'shish/tahrirlash/o'chirish (Shashlik, Oshpaz, Bar, Kassa)
+     - Kategoriya → printer bog'lash jadvali (dropdown bilan)
+     - Har printer uchun kategoriya va print job soni
+     - Info banner (qanday ishlashi tushuntirilgan)
+  
+  2. PrintQueueView.tsx - kassir uchun print navbati:
+     - Har 5 soniyada avtomatik yangilanadi
+     - Printer bo'yicha guruhlangan (har printer alohida kartochka)
+     - Har kartochkada: printer nomi, kutilayotgan job soni
+     - "Hammasini chop etish" tugmasi (ketma-ket print)
+     - Har job uchun: stol raqami, ofitsiant, order #, vaqt, taomlar ro'yxati
+     - "Chop etish" va "Tayyor" tugmalari
+     - 80mm termal chek formati (window.print)
+
+- DashboardLayout yangilandi:
+  - Boshqaruv bo'limiga "🖨️ Print navbati" va "⚙️ Printer sozlamalari" qo'shildi
+  - Endi jami 27 ta modul (avval 25 ta edi)
+
+- Test natijalari (API + browser verified):
+  ✅ 3 ta printer stansiyasi yaratildi: Shashlik, Oshpaz, Bar
+  ✅ Grill kategoriya → Shashlik printer ga bog'landi
+  ✅ Ichimliklar kategoriya → Bar printer ga bog'landi
+  ✅ Ofitsiant 4 shashlik + 2 cola buyurtma bosdi
+  ✅ Avtomatik 2 ta print job yaratildi:
+    - Shashlik printer: 4x Tovuq shashlik
+    - Bar printer: 2x Coca Cola
+  ✅ PrintQueueView: printer bo'yicha guruhlangan, 5s auto-refresh
+  ✅ PrintersView: kategoriya-printer bog'lash ishlamoqda
+  ✅ Lint: 0 xato
+
+Stage Summary:
+- Mavjud 25 ta modul yo'qotilmadi
+- 2 ta yangi modul (Print navbati + Printer sozlamalari)
+- Avtomatik print routing: ofitsiant buyurtma → avtomatik print job har printerga
+- Kassir print queue'da har bir printer uchun cheklarni bosib chiqaradi
+- Hammasi kassa kompyuterida (printerlar kassaga ulangan)
+- Endi jami 27 ta professional modul

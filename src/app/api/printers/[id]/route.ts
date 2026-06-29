@@ -10,19 +10,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params
     const body = await req.json()
 
-    const existing = await db.category.findFirst({
+    const existing = await db.printerStation.findFirst({
       where: { id, restaurantId: restaurant.id }
     })
     if (!existing) return NextResponse.json({ error: 'Topilmadi' }, { status: 404 })
 
-    const updated = await db.category.update({
+    const updated = await db.printerStation.update({
       where: { id },
       data: {
         name: body.name,
         description: body.description,
-        printerStationId: body.printerStationId === '' ? null : (body.printerStationId || undefined)
-      },
-      include: { printerStation: true }
+        sortOrder: parseInt(body.sortOrder) || 0,
+        isActive: body.isActive
+      }
     })
     return NextResponse.json({ item: updated })
   } catch (e: any) {
@@ -36,12 +36,18 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
 
     const { id } = await params
-    const existing = await db.category.findFirst({
+    const existing = await db.printerStation.findFirst({
       where: { id, restaurantId: restaurant.id }
     })
     if (!existing) return NextResponse.json({ error: 'Topilmadi' }, { status: 404 })
 
-    await db.category.delete({ where: { id } })
+    // Unlink categories from this printer
+    await db.category.updateMany({
+      where: { printerStationId: id },
+      data: { printerStationId: null }
+    })
+
+    await db.printerStation.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

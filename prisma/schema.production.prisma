@@ -73,6 +73,8 @@ model Restaurant {
   coupons         Coupon[]
   customerDebts   CustomerDebt[]
   notifications   Notification[]
+  printerStations PrinterStation[]
+  printJobs       PrintJob[]
 }
 
 // Session for restaurant login
@@ -128,9 +130,12 @@ model Category {
   restaurantId  String
   name          String
   description   String?
+  // Printer routing - bu kategoriyadagi taomlar qaysi printerga yuboriladi
+  printerStationId String?
   createdAt     DateTime @default(now())
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  printerStation PrinterStation? @relation(fields: [printerStationId], references: [id], onDelete: SetNull)
   products      Product[]
 
   @@index([restaurantId])
@@ -492,6 +497,7 @@ model Order {
   waiter        Staff @relation("OrderWaiter", fields: [waiterId], references: [id], onDelete: Cascade)
   cashier       Staff? @relation("OrderCashier", fields: [cashierId], references: [id], onDelete: SetNull)
   items         OrderItem[]
+  printJobs     PrintJob[]
 
   @@index([restaurantId])
   @@index([tableId])
@@ -671,4 +677,45 @@ model Notification {
 
   @@index([restaurantId, isRead])
   @@index([restaurantId, audience])
+}
+
+// ============================================================
+// PRINTER STATIONS - printer stansiyalari (shashlik, oshpaz, bar, kassa)
+// ============================================================
+model PrinterStation {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String   // "Shashlik printer", "Oshpaz printer", "Bar printer", "Kassa chek printer"
+  description   String?
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  categories    Category[]
+  printJobs     PrintJob[]
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// PRINT JOBS - print navbati (ofitsiant buyurtma bosganda avtomatik yaratiladi)
+// ============================================================
+model PrintJob {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  orderId       String
+  printerStationId String
+  status        String   @default("pending") // pending | printed | failed
+  // JSON content: { table, waiter, items, orderNo, createdAt }
+  content       String
+  createdAt     DateTime @default(now())
+  printedAt     DateTime?
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  printerStation PrinterStation @relation(fields: [printerStationId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
+  @@index([printerStationId, status])
 }

@@ -17,9 +17,11 @@ import NotificationsView from './NotificationsView'
 import AnalyticsView from './AnalyticsView'
 import IntegrationsView from './IntegrationsView'
 import MenuView from './MenuView'
+import PrintersView from './PrintersView'
+import PrintQueueView from './PrintQueueView'
 import { CustomersView, StaffView, TablesViewWithRooms, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView, RoomsView } from './CrudViews'
 
-type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations'
+type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'printqueue'
 
 type Restaurant = {
   id: string
@@ -88,6 +90,8 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'expenses', label: 'Chiqimlar', icon: '💸' },
       { key: 'shifts', label: 'Smenalar (Kassa)', icon: '💰' },
       { key: 'kitchen', label: 'Oshpaz ekrani (KDS)', icon: '🍳' },
+      { key: 'printqueue', label: 'Print navbati', icon: '🖨️' },
+      { key: 'printers', label: 'Printer sozlamalari', icon: '⚙️' },
       { key: 'export', label: 'Eksport (Excel)', icon: '📤' },
       { key: 'integrations', label: 'Integratsiyalar', icon: '🔌' },
       { key: 'settings', label: 'Sozlamalar', icon: '⚙️' }
@@ -139,6 +143,8 @@ export default function DashboardLayout({
       case 'reports': return <ReportsView />
       case 'analytics': return <AnalyticsView />
       case 'integrations': return <IntegrationsView />
+      case 'printers': return <PrintersView />
+      case 'printqueue': return <PrintQueueView />
       case 'settings': return <SettingsView restaurant={restaurant} access={access} onLogout={onLogout} />
       case 'shifts': return <ShiftsView />
       case 'kitchen': return <KitchenDisplayView />
