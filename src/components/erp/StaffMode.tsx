@@ -460,15 +460,24 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
           {filtered.length === 0 ? (
             <p className="text-center text-slate-400 py-8">Mahsulot topilmadi</p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {filtered.map(p => (
                 <button
                   key={p.id}
                   onClick={() => addToCart(p)}
-                  className="p-3 rounded-xl border border-slate-200 hover:border-emerald-400 hover:shadow-md bg-white text-left"
+                  className="rounded-xl border border-slate-200 hover:border-emerald-400 hover:shadow-md bg-white text-left overflow-hidden"
                 >
-                  <div className="font-semibold text-slate-900 text-sm line-clamp-2 mb-1">{p.name}</div>
-                  <div className="text-emerald-600 font-bold">{formatMoney(p.price)}</div>
+                  {p.imageUrl ? (
+                    <div className="aspect-square bg-slate-100 overflow-hidden">
+                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-slate-100 flex items-center justify-center text-3xl">🍽️</div>
+                  )}
+                  <div className="p-2">
+                    <div className="font-semibold text-slate-900 text-sm line-clamp-2 mb-1">{p.name}</div>
+                    <div className="text-emerald-600 font-bold">{formatMoney(p.price)}</div>
+                  </div>
                 </button>
               ))}
             </div>

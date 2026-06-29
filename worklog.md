@@ -649,3 +649,66 @@ Stage Summary:
 - Avtomatik tahlil: soatlik, foyda, mijozlar, prognoz, A/B test
 - Tashqi integratsiyalar: 1C Buxgalteriya (XML), Yandex/Google Maps
 - Endi jami 24 ta professional modul
+
+---
+Task ID: ERP-012
+Agent: Main agent (Super Z)
+Task: Professional Menyu bo'limi - kartochkali ko'rinish + rasm yuklash (jpg)
+
+Work Log:
+- Mavjud funksiyalar yo'qotilmadi
+- Yangi API: /api/upload/product-image
+  - Sharp bilan rasmni 800x800 px ga resize (cover, center)
+  - JPEG quality 85 ga compress
+  - Base64 data URL sifatida qaytarish (local + Vercel da ishlaydi)
+  - Maks 10MB, faqat image/ type
+
+- Yangi UI: MenuView.tsx - professional menyu boshqaruvi
+  - Kategoriya boshqaruvi (qo'shish/tahrirlash/o'chirish)
+  - Kategoriya filter tabs (har birida taomlar soni)
+  - Qidiruv funksiyasi
+  - Kartochkali grid (2-6 columns responsiv)
+  - Har kartochkada:
+    - Rasm (aspect-square, object-cover) - to'liq moslashgan
+    - Kategoriya badge (yuqori chap)
+    - Mavjud emas badge (agar isAvailable=false)
+    - Hover da edit/delete tugmalari (yuqori o'ng)
+    - Taom nomi, narxi, tannarx, foyda
+  - Taom qo'shish formasi:
+    - Rasm yuklash (clickable area, JPG/PNG/WebP)
+    - Rasm preview (32x32 with upload/remove)
+    - Avtomatik resize (800x800, JPEG 85)
+    - Taom nomi, tavsif, kategoriya, narx, birlik
+    - Mavjudlik checkbox
+  - Kategoriya formasi (nomi, tavsif)
+
+- DashboardLayout yangilandi:
+  - "📋 Menyu (rasmli)" moduli qo'shildi (Mahsulotlar bo'limida)
+  - Endi jami 25 ta modul
+
+- WaiterView (StaffMode) yangilandi:
+  - Taom kartochkalarida rasm ko'rinadi (aspect-square)
+  - Rasm bo'lmagan taomlar uchun 🍽️ emoji
+  - Grid 2-4 columns (responsiv)
+
+- POSView yangilandi:
+  - Taom kartochkalarida rasm ko'rinadi (aspect-square)
+  - Rasm + nom + narx + tannarx
+
+- Yangi API: /api/categories/[id] (PUT, DELETE) - kategoriya tahrirlash/o'chirish
+
+- Test natijalari (API + browser verified):
+  ✅ Rasm yuklash: 200x200 PNG → 800x800 JPEG base64 (623 chars)
+  ✅ Palov rasmi bilan yaratildi
+  ✅ Shashlik "Issiq taomlar" kategoriyasiga qo'shildi
+  ✅ MenuView: 6 ta taom kartochkada ko'rinmoqda
+  ✅ MenuView: kategoriya filter (Hammasi 6, Issiq taomlar 1)
+  ✅ POS: 2 ta rasmli taom ko'rinmoqda
+  ✅ WaiterView: 2 ta rasmli taom ko'rinmoqda
+  ✅ Lint: 0 xato
+
+Stage Summary:
+- Mavjud 24 ta modul yo'qotilmadi
+- 1 ta yangi modul (Menyu) + rasm yuklash funksiyasi
+- Endi jami 25 ta professional modul
+- Menyu, POS, va Ofitsiant panelida taom rasmlari ko'rinadi

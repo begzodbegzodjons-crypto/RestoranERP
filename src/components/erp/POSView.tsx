@@ -180,17 +180,26 @@ export default function POSView() {
                   key={p.id}
                   onClick={() => addToCart(p)}
                   disabled={!p.isAvailable}
-                  className={`relative p-4 rounded-xl border text-left transition-all ${
+                  className={`relative rounded-xl border text-left transition-all overflow-hidden ${
                     p.isAvailable
                       ? 'border-slate-200 hover:border-emerald-400 hover:shadow-md bg-white'
                       : 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed'
                   }`}
                 >
-                  <div className="font-semibold text-slate-900 mb-1 line-clamp-2 text-sm">{p.name}</div>
-                  <div className="text-emerald-600 font-bold">{formatMoney(p.price)}</div>
-                  {p.cost > 0 && (
-                    <div className="text-xs text-slate-400">Tannarx: {formatMoney(p.cost)}</div>
+                  {p.imageUrl ? (
+                    <div className="aspect-square bg-slate-100 overflow-hidden">
+                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="aspect-square bg-slate-100 flex items-center justify-center text-4xl">🍽️</div>
                   )}
+                  <div className="p-3">
+                    <div className="font-semibold text-slate-900 mb-1 line-clamp-2 text-sm">{p.name}</div>
+                    <div className="text-emerald-600 font-bold">{formatMoney(p.price)}</div>
+                    {p.cost > 0 && (
+                      <div className="text-xs text-slate-400">Tannarx: {formatMoney(p.cost)}</div>
+                    )}
+                  </div>
                   {p.recipes.length === 0 && (
                     <div className="absolute top-2 right-2 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Retsept yo'q</div>
                   )}

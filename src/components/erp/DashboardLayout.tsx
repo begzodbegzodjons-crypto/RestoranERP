@@ -16,9 +16,10 @@ import ExportView from './ExportView'
 import NotificationsView from './NotificationsView'
 import AnalyticsView from './AnalyticsView'
 import IntegrationsView from './IntegrationsView'
+import MenuView from './MenuView'
 import { CustomersView, StaffView, TablesViewWithRooms, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView, RoomsView } from './CrudViews'
 
-type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations'
+type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations'
 
 type Restaurant = {
   id: string
@@ -50,6 +51,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
   {
     section: 'Mahsulotlar',
     items: [
+      { key: 'menu', label: '📋 Menyu (rasmli)', icon: '📋' },
       { key: 'products', label: 'Taomlar & Retsept', icon: '🍽️' },
       { key: 'categories', label: 'Kategoriyalar', icon: '🏷️' }
     ]
@@ -122,6 +124,7 @@ export default function DashboardLayout({
     switch (view) {
       case 'dashboard': return <DashboardView restaurantName={restaurant.name} />
       case 'pos': return <POSView />
+      case 'menu': return <MenuView />
       case 'products': return <ProductsView />
       case 'ingredients': return <IngredientsView />
       case 'purchases': return <PurchasesView />
