@@ -153,3 +153,41 @@ Stage Summary:
 - 10+ CSS animatsiya bir vaqtda ishlaydi (turli tezlik va kechikishlarda)
 - Reduced motion uchun accessibility qo'llab-quvvatlash
 - Mobil va desktop responsiv
+
+---
+Task ID: ERP-004 (Fix)
+Agent: Main agent (Super Z)
+Task: Yozuv ko'rinmaslik muammosini tuzatish (animatsiya juda qora gradient ishlatgan)
+
+Work Log:
+- Muammo: Oldingi animatsiya oklch(0.2 0.05 162) = lab(7.85) ishlatgan — bu deyarli QORA rang
+- background-clip: text + color: transparent组合ida gradient qora fazada bo'lganda yozuv ko'rinmas bo'lib qolgan
+- Yechim:
+  - OKLCH ranglar o'rniga HEX ranglar ishlatildi (kengroq brauzer qo'llab-quvvatlash)
+  - Gradient faqat yorqin emerald ranglardan iborat: #047857 → #059669 → #10b981 → #14b8a6
+  - lightness 0.45+ saqlangan — hech qachon qora emas
+  - `color: #047857` base color qo'shildi (fallback sifatida)
+  - Drop-shadow filter orqali glow (background-clip: text bilan ishlaydi)
+  - Buzilgan `::before`/`::after` pseudo-elementlar (content: '' bilan) olib tashlandi
+  - Yangi `.hero-sweep-overlay` span elementi qo'shildi — actual DOM element sifatida ishlaydi
+
+- Turbopack CSS cache muammosi:
+  - .next cache tozalandi
+  - Dev server qayta ochildi
+  - Endi yangi CSS to'g'ri qo'llanmoqda
+
+- Test natijalari:
+  - color: rgb(4, 120, 87) ✓ (yorqin emerald)
+  - background-image: linear-gradient(100deg, rgb(4, 120, 87) → rgb(16, 185, 129) → rgb(20, 184, 166) → ...) ✓
+  - visible: true ✓
+  - Screenshotlarda 100,000+ text piksel aniqlangan ✓
+  - Yashil piksel soni 3,500-12,000 orasida o'zgaradi (shimmer animatsiyasi ishlayapti) ✓
+  - Mobil va desktop responsiv ✓
+  - Lint: 0 xato ✓
+
+Stage Summary:
+- Yozuv endi HAR DOIM ko'rinadi (yorqin emerald gradient)
+- Animatsiyalar to'g'ri ishlaydi: shimmer, float, glow, sparkles, light sweep
+- "bir tizimda" so'zi maxsus cyan gradient + drop-shadow glow bilan ajralib turadi
+- 8 ta sparkle yozuv atrofida twinkle qiladi
+- So'zlar ketma-ket paydo bo'ladi (bounce easing)
