@@ -273,3 +273,50 @@ Stage Summary:
 - Yozuv ustidan oq nur o'tadi (4s da)
 - Float harakati (5s da yuqoriga-pastga 3px) + drop-shadow glow
 - Yozuv HAR DOIM ko'rinadi (base color fallback bilan)
+
+---
+Task ID: ERP-007 (Verification)
+Agent: Main agent (Super Z)
+Task: Admin panelida restoranlarni bloklash va aktivlashtirish funksiyasini tekshirish (dizaynga tegmasdan)
+
+Work Log:
+- Tekshirildi: Admin panelida bloklash va aktivlashtirish funksiyalari allaqachon mavjud ekan
+- Dizaynga HECH NARSA o'zgartirilmadi (foydalanuvchi talabi)
+
+### Mavjud funksiyalar (hammasi ishlaydi):
+
+#### 1. Restoranlar ro'yxatida (jadval):
+- `+30k` tugmasi — 1 bosishda 30 kunga aktivlashtirish (tez amal)
+- `🚫` tugmasi — bloklash (prompt bilan sabab so'raydi)
+- `🔓` tugmasi — blokdan chiqarish (faqat bloklangan restoranlar uchun)
+
+#### 2. Restoran detali modalida (⚙️ Boshqaruv bo'limi):
+- `Aktivlashtirish formasi` — to'liq forma:
+  - Kun soni (1-3650, default 30)
+  - Izoh maydoni (ixtiyoriy)
+  - "✓ N kunga aktivlashtirish" tugmasi
+- `🚫 Bloklash` tugmasi — sabab bilan bloklash
+- `🔓 Blokdan chiqarish` tugmasi (bloklangan restoranlar uchun)
+
+### API endpointlar (hammasi ishlaydi):
+- `POST /api/admin/restaurants/[id]/block` — bloklash (sabab bilan, sessiyalar o'chiriladi)
+- `DELETE /api/admin/restaurants/[id]/block` — blokdan chiqarish
+- `POST /api/admin/restaurants/[id]/activate` — kodsiz N kunga aktivlashtirish (extension bilan)
+- `GET /api/admin/restaurants/[id]/stats` — to'liq statistika
+- `GET /api/admin/restaurants` — barcha restoranlar statistika bilan
+
+### Test natijalari (browser orqali verified):
+- ✅ Anor restorani bloklandi: ⏱ Sinov → 🚫 Admin blok
+- ✅ Blokdan chiqarildi: 🚫 Admin blok → ⏱ Sinov
+- ✅ 60 kunga aktivlashtirildi: ⏱ Sinov → ✓ Aktiv (60k qoldi)
+- ✅ Aktivatsiya sanasi: 28/08/2026 (to'g'ri hisoblandi)
+- ✅ Detail modal to'liq ishlamoqda (statistika + boshqaruv)
+- ✅ Aktivlashtirish formasi ishlamoqda (kun + izoh)
+- ✅ Lint: 0 xato
+
+Stage Summary:
+- Dizaynga HECH NARSA o'zgartirilmadi
+- Bloklash funksiyasi ishlaydi (sabab bilan, force logout bilan)
+- Aktivlashtirish funksiyasi ishlaydi (N kunga, extension bilan)
+- Blokdan chiqarish funksiyasi ishlaydi
+- Barcha funksiyalar ro'yxatda va detail modalda mavjud
