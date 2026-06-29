@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, toast } from './utils'
+import HeroTitle from './HeroTitle'
 
 export default function AuthPage({ onAuthed }: { onAuthed: () => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
@@ -62,9 +63,7 @@ export default function AuthPage({ onAuthed }: { onAuthed: () => void }) {
             </div>
           </div>
 
-          <h1 className="text-5xl xl:text-6xl 2xl:text-7xl font-bold leading-tight tracking-tight">
-            Restoraningizni <span className="shimmer-text">bir tizimda</span> boshqaring
-          </h1>
+          <HeroTitle />
 
           <p className="text-muted-foreground text-xl leading-relaxed">
             Retseptlar, ombor mahsulotlari, har bir taomning tayyorlash va sotilish narxlari avtomatik hisoblanadi.

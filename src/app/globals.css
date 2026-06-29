@@ -166,6 +166,272 @@
   to { background-position: 200% center; }
 }
 
+/* ============================================
+   HERO TITLE ANIMATIONS - yaltirash + harakat + glow
+   ============================================ */
+
+/* Asosiy hero yozuv - stilniy gradient + yaltirash + 3D harakat */
+.hero-title {
+  background: linear-gradient(
+    100deg,
+    oklch(0.2 0.05 162) 0%,
+    oklch(0.4 0.13 162) 20%,
+    oklch(0.6 0.2 162) 40%,
+    oklch(0.7 0.18 184) 50%,
+    oklch(0.6 0.2 162) 60%,
+    oklch(0.4 0.13 162) 80%,
+    oklch(0.2 0.05 162) 100%
+  );
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: hero-shimmer 4s linear infinite, hero-float 5s ease-in-out infinite, hero-tilt 8s ease-in-out infinite;
+  position: relative;
+  display: inline-block;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+@keyframes hero-shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 300% center; }
+}
+
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.015); }
+}
+
+@keyframes hero-tilt {
+  0%, 100% { text-shadow: 0 0 0 transparent; }
+  25% { text-shadow: 0 0 30px oklch(0.6 0.2 162 / 0.4), 0 0 60px oklch(0.7 0.18 184 / 0.2); }
+  50% { text-shadow: 0 0 40px oklch(0.7 0.18 184 / 0.5), 0 0 80px oklch(0.6 0.2 162 / 0.25); }
+  75% { text-shadow: 0 0 30px oklch(0.6 0.2 162 / 0.4), 0 0 60px oklch(0.7 0.18 184 / 0.2); }
+}
+
+/* "bir tizimda" - alohida effektli highlight so'z - yanada kuchli yaltirash */
+.hero-highlight {
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    oklch(0.55 0.18 162) 0%,
+    oklch(0.65 0.22 184) 20%,
+    oklch(0.8 0.18 200) 40%,
+    oklch(0.95 0.1 200) 50%,
+    oklch(0.8 0.18 200) 60%,
+    oklch(0.65 0.22 184) 80%,
+    oklch(0.55 0.18 162) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: hero-highlight-shimmer 2.5s linear infinite, hero-highlight-pulse 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes hero-highlight-shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes hero-highlight-pulse {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 10px oklch(0.55 0.18 162 / 0.5))
+      drop-shadow(0 0 20px oklch(0.65 0.22 184 / 0.3))
+      drop-shadow(0 0 30px oklch(0.8 0.18 200 / 0.2));
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 18px oklch(0.7 0.22 184 / 0.7))
+      drop-shadow(0 0 32px oklch(0.8 0.18 200 / 0.45))
+      drop-shadow(0 0 50px oklch(0.95 0.1 200 / 0.3));
+    transform: scale(1.04) rotate(-0.5deg);
+  }
+}
+
+/* Yaltirab yonuvchi light sweep effekti - yozuv ustidan o'tadigan nur */
+.hero-title-wrapper {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+.hero-title-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -10% -5%;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.4) 45%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0.4) 55%,
+    transparent 65%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: hero-light-sweep 3.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: screen;
+}
+
+@keyframes hero-light-sweep {
+  0% { background-position: 200% 0; opacity: 0; }
+  15% { opacity: 0; }
+  35% { opacity: 1; }
+  65% { opacity: 1; }
+  85% { opacity: 0; }
+  100% { background-position: -100% 0; opacity: 0; }
+}
+
+/* Ikkinchi darajali light sweep - teskari yo'nalishda */
+.hero-title-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -10% -5%;
+  background: linear-gradient(
+    75deg,
+    transparent 40%,
+    rgba(167, 243, 208, 0.5) 48%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(167, 243, 208, 0.5) 52%,
+    transparent 60%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: hero-light-sweep-reverse 5s ease-in-out infinite;
+  animation-delay: 1.5s;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: screen;
+}
+
+@keyframes hero-light-sweep-reverse {
+  0% { background-position: -100% 0; opacity: 0; }
+  20% { opacity: 0; }
+  40% { opacity: 0.8; }
+  60% { opacity: 0.8; }
+  80% { opacity: 0; }
+  100% { background-position: 200% 0; opacity: 0; }
+}
+
+/* Yozuv atrofida yumshoq yorug'lik (glow) */
+.hero-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-glow::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    oklch(0.55 0.18 162) 0%,
+    oklch(0.65 0.22 184) 50%,
+    oklch(0.55 0.18 162) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: blur(22px);
+  opacity: 0.6;
+  z-index: -1;
+  animation: hero-shimmer 4s linear infinite, glow-pulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; filter: blur(22px); }
+  50% { opacity: 0.8; filter: blur(28px); }
+}
+
+/* So'zlarni ketma-ket paydo bo'lish animatsiyasi */
+.hero-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(30px) rotateX(-30deg);
+  animation: hero-word-enter 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: bottom;
+}
+
+.hero-word:nth-child(1) { animation-delay: 0.2s; }
+.hero-word:nth-child(2) { animation-delay: 0.5s; }
+.hero-word:nth-child(3) { animation-delay: 0.8s; }
+
+@keyframes hero-word-enter {
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
+  }
+}
+
+/* Sparkles - yozuv atrofida kichik uchqunlar */
+.hero-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(167, 243, 208, 0.8) 50%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sparkle-twinkle 2s ease-in-out infinite;
+  z-index: 3;
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5) rotate(180deg);
+  }
+}
+
+/* Reduced motion - foydalanuvchilar uchun animatsiyani o'chirish */
+@media (prefers-reduced-motion: reduce) {
+  .hero-title,
+  .hero-highlight,
+  .hero-title-wrapper::before,
+  .hero-title-wrapper::after,
+  .hero-glow::after,
+  .hero-word {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .hero-title {
+    background: linear-gradient(135deg, oklch(0.3 0.1 162) 0%, oklch(0.55 0.18 162) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-highlight {
+    background: linear-gradient(135deg, oklch(0.55 0.18 162) 0%, oklch(0.7 0.2 184) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
 /* Custom scrollbar */
 .custom-scroll::-webkit-scrollbar {
   width: 6px;

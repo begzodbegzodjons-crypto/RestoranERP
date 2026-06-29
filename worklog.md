@@ -110,3 +110,46 @@
 - Production build script (`vercel-build`) qo'shildi
 - Auth mantiqi admin blokirovkasini qo'llab-quvvatlaydi
 - Barcha yangi funksiyalar browser testlari orqali verified
+
+---
+Task ID: ERP-003
+Agent: Main agent (Super Z)
+Task: Bosh sahifadagi "Restoraningizni bir tizimda boshqaring" yozuvini animatsiya, yaltirash, harakatlanish effektlari bilan tayyorlash
+
+Work Log:
+- Yangi `HeroTitle` komponenti yaratildi (src/components/erp/HeroTitle.tsx)
+- globals.css ga 8 ta yangi animatsiya effekti qo'shildi:
+  1. `hero-shimmer` - gradient yaltirash (4s linear infinite)
+  2. `hero-float` - yuqoriga-pastga harakat (5s ease-in-out infinite)
+  3. `hero-tilt` - text-shadow orqali glow pulsi (8s)
+  4. `hero-highlight-shimmer` - "bir tizimda" so'zi uchun maxsus yaltirash (2.5s)
+  5. `hero-highlight-pulse` - highlight so'z uchun drop-shadow + scale + rotate (2s)
+  6. `hero-light-sweep` - oq nur yozuv ustidan o'tadi (3.5s)
+  7. `hero-light-sweep-reverse` - teskari yo'nalishda ikkinchi nur (5s, 1.5s delay)
+  8. `glow-pulse` - yozuv atrofidagi blur yorug'lik pulsi (4s)
+  9. `hero-word-enter` - so'zlar ketma-ket 3D rotateX bilan paydo bo'lishi (1s, 0.2/0.5/0.8s delay)
+  10. `sparkle-twinkle` - 8 ta sparkle (yulduzcha) 2s twinkle effekti bilan
+
+- Visual effektlar:
+  - Gradient (emerald → teal → cyan → oq → teskari) - 300% background-size bilan yaltirash
+  - 2 ta light sweep (ikkala yo'nalishda, mix-blend-mode: screen)
+  - 3D so'z kirishi (rotateX -30deg → 0, translateY 30px → 0, cubic-bezier bounce)
+  - Glow: blur(22-28px) orqali yozuv atrofida yumshoq yorug'lik
+  - "bir tizimda" so'zi: maxsus 7-to'xtamli gradient + 3-darajali drop-shadow + scale(1.04) + rotate(-0.5deg)
+  - 8 ta sparkle yozuv atrofida turli pozitsiyalarda, turli kechikishlar bilan
+
+- Accessibility: `prefers-reduced-motion: reduce` media query - animatsiyalar o'chiriladi, statik gradient qoladi
+- AuthPage.tsx dan H1 olib tashlab, `<HeroTitle />` komponenti qo'yildi
+- Lint: 0 xato
+- Browser test (agent-browser):
+  - 8 ta sparkle render qilingan
+  - 3 ta hero-word to'g'ri kechikishlar bilan
+  - hero-title va hero-highlight class'lar to'g'ri qo'llanilgan
+  - Animatsiya computed style'da ko'rinmoqda
+  - Mobil (390x844) va desktop (1280x800) ham ishlamoqda
+
+Stage Summary:
+- Bosh sahifadagi hero yozuv to'liq animatsiyali bo'ldi: yaltirash, 3D harakat, glow, sparkles, light sweep, highlight effekti
+- 10+ CSS animatsiya bir vaqtda ishlaydi (turli tezlik va kechikishlarda)
+- Reduced motion uchun accessibility qo'llab-quvvatlash
+- Mobil va desktop responsiv
