@@ -10,7 +10,14 @@ export async function GET() {
 
     const tables = await db.restaurantTable.findMany({
       where: { restaurantId: staff.restaurantId },
-      orderBy: { name: 'asc' }
+      include: { room: true },
+      orderBy: [{ roomId: 'asc' }, { name: 'asc' }]
+    })
+
+    // Get all rooms for grouping
+    const rooms = await db.room.findMany({
+      where: { restaurantId: staff.restaurantId, isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
     })
 
     // For each table, check if it has an open order
@@ -40,7 +47,7 @@ export async function GET() {
       })
     )
 
-    return NextResponse.json({ items: tablesWithOrders })
+    return NextResponse.json({ items: tablesWithOrders, rooms })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

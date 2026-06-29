@@ -505,3 +505,139 @@ export function DebtsView() {
     ]}
   />
 }
+
+// ============== ROOMS - xonalar ==============
+export function RoomsView() {
+  return <CrudView
+    title="Xonalar"
+    emoji="🏠"
+    endpoint="/api/rooms"
+    searchKey="name"
+    fields={[
+      { key: 'name', label: 'Xona nomi', required: true, placeholder: 'Asosiy zal, VIP xona, Tashqi terassa...' },
+      { key: 'description', label: 'Tavsif', type: 'textarea', placeholder: 'Masalan: 20 kishi sig\'adigan, konditsioner bor...' },
+      { key: 'color', label: 'Rang', type: 'select', options: [
+        { value: 'emerald', label: '🟢 Yashil (Emerald)' },
+        { value: 'blue', label: '🔵 Ko\'k (Blue)' },
+        { value: 'purple', label: '🟣 Binafsha (Purple)' },
+        { value: 'amber', label: '🟡 Sariq (Amber)' },
+        { value: 'rose', label: '🔴 Qizil (Rose)' },
+        { value: 'cyan', label: '🔵 Och ko\'k (Cyan)' },
+        { value: 'slate', label: '⚫ Kulrang (Slate)' }
+      ]},
+      { key: 'sortOrder', label: 'Tartib raqami', type: 'number', placeholder: '0' },
+      { key: 'isActive', label: 'Faol', type: 'select', options: [
+        { value: 'true', label: 'Ha' },
+        { value: 'false', label: 'Yo\'q' }
+      ]}
+    ]}
+    columns={[
+      { key: 'name', label: 'Xona nomi', render: (i: any) => (
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full bg-${i.color || 'emerald'}-500`}></div>
+          <div>
+            <div className="font-semibold text-slate-900">{i.name}</div>
+            {i.description && <div className="text-xs text-slate-500">{i.description}</div>}
+          </div>
+        </div>
+      )},
+      { key: 'color', label: 'Rang', render: (i: any) => <span className="capitalize text-slate-600">{i.color || 'emerald'}</span> },
+      { key: 'sortOrder', label: 'Tartib', className: 'text-right', render: (i: any) => i.sortOrder || 0 },
+      { key: '_count', label: 'Stollar', className: 'text-right', render: (i: any) => <span className="font-semibold">{i._count?.tables || 0} ta</span> },
+      { key: 'isActive', label: 'Holat', render: (i: any) => (
+        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${i.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+          {i.isActive !== false ? 'Faol' : 'Nofaol'}
+        </span>
+      )}
+    ]}
+  />
+}
+
+// ============== TABLES (yangilangan - room bilan) ==============
+export function TablesViewWithRooms() {
+  return <TablesViewBase />
+}
+
+function TablesViewBase() {
+  const [rooms, setRooms] = useState<any[]>([])
+  const [filterRoom, setFilterRoom] = useState<string>('all')
+
+  useEffect(() => {
+    api('/api/rooms').then(r => setRooms(r.items || [])).catch(() => {})
+  }, [])
+
+  const roomOptions = [
+    { value: '', label: '— Xonasiz —' },
+    ...rooms.map((r: any) => ({ value: r.id, label: `🏠 ${r.name}` }))
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">🪑 Stollar</h2>
+          <p className="text-slate-500 text-sm">Xonalar bo'yicha stollarni boshqaring</p>
+        </div>
+        <a href="#" onClick={(e) => { e.preventDefault(); window.location.reload() }} className="text-xs text-slate-500 hover:text-slate-700">↻ Yangilash</a>
+      </div>
+
+      {/* Room filter */}
+      {rooms.length > 0 && (
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setFilterRoom('all')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${filterRoom === 'all' ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}
+          >
+            Hammasi
+          </button>
+          {rooms.map(r => (
+            <button
+              key={r.id}
+              onClick={() => setFilterRoom(r.id)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 ${filterRoom === r.id ? `bg-${r.color || 'emerald'}-500 text-white` : 'bg-white border border-slate-200 text-slate-700'}`}
+            >
+              <div className={`w-2 h-2 rounded-full bg-${r.color || 'emerald'}-500`}></div>
+              {r.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <CrudView
+        title="Stollar"
+        emoji="🪑"
+        endpoint="/api/tables"
+        searchKey="name"
+        fields={[
+          { key: 'name', label: 'Stol nomi', required: true, placeholder: 'Stol 1, Stol 2, ...' },
+          { key: 'roomId', label: 'Xona', type: 'select', options: roomOptions },
+          { key: 'seats', label: 'O\'rindiqlar soni', type: 'number', required: true },
+          { key: 'status', label: 'Holat', type: 'select', options: [
+            { value: 'free', label: 'Bo\'sh' },
+            { value: 'occupied', label: 'Band' },
+            { value: 'reserved', label: 'Bron qilingan' }
+          ]}
+        ]}
+        columns={[
+          { key: 'name', label: 'Stol', render: (i: any) => <div className="font-semibold text-slate-900">{i.name}</div> },
+          { key: 'room', label: 'Xona', render: (i: any) => i.room ? (
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full bg-${i.room.color || 'emerald'}-500`}></div>
+              <span className="text-slate-700">{i.room.name}</span>
+            </div>
+          ) : <span className="text-slate-400 text-xs">— (xonasiz)</span> },
+          { key: 'seats', label: 'O\'rindiqlar', className: 'text-right', render: (i: any) => `${i.seats} kishi` },
+          { key: 'status', label: 'Holat', render: (i: any) => {
+            const m: Record<string, { label: string; cls: string }> = {
+              free: { label: 'Bo\'sh', cls: 'bg-emerald-100 text-emerald-700' },
+              occupied: { label: 'Band', cls: 'bg-red-100 text-red-700' },
+              reserved: { label: 'Bron', cls: 'bg-amber-100 text-amber-700' }
+            }
+            const s = m[i.status] || m.free
+            return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${s.cls}`}>{s.label}</span>
+          }}
+        ]}
+      />
+    </div>
+  )
+}

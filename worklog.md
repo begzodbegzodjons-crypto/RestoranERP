@@ -484,3 +484,69 @@ Stage Summary:
 - 15+ yangi API endpoint
 - 5 ta yangi Prisma model
 - Production schema (PostgreSQL) ham yangilandi
+
+---
+Task ID: ERP-010
+Agent: Main agent (Super Z)
+Task: Xonalar (Rooms) modulini qo'shish - Zal, VIP, Tashqi bo'yicha stollarni guruhlash
+
+Work Log:
+- Mavjud funksiyalar yo'qotilmadi
+- Prisma schema'ga yangi model qo'shildi:
+  - Room: id, restaurantId, name, description, color, sortOrder, isActive
+  - RestaurantTable ga roomId qo'shildi (ixtiyoriy, xonaga bog'lanish)
+  - Restaurant ga rooms relation qo'shildi
+  - Production schema (PostgreSQL) ham yangilandi
+
+- Yangi API endpointlar:
+  - GET /api/rooms - xonalar ro'yxati (stollar soni bilan)
+  - POST /api/rooms - yangi xona yaratish
+  - PUT /api/rooms/[id] - xona yangilash
+  - DELETE /api/rooms/[id] - xona o'chirish (stollarni avtomatik xonasiz qiladi)
+  - GET /api/tables (yangilandi) - room ma'lumoti bilan
+  - POST /api/tables (yangilandi) - roomId qo'shish
+  - PUT /api/tables/[id] (yangilandi) - roomId yangilash
+  - GET /api/staff/tables (yangilandi) - room bilan + rooms ro'yxati
+
+- Yangi UI:
+  1. RoomsView (CrudViews ga qo'shildi) - xonalar CRUD:
+     - Nomi, tavsif, rang (7 ta: emerald, blue, purple, amber, rose, cyan, slate)
+     - Tartib raqami, faol/nofaol
+     - Stollar soni ko'rinadi
+     - Rangli dot indicator
+  
+  2. TablesViewWithRooms (CrudViews ga qo'shildi) - stollar bilan:
+     - Room filter tugmalari (Hammasi, Asosiy zal, VIP xona, ...)
+     - Har stol uchun xona nomi va rangi ko'rinadi
+     - Yangi stol qo'shganda xona tanlash mumkin
+  
+  3. DashboardLayout yangilandi:
+     - Boshqaruv bo'limiga "🏠 Xonalar (Zal/VIP)" qo'shildi
+     - Stollar moduli endi TablesViewWithRooms ishlatadi
+  
+  4. StaffMode (WaiterView + CashierView) yangilandi:
+     - Room filter tugmalari (🏠 Hammasi, xonalar...)
+     - Har stol kartochkasida xona nomi va rangi
+     - Ofitsiant faqat bir xonaning stollarini ko'radi (filter orqali)
+     - Kassir ham xona bo'yicha filterlay oladi
+
+- Tailwind config'ga safelist qo'shildi - dinamik bg-${color}-500 class'lari ishlashi uchun
+
+- Test natijalari (API + browser verified):
+  ✅ Asosiy zal (emerald) yaratildi - 3 ta stol
+  ✅ VIP xona (purple) yaratildi - 2 ta stol
+  ✅ Stol 1, 2, 3 → Asosiy zal ga bog'landi
+  ✅ VIP-1 (8 kishi), VIP-2 (10 kishi) → VIP xona ga bog'landi
+  ✅ RoomsView da xonalar ko'rinmoqda (rang, stollar soni)
+  ✅ TablesView da har stol uchun xona nomi ko'rinmoqda
+  ✅ Waiter panelida room filter ishlamoqda (Hammasi / Asosiy zal / VIP xona)
+  ✅ VIP filter faqat VIP stollari ko'rsatmoqda
+  ✅ Cashier panelida ham room filter
+  ✅ Lint: 0 xato
+
+Stage Summary:
+- Mavjud funksiyalar yo'qotilmadi
+- Yangi Room modeli va 4 ta API endpoint qo'shildi
+- 3 ta UI yangilandi (RoomsView, TablesViewWithRooms, StaffMode)
+- Restoran endi xonalarga ega: Zal, VIP, Tashqi terassa, ...
+- Har xonada o'z stollari, ofitsiant va kassir xona bo'yicha filterlay oladi

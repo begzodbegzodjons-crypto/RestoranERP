@@ -245,9 +245,11 @@ function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit }: {
 // ============== WAITER VIEW ==============
 function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
   const [tables, setTables] = useState<any[]>([])
+  const [rooms, setRooms] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [selectedCat, setSelectedCat] = useState<string | null>(null)
+  const [selectedRoom, setSelectedRoom] = useState<string>('all')
   const [selectedTable, setSelectedTable] = useState<any | null>(null)
   const [cart, setCart] = useState<{ product: any; quantity: number; notes?: string }[]>([])
   const [search, setSearch] = useState('')
@@ -259,6 +261,7 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
     try {
       const [t, p] = await Promise.all([api('/api/staff/tables'), api('/api/staff/products')])
       setTables(t.items)
+      setRooms(t.rooms || [])
       setProducts(p.items)
       setCategories(p.categories || [])
     } catch (e: any) {
@@ -343,13 +346,37 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
         <h2 className="text-2xl font-bold text-slate-900 mb-1">🍽️ Stolni tanlang</h2>
         <p className="text-sm text-slate-500 mb-4">Buyurtma berish uchun stoldan boshlang</p>
 
+        {/* Room filter */}
+        {rooms.length > 0 && (
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <button
+              onClick={() => setSelectedRoom('all')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium ${selectedRoom === 'all' ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}
+            >
+              🏠 Hammasi
+            </button>
+            {rooms.map(r => (
+              <button
+                key={r.id}
+                onClick={() => setSelectedRoom(r.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 ${selectedRoom === r.id ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}
+              >
+                <div className={`w-2 h-2 rounded-full bg-${r.color || 'emerald'}-500`}></div>
+                {r.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {tables.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
             Stollar mavjud emas. Admin panelda stollarni qo'shing.
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {tables.map(t => (
+            {tables
+              .filter(t => selectedRoom === 'all' ? true : (t.roomId === selectedRoom || (!t.roomId && selectedRoom === 'all')))
+              .map(t => (
               <button
                 key={t.id}
                 onClick={() => setSelectedTable(t)}
@@ -364,6 +391,12 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
                   <div className="text-xs text-slate-500">{t.seats} kishi</div>
                 </div>
                 <div className="font-bold text-slate-900">{t.name}</div>
+                {t.room && (
+                  <div className="flex items-center gap-1 mt-0.5 text-xs text-slate-500">
+                    <div className={`w-1.5 h-1.5 rounded-full bg-${t.room.color || 'emerald'}-500`}></div>
+                    {t.room.name}
+                  </div>
+                )}
                 {t.openOrder ? (
                   <div className="mt-2 text-xs">
                     <div className="text-amber-700 font-semibold">Band: {formatMoney(t.openOrder.total)}</div>
@@ -513,6 +546,8 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
 // ============== CASHIER VIEW ==============
 function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
   const [tables, setTables] = useState<any[]>([])
+  const [rooms, setRooms] = useState<any[]>([])
+  const [selectedRoom, setSelectedRoom] = useState<string>('all')
   const [orders, setOrders] = useState<any[]>([])
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
@@ -529,6 +564,7 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
         api('/api/staff/orders?status=open')
       ])
       setTables(t.items)
+      setRooms(t.rooms || [])
       setOrders(o.items || [])
     } catch (e: any) {
       toast.error(e.message)
@@ -571,7 +607,7 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
   }
 
   // Tables with open orders grid
-  const busyTables = tables.filter(t => t.openOrder)
+  const busyTables = tables.filter(t => t.openOrder && (selectedRoom === 'all' ? true : t.roomId === selectedRoom))
 
   return (
     <div className="p-4 sm:p-6">
@@ -579,6 +615,28 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
         <h2 className="text-2xl font-bold text-slate-900">💳 Kassir paneli</h2>
         <p className="text-sm text-slate-500">Band stollarni tanlab, to'lovni qabul qiling</p>
       </div>
+
+      {/* Room filter */}
+      {rooms.length > 0 && (
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <button
+            onClick={() => setSelectedRoom('all')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${selectedRoom === 'all' ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}
+          >
+            🏠 Hammasi
+          </button>
+          {rooms.map(r => (
+            <button
+              key={r.id}
+              onClick={() => setSelectedRoom(r.id)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 ${selectedRoom === r.id ? 'bg-emerald-500 text-white' : 'bg-white border border-slate-200 text-slate-700'}`}
+            >
+              <div className={`w-2 h-2 rounded-full bg-${r.color || 'emerald'}-500`}></div>
+              {r.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {busyTables.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400">
@@ -602,6 +660,12 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Band</span>
               </div>
               <div className="font-bold text-slate-900 text-lg">{t.name}</div>
+              {t.room && (
+                <div className="flex items-center gap-1 mb-1 text-xs text-slate-500">
+                  <div className={`w-1.5 h-1.5 rounded-full bg-${t.room.color || 'emerald'}-500`}></div>
+                  {t.room.name}
+                </div>
+              )}
               <div className="text-xs text-slate-500 mb-2">{t.openOrder.waiterName} • {formatDateTime(t.openOrder.createdAt)}</div>
               <div className="text-xs text-slate-500 mb-2">{t.openOrder.itemsCount} ta pozitsiya</div>
               <div className="text-xl font-bold text-emerald-600">{formatMoney(t.openOrder.total)}</div>

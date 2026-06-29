@@ -14,9 +14,9 @@ import ShiftsView from './ShiftsView'
 import KitchenDisplayView from './KitchenDisplayView'
 import ExportView from './ExportView'
 import NotificationsView from './NotificationsView'
-import { CustomersView, StaffView, TablesView, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView } from './CrudViews'
+import { CustomersView, StaffView, TablesViewWithRooms, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView, RoomsView } from './CrudViews'
 
-type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications'
+type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications'
 
 type Restaurant = {
   id: string
@@ -78,6 +78,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     section: 'Boshqaruv',
     items: [
       { key: 'staff', label: 'Xodimlar', icon: '👷' },
+      { key: 'rooms', label: 'Xonalar (Zal/VIP)', icon: '🏠' },
       { key: 'tables', label: 'Stollar', icon: '🪑' },
       { key: 'expenses', label: 'Chiqimlar', icon: '💸' },
       { key: 'shifts', label: 'Smenalar (Kassa)', icon: '💰' },
@@ -124,7 +125,8 @@ export default function DashboardLayout({
       case 'categories': return <CategoriesView />
       case 'customers': return <CustomersView />
       case 'staff': return <StaffView />
-      case 'tables': return <TablesView />
+      case 'tables': return <TablesViewWithRooms />
+      case 'rooms': return <RoomsView />
       case 'suppliers': return <SuppliersView />
       case 'expenses': return <ExpensesView />
       case 'reports': return <ReportsView />

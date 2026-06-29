@@ -65,6 +65,7 @@ model Restaurant {
   customers       Customer[]
   staff           Staff[]
   tables          RestaurantTable[]
+  rooms           Room[]
   sessions        Session[]
   orders          Order[]
   shifts          Shift[]
@@ -416,18 +417,46 @@ model StaffSession {
 model RestaurantTable {
   id            String   @id @default(cuid())
   restaurantId  String
+  roomId        String?  // xona (Zal, VIP, Tashqi) - ixtiyoriy
   name          String   // "Stol 1"
   seats         Int      @default(4)
   status        String   @default("free") // free | occupied | reserved
   createdAt     DateTime @default(now())
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  room          Room?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
   sales         Sale[]
   orders        Order[]
   reservations  Reservation[]
 
   @@index([restaurantId])
+  @@index([roomId])
 }
+
+// ============================================================
+// ROOMS - xonalar (Zal, VIP, Tashqi, etc.)
+// ============================================================
+model Room {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String   // "Asosiy zal", "VIP xona", "Tashqi terassa"
+  description   String?
+  // Rang (UI da farqlash uchun) - tailwind rang class
+  color         String   @default("emerald")
+  // Tartib raqami
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tables        RestaurantTable[]
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// ORDERS - ofitsiant yaratgan, kassir yopadigan buyurtmalar
 // ============================================================
 model Order {
   id            String   @id @default(cuid())
