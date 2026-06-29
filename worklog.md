@@ -712,3 +712,57 @@ Stage Summary:
 - 1 ta yangi modul (Menyu) + rasm yuklash funksiyasi
 - Endi jami 25 ta professional modul
 - Menyu, POS, va Ofitsiant panelida taom rasmlari ko'rinadi
+
+---
+Task ID: ERP-013
+Agent: Main agent (Super Z)
+Task: 100% ma'lumot Supabase cloud'ida saqlanishi - local saqlash yo'q
+
+Work Log:
+- Mavjud funksiyalar yo'qotilmadi
+- Tekshirildi: src/app/api/ da hech qanday local file write yo'q
+- @supabase/supabase-js o'rnatildi
+
+- Yangi: src/lib/supabase-storage.ts - Supabase Storage helper:
+  - getSupabase() - Supabase client (env yo'q bo'lsa null)
+  - isSupabaseStorageEnabled() - Supabase Storage yoqilganmi
+  - uploadToSupabaseStorage(buffer, fileName) - rasm yuklash
+  - deleteFromSupabaseStorage(fileName) - rasm o'chirish
+
+- /api/upload/product-image yangilandi:
+  - PRODUCTION: Supabase Storage'ga yuklash → public URL qaytaradi
+  - LOCAL DEV: base64 data URL (Supabase env yo'q bo'lsa fallback)
+  - Avtomatik: env bor → Supabase, env yo'q → base64
+  - Sharp bilan 800x800 px resize, JPEG 85% compress
+
+- .env va .env.example yangilandi:
+  - SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET_NAME
+  - Production'da Supabase Storage ishlatish uchun yo'riqnoma
+
+- next.config.ts yangilandi:
+  - serverExternalPackages: sharp qo'shildi
+  - images.remotePatterns: Supabase Storage URL'lari uchun
+  - bodySizeLimit: 10mb (rasm yuklash uchun)
+
+- DEPLOYMENT.md to'liq yangilandi:
+  - Supabase Storage bucket yaratish yo'riqnomasi
+  - Vercel environment variables (DATABASE_URL + SUPABASE_*)
+  - "Ma'lumotlar qayerda saqlanadi?" bo'limi
+  - Ofitsiant va kassa alohida kompyuterda ishlashi tushuntirildi
+
+- Production schema (PostgreSQL) local schema (SQLite) bilan sinxronlandi
+
+- Test natijalari:
+  ✅ Lint: 0 xato
+  ✅ Local file write yo'q (src/app/api/ da fs.writeFileSync yo'q)
+  ✅ Supabase Storage integratsiyasi tayyor
+  ✅ Base64 fallback ishlaydi (local dev)
+  ✅ next.config.ts Vercel uchun mos
+
+Stage Summary:
+- 100% ma'lumot Supabase cloud'ida saqlanadi
+- Local hech narsa saqlanmaydi
+- Rasmlar: Supabase Storage (production) / base64 (local dev fallback)
+- Database: Supabase PostgreSQL (production) / SQLite (local dev)
+- Ofitsiant va kassa alohida kompyuterda ishlay oladi (har ikkala Vercel+Supabase'ga ulanadi)
+- 25 ta modul yo'qotilmadi

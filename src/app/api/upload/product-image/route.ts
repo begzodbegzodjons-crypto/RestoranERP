@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentRestaurant } from '@/lib/auth'
 import sharp from 'sharp'
+import { uploadToSupabaseStorage, isSupabaseStorageEnabled } from '@/lib/supabase-storage'
+import crypto from 'crypto'
 
 // POST /api/upload/product-image - taom rasmini yuklash
-// Accepts: multipart/form-data with 'file' field
-// Returns: { success: true, imageUrl: 'data:image/jpeg;base64,...' }
+// Production: Supabase Storage (cloud)
+// Local dev: base64 data URL (Supabase env yo'q bo'lsa)
 export async function POST(req: NextRequest) {
   try {
     const restaurant = await getCurrentRestaurant()
@@ -39,13 +41,36 @@ export async function POST(req: NextRequest) {
       .jpeg({ quality: 85, mozjpeg: true })
       .toBuffer()
 
-    // Convert to base64 data URL (works everywhere: local + Vercel)
-    const dataUrl = `data:image/jpeg;base64,${processed.toString('base64')}`
+    // Generate unique filename
+    const fileName = `product-${restaurant.id}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`
+
+    let imageUrl: string
+    let storageType: string
+
+    if (isSupabaseStorageEnabled()) {
+      // PRODUCTION: Upload to Supabase Storage (cloud)
+      const publicUrl = await uploadToSupabaseStorage(processed, fileName, 'image/jpeg')
+
+      if (publicUrl) {
+        imageUrl = publicUrl
+        storageType = 'supabase'
+      } else {
+        // Fallback to base64 if Supabase upload fails
+        imageUrl = `data:image/jpeg;base64,${processed.toString('base64')}`
+        storageType = 'base64-fallback'
+      }
+    } else {
+      // LOCAL DEV: Use base64 data URL (no cloud storage configured)
+      imageUrl = `data:image/jpeg;base64,${processed.toString('base64')}`
+      storageType = 'base64'
+    }
 
     return NextResponse.json({
       success: true,
-      imageUrl: dataUrl,
-      size: processed.length
+      imageUrl,
+      storageType,
+      size: processed.length,
+      fileName: storageType === 'supabase' ? fileName : undefined
     })
   } catch (e: any) {
     console.error('Upload error:', e)
