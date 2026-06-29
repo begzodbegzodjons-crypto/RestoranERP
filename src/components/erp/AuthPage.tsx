@@ -63,7 +63,9 @@ export default function AuthPage({ onAuthed }: { onAuthed: () => void }) {
           </div>
 
           <h1 className="text-5xl xl:text-6xl 2xl:text-7xl font-bold leading-tight tracking-tight">
-            Restoraningizni <span className="shimmer-text">bir tizimda</span> boshqaring
+            <span className="hero-shimmer-wrapper">
+              <span className="hero-shimmer">Restoraningizni bir tizimda boshqaring</span>
+            </span>
           </h1>
 
           <p className="text-muted-foreground text-xl leading-relaxed">

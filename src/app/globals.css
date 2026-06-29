@@ -167,6 +167,110 @@
 }
 
 /* ============================================
+   HERO TITLE - to'liq yaltirash + nur + harakat
+   ============================================ */
+.hero-shimmer {
+  /* Base rang - HAR DOIM ko'rinadigan emerald (fallback) */
+  color: #047857;
+  -webkit-text-fill-color: #047857;
+
+  /* Multi-color gradient: emerald → teal → cyan → blue → purple → pink → orange → back */
+  background: linear-gradient(
+    90deg,
+    #047857 0%,
+    #059669 8%,
+    #10b981 14%,
+    #14b8a6 20%,
+    #06b6d4 28%,
+    #0ea5e9 35%,
+    #3b82f6 42%,
+    #8b5cf6 50%,
+    #d946ef 58%,
+    #ec4899 65%,
+    #f43f5e 72%,
+    #f97316 80%,
+    #eab308 86%,
+    #84cc16 92%,
+    #047857 100%
+  );
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Float + shimmer birgalikda */
+  animation: hero-multi-shimmer 6s linear infinite, hero-gentle-float 5s ease-in-out infinite;
+  display: inline-block;
+  position: relative;
+}
+
+@keyframes hero-multi-shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 300% center; }
+}
+
+@keyframes hero-gentle-float {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 2px 6px rgba(16, 185, 129, 0.3));
+  }
+  50% {
+    transform: translateY(-3px);
+    filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.4));
+  }
+}
+
+/* Nur effekti - yozuv ustidan oq nur o'tadi */
+.hero-shimmer-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.hero-shimmer-wrapper::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -100%;
+  width: 50%;
+  height: 140%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 40%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.4) 60%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: hero-light-pass 4s ease-in-out infinite;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+  filter: blur(1px);
+  z-index: 2;
+}
+
+@keyframes hero-light-pass {
+  0% { left: -100%; opacity: 0; }
+  30% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { left: 200%; opacity: 0; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .hero-shimmer,
+  .hero-shimmer-wrapper::after {
+    animation: none !important;
+  }
+  .hero-shimmer {
+    background: linear-gradient(135deg, #047857 0%, #10b981 50%, #047857 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* ============================================
    HERO TITLE ANIMATIONS - yaltirash + harakat + glow
    ============================================ */
 

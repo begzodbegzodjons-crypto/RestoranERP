@@ -218,3 +218,58 @@ Work Log:
 Stage Summary:
 - Avvalgi oddiy holga qaytarildi
 - Faqat "bir tizimda" so'zida shimmer-text effekti qoldi (referens sayt bilan bir xil)
+
+---
+Task ID: ERP-006
+Agent: Main agent (Super Z)
+Task: Butun "Restoraningizni bir tizimda boshqaring" yozuvini har xil ranglar bilan yaltirash + nur + harakat effekti
+
+Work Log:
+- Yangi CSS class `.hero-shimmer` yaratildi (avvalgi muammolardan saboq olgan holda):
+  - Base color: #047857 (HAR DOIM ko'rinadigan emerald fallback)
+  - 14 rangli gradient: emerald → teal → cyan → sky → blue → purple → fuchsia → pink → rose → orange → amber → yellow → lime → back to emerald
+  - background-size: 300% (kengaytirilgan yaltirash uchun)
+  - background-clip: text + -webkit-text-fill-color: transparent
+  - Animatsiya: hero-multi-shimmer (6s linear infinite) + hero-gentle-float (5s ease-in-out infinite)
+  - Float bilan drop-shadow filter (color 5s da emerald → purple o'zgaradi)
+
+- `.hero-shimmer-wrapper` yaratildi (nur effekti uchun):
+  - ::after pseudo-element orqali oq nur yozuv ustidan o'tadi
+  - skewX(-20deg) bilan diagonal
+  - mix-blend-mode: overlay
+  - animation: hero-light-pass 4s ease-in-out infinite
+
+- AuthPage.tsx H1 yangilandi:
+  ```jsx
+  <h1>
+    <span className="hero-shimmer-wrapper">
+      <span className="hero-shimmer">Restoraningizni bir tizimda boshqaring</span>
+    </span>
+  </h1>
+  ```
+
+- Reduced motion accessibility qo'shildi
+
+- Turbopack CSS cache tozalandi (.next removed, dev server restarted)
+
+- Test natijalari (agent-browser):
+  - color: rgb(4, 120, 87) ✓ (yorqin emerald base)
+  - background-image: 14 rangli gradient ✓
+  - animation: hero-multi-shimmer 6s + hero-gentle-float 5s ✓
+  - visible: true, width=512, height=224 ✓
+  - 6 screenshotda har xil ranglar aniqlangan:
+    - Phase 1: orange (246, 131, 19)
+    - Phase 2: cyan-blue (18, 189, 239)
+    - Phase 3: orange (249, 115, 22)
+    - Phase 4: cyan (14, 166, 233)
+    - Phase 5: yellow (252, 244, 15)
+    - Phase 6: cyan (14, 165, 233)
+  - Har screenshotda ~130,000 text piksel ✓
+  - Mobil va desktop responsiv ✓
+  - Lint: 0 xato ✓
+
+Stage Summary:
+- Butun yozuv endi 14 rangli gradient bilan yaltirayapti (emerald → teal → cyan → blue → purple → pink → rose → orange → yellow → lime)
+- Yozuv ustidan oq nur o'tadi (4s da)
+- Float harakati (5s da yuqoriga-pastga 3px) + drop-shadow glow
+- Yozuv HAR DOIM ko'rinadi (base color fallback bilan)
