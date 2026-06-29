@@ -392,3 +392,116 @@ export function CategoriesView() {
     ]}
   />
 }
+
+// ============== RESERVATIONS ==============
+export function ReservationsView() {
+  return <CrudView
+    title="Rezervatsiyalar"
+    emoji="📅"
+    endpoint="/api/reservations"
+    searchKey="customerName"
+    fields={[
+      { key: 'customerName', label: 'Mijoz ismi', required: true },
+      { key: 'phone', label: 'Telefon', type: 'tel', required: true, placeholder: '+998 90 123 45 67' },
+      { key: 'partySize', label: 'Mehmonlar soni', type: 'number', required: true },
+      { key: 'reservationDate', label: 'Sana (YYYY-MM-DD)', type: 'text', required: true, placeholder: '2026-01-15' },
+      { key: 'reservationTime', label: 'Vaqt (HH:MM)', type: 'text', required: true, placeholder: '19:30' },
+      { key: 'tableId', label: 'Stol (ixtiyoriy)' },
+      { key: 'status', label: 'Holat', type: 'select', options: [
+        { value: 'pending', label: '⏳ Kutilmoqda' },
+        { value: 'confirmed', label: '✓ Tasdiqlangan' },
+        { value: 'seated', label: '🍽️ O\'tirgan' },
+        { value: 'cancelled', label: '✗ Bekor qilingan' },
+        { value: 'no_show', label: '🚫 Kelmagan' }
+      ]},
+      { key: 'notes', label: 'Izoh', type: 'textarea' }
+    ]}
+    columns={[
+      { key: 'customerName', label: 'Mijoz', render: (i: any) => <div><div className="font-semibold text-slate-900">{i.customerName}</div><div className="text-xs text-slate-500">{i.phone}</div></div> },
+      { key: 'partySize', label: 'Mehmonlar', className: 'text-right', render: (i: any) => `${i.partySize} kishi` },
+      { key: 'reservationDate', label: 'Sana', render: (i: any) => <div><div className="text-sm">{new Date(i.reservationDate).toLocaleDateString('uz-UZ')}</div><div className="text-xs text-slate-500">{i.reservationTime}</div></div> },
+      { key: 'table', label: 'Stol', render: (i: any) => i.table?.name || '—' },
+      { key: 'status', label: 'Holat', render: (i: any) => {
+        const m: Record<string, { label: string; cls: string }> = {
+          pending: { label: '⏳ Kutilmoqda', cls: 'bg-amber-100 text-amber-700' },
+          confirmed: { label: '✓ Tasdiqlangan', cls: 'bg-emerald-100 text-emerald-700' },
+          seated: { label: '🍽️ O\'tirgan', cls: 'bg-blue-100 text-blue-700' },
+          cancelled: { label: '✗ Bekor', cls: 'bg-red-100 text-red-700' },
+          no_show: { label: '🚫 Kelmagan', cls: 'bg-slate-100 text-slate-700' }
+        }
+        const s = m[i.status] || m.pending
+        return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${s.cls}`}>{s.label}</span>
+      }}
+    ]}
+  />
+}
+
+// ============== COUPONS ==============
+export function CouponsView() {
+  return <CrudView
+    title="Kuponlar"
+    emoji="🏷️"
+    endpoint="/api/coupons"
+    searchKey="code"
+    fields={[
+      { key: 'code', label: 'Kod', required: true, placeholder: 'OSH10, YANGIYIL25, ...' },
+      { key: 'description', label: 'Tavsif', type: 'textarea' },
+      { key: 'discountType', label: 'Chegirma turi', type: 'select', required: true, options: [
+        { value: 'percent', label: 'Foiz (%)' },
+        { value: 'fixed', label: 'Summa (UZS)' }
+      ]},
+      { key: 'discountValue', label: 'Qiymat', type: 'number', required: true, placeholder: '10 (foiz) yoki 10000 (summa)' },
+      { key: 'minOrder', label: 'Min buyurtma (UZS)', type: 'number', placeholder: '0' },
+      { key: 'maxUses', label: 'Max ishlatish (0=cheksiz)', type: 'number', placeholder: '0' },
+      { key: 'validUntil', label: 'Tugash sanasi (YYYY-MM-DD)', type: 'text', placeholder: '2026-12-31' },
+      { key: 'isActive', label: 'Faol', type: 'select', options: [
+        { value: 'true', label: 'Ha' },
+        { value: 'false', label: 'Yo\'q' }
+      ]}
+    ]}
+    columns={[
+      { key: 'code', label: 'Kod', render: (i: any) => <code className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">{i.code}</code> },
+      { key: 'discount', label: 'Chegirma', render: (i: any) => i.discountType === 'percent' ? `${i.discountValue}%` : formatMoney(i.discountValue) },
+      { key: 'usedCount', label: 'Ishlatilgan', className: 'text-right', render: (i: any) => `${i.usedCount}${i.maxUses > 0 ? `/${i.maxUses}` : ''}` },
+      { key: 'validUntil', label: 'Muddat', render: (i: any) => i.validUntil ? new Date(i.validUntil).toLocaleDateString('uz-UZ') : '∞' },
+      { key: 'isActive', label: 'Holat', render: (i: any) => (
+        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${i.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+          {i.isActive ? 'Faol' : 'Nofaol'}
+        </span>
+      )}
+    ]}
+  />
+}
+
+// ============== CUSTOMER DEBTS ==============
+export function DebtsView() {
+  return <CrudView
+    title="Mijoz qarzlari"
+    emoji="💳"
+    endpoint="/api/customer-debts"
+    searchKey="customerName"
+    fields={[
+      { key: 'customerName', label: 'Mijoz ismi', required: true },
+      { key: 'phone', label: 'Telefon', type: 'tel', required: true },
+      { key: 'amount', label: 'Qarz summasi (UZS)', type: 'number', required: true },
+      { key: 'dueDate', label: 'To\'lash muddati (YYYY-MM-DD)', type: 'text', placeholder: '2026-02-01' },
+      { key: 'notes', label: 'Izoh', type: 'textarea' }
+    ]}
+    columns={[
+      { key: 'customerName', label: 'Mijoz', render: (i: any) => <div><div className="font-semibold text-slate-900">{i.customerName}</div><div className="text-xs text-slate-500">{i.phone}</div></div> },
+      { key: 'amount', label: 'Qarz', className: 'text-right', render: (i: any) => <span className="font-bold text-red-500">{formatMoney(i.amount)}</span> },
+      { key: 'paidAmount', label: 'To\'langan', className: 'text-right', render: (i: any) => <span className="font-semibold text-emerald-600">{formatMoney(i.paidAmount)}</span> },
+      { key: 'remaining', label: 'Qolgan', className: 'text-right', render: (i: any) => <span className="font-bold text-orange-600">{formatMoney(i.remaining)}</span> },
+      { key: 'dueDate', label: 'Muddat', render: (i: any) => i.dueDate ? new Date(i.dueDate).toLocaleDateString('uz-UZ') : '—' },
+      { key: 'status', label: 'Holat', render: (i: any) => {
+        const m: Record<string, { label: string; cls: string }> = {
+          unpaid: { label: 'To\'lanmagan', cls: 'bg-red-100 text-red-700' },
+          partial: { label: 'Qisman', cls: 'bg-amber-100 text-amber-700' },
+          paid: { label: 'To\'langan', cls: 'bg-emerald-100 text-emerald-700' }
+        }
+        const s = m[i.status] || m.unpaid
+        return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${s.cls}`}>{s.label}</span>
+      }}
+    ]}
+  />
+}

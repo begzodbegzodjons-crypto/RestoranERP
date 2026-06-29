@@ -29,6 +29,11 @@ model Restaurant {
   taxRate         Float    @default(0.0)
   // Ofitsiant xizmati foizi (avtomatik to'lovga qo'shiladi)
   serviceChargePercent Float @default(0.0)
+  // QQS solig'i foizi (O'zbekistonda 12%)
+  vatRate         Float    @default(0.0)
+  // Telegram bot uchun (notif yuborish)
+  telegramBotToken String?
+  telegramChatId  String?
 
   // Trial / Activation logic
   status          String   @default("trial") // trial | active | blocked
@@ -62,6 +67,11 @@ model Restaurant {
   tables          RestaurantTable[]
   sessions        Session[]
   orders          Order[]
+  shifts          Shift[]
+  reservations    Reservation[]
+  coupons         Coupon[]
+  customerDebts   CustomerDebt[]
+  notifications   Notification[]
 }
 
 // Session for restaurant login
@@ -346,10 +356,14 @@ model Customer {
   notes         String?
   totalOrders   Int      @default(0)
   totalSpent    Float    @default(0)
+  // Loyalty dasturi
+  loyaltyPoints Int      @default(0)
+  birthday      DateTime?
   createdAt     DateTime @default(now())
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   sales         Sale[]
+  debts         CustomerDebt[]
 
   @@index([restaurantId])
 }
@@ -378,6 +392,7 @@ model Staff {
   staffSessions StaffSession[]
   ordersAsWaiter  Order[] @relation("OrderWaiter")  // ofitsiant yaratgan buyurtmalar
   ordersAsCashier Order[] @relation("OrderCashier") // kassir yopgan buyurtmalar
+  shifts        Shift[]   @relation("ShiftStaff")   // kassir smenalari
 
   @@index([restaurantId])
 }
@@ -409,12 +424,10 @@ model RestaurantTable {
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   sales         Sale[]
   orders        Order[]
+  reservations  Reservation[]
 
   @@index([restaurantId])
 }
-
-// ============================================================
-// ORDERS - ofitsiant yaratgan, kassir yopadigan buyurtmalar
 // ============================================================
 model Order {
   id            String   @id @default(cuid())
@@ -423,7 +436,14 @@ model Order {
   waiterId      String   // ofitsiant (Staff)
   cashierId     String?  // kassir (Staff) - to'lovni qabul qilgan
   status        String   @default("open") // open (ofitsiant yubordi) | paid (kassir yopdi) | cancelled
+  // KDS - oshpaz ekrani uchun
+  kitchenStatus String   @default("new") // new | cooking | ready | served
+  kitchenStartedAt DateTime?
+  kitchenReadyAt  DateTime?
   invoiceNo     String?
+
+  // Shift bog'lash
+  shiftId       String?
 
   subtotal      Float    @default(0)
   serviceChargePercent Float @default(0)
@@ -492,4 +512,134 @@ model AdminLog {
   detail        String?
   ip            String?
   createdAt     DateTime @default(now())
+}
+
+// ============================================================
+// SHIFT - kassir smenasi (open/close + Z-otchet)
+// ============================================================
+model Shift {
+  id            String    @id @default(cuid())
+  restaurantId  String
+  staffId       String    // kassir
+  status        String    @default("open") // open | closed
+  // Boshlang'ich naqd kassada
+  openingCash   Float     @default(0)
+  // Yopilganda - hisoblangan va haqiqiy naqd
+  expectedCash  Float     @default(0)
+  closingCash   Float     @default(0)
+  cashDiff      Float     @default(0) // closing - expected (ortiqcha/yo'qotish)
+  // Smena davomida to'plangan
+  totalSales    Float     @default(0)
+  cashSales     Float     @default(0)
+  cardSales     Float     @default(0)
+  transferSales Float     @default(0)
+  orderCount    Int       @default(0)
+  // Vaqt
+  openedAt      DateTime  @default(now())
+  closedAt      DateTime?
+  notes         String?
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  staff         Staff     @relation("ShiftStaff", fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
+  @@index([staffId])
+}
+
+// ============================================================
+// RESERVATION - stol rezervatsiyasi
+// ============================================================
+model Reservation {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  tableId       String?
+  customerName  String
+  phone         String
+  partySize     Int       @default(2)
+  reservationDate DateTime
+  reservationTime String  // "19:30"
+  status        String   @default("pending") // pending | confirmed | seated | cancelled | no_show
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table         RestaurantTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId, reservationDate])
+  @@index([status])
+}
+
+// ============================================================
+// COUPON - chegirma kuponlari
+// ============================================================
+model Coupon {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  code          String   // "OSH10" - unique within restaurant
+  description   String?
+  // Type: percent (foiz) | fixed (summa)
+  discountType  String   @default("percent") // percent | fixed
+  discountValue Float    // 10 means 10% or 10000 UZS
+  // Min buyurtma summasi (chegirma ishlashi uchun)
+  minOrder      Float    @default(0)
+  // Foydalanish chegarasi
+  maxUses       Int      @default(0) // 0 = cheksiz
+  usedCount     Int      @default(0)
+  // Muddat
+  validFrom     DateTime @default(now())
+  validUntil    DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, code])
+  @@index([restaurantId, isActive])
+}
+
+// ============================================================
+// CUSTOMER DEBT - mijoz qarzi
+// ============================================================
+model CustomerDebt {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  customerId    String?
+  customerName  String
+  phone         String
+  // Qarz
+  amount        Float
+  paidAmount    Float    @default(0)
+  remaining     Float    @default(0)
+  status        String   @default("unpaid") // unpaid | partial | paid
+  dueDate       DateTime?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customer      Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId, status])
+  @@index([customerId])
+}
+
+// ============================================================
+// NOTIFICATION - bildirishnomalar (Telegram/email uchun)
+// ============================================================
+model Notification {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  type          String   // new_order | low_stock | shift_closed | reservation | payment | debt
+  title         String
+  message       String
+  // receiver: who should see this
+  audience      String   @default("all") // all | admin | kitchen | cashier | waiter
+  isRead        Boolean  @default(false)
+  metadata      String?  // JSON string with extra data
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, isRead])
+  @@index([restaurantId, audience])
 }

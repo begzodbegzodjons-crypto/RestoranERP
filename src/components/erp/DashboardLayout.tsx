@@ -10,9 +10,13 @@ import SalesView from './SalesView'
 import ReportsView from './ReportsView'
 import SettingsView from './SettingsView'
 import StaffMode from './StaffMode'
-import { CustomersView, StaffView, TablesView, SuppliersView, CategoriesView, ExpensesView } from './CrudViews'
+import ShiftsView from './ShiftsView'
+import KitchenDisplayView from './KitchenDisplayView'
+import ExportView from './ExportView'
+import NotificationsView from './NotificationsView'
+import { CustomersView, StaffView, TablesView, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView } from './CrudViews'
 
-type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode'
+type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications'
 
 type Restaurant = {
   id: string
@@ -36,7 +40,8 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     items: [
       { key: 'dashboard', label: 'Boshqaruv paneli', icon: '📊' },
       { key: 'pos', label: 'POS Kassa', icon: '💳' },
-      { key: 'reports', label: 'Hisobotlar', icon: '📈' }
+      { key: 'reports', label: 'Hisobotlar', icon: '📈' },
+      { key: 'notifications', label: 'Bildirishnomalar', icon: '🔔' }
     ]
   },
   {
@@ -58,7 +63,15 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     section: 'Savdo',
     items: [
       { key: 'sales', label: 'Savdo tarixi', icon: '🧾' },
-      { key: 'customers', label: 'Mijozlar (CRM)', icon: '👥' }
+      { key: 'customers', label: 'Mijozlar (CRM)', icon: '👥' },
+      { key: 'debts', label: 'Mijoz qarzlari', icon: '💳' }
+    ]
+  },
+  {
+    section: 'Marketing',
+    items: [
+      { key: 'coupons', label: 'Kuponlar', icon: '🏷️' },
+      { key: 'reservations', label: 'Rezervatsiyalar', icon: '📅' }
     ]
   },
   {
@@ -67,6 +80,9 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'staff', label: 'Xodimlar', icon: '👷' },
       { key: 'tables', label: 'Stollar', icon: '🪑' },
       { key: 'expenses', label: 'Chiqimlar', icon: '💸' },
+      { key: 'shifts', label: 'Smenalar (Kassa)', icon: '💰' },
+      { key: 'kitchen', label: 'Oshpaz ekrani (KDS)', icon: '🍳' },
+      { key: 'export', label: 'Eksport (Excel)', icon: '📤' },
       { key: 'settings', label: 'Sozlamalar', icon: '⚙️' }
     ]
   },
@@ -113,6 +129,13 @@ export default function DashboardLayout({
       case 'expenses': return <ExpensesView />
       case 'reports': return <ReportsView />
       case 'settings': return <SettingsView restaurant={restaurant} access={access} onLogout={onLogout} />
+      case 'shifts': return <ShiftsView />
+      case 'kitchen': return <KitchenDisplayView />
+      case 'reservations': return <ReservationsView />
+      case 'coupons': return <CouponsView />
+      case 'debts': return <DebtsView />
+      case 'export': return <ExportView />
+      case 'notifications': return <NotificationsView />
       case 'staffmode': return (
         <div className="-m-4 sm:-m-6 lg:-m-8">
           <StaffMode

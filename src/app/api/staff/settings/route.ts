@@ -11,34 +11,51 @@ export async function GET() {
     return NextResponse.json({
       serviceChargePercent: restaurant.serviceChargePercent,
       taxRate: restaurant.taxRate,
-      currency: restaurant.currency
+      vatRate: restaurant.vatRate,
+      currency: restaurant.currency,
+      telegramBotToken: restaurant.telegramBotToken ? 'configured' : null
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
 
-// PUT /api/staff/settings - service charge yangilash
+// PUT /api/staff/settings - service charge / VAT / telegram yangilash
 export async function PUT(req: NextRequest) {
   try {
     const restaurant = await getCurrentRestaurant()
     if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
 
     const body = await req.json()
-    const serviceChargePercent = parseFloat(body.serviceChargePercent) || 0
+    const updates: any = {}
 
-    if (serviceChargePercent < 0 || serviceChargePercent > 100) {
-      return NextResponse.json({ error: 'Foiz 0-100 orasida bo\'lishi kerak' }, { status: 400 })
+    if (body.serviceChargePercent != null) {
+      const v = parseFloat(body.serviceChargePercent)
+      if (v < 0 || v > 100) return NextResponse.json({ error: 'Xizmat foizi 0-100 orasida' }, { status: 400 })
+      updates.serviceChargePercent = v
+    }
+    if (body.vatRate != null) {
+      const v = parseFloat(body.vatRate)
+      if (v < 0 || v > 100) return NextResponse.json({ error: 'QQS 0-100 orasida' }, { status: 400 })
+      updates.vatRate = v
+    }
+    if (body.telegramBotToken !== undefined) {
+      updates.telegramBotToken = body.telegramBotToken || null
+    }
+    if (body.telegramChatId !== undefined) {
+      updates.telegramChatId = body.telegramChatId || null
     }
 
     const updated = await db.restaurant.update({
       where: { id: restaurant.id },
-      data: { serviceChargePercent }
+      data: updates
     })
 
     return NextResponse.json({
       success: true,
-      serviceChargePercent: updated.serviceChargePercent
+      serviceChargePercent: updated.serviceChargePercent,
+      vatRate: updated.vatRate,
+      telegramConfigured: !!updated.telegramBotToken
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

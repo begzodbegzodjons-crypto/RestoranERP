@@ -401,3 +401,86 @@ Stage Summary:
   - Chek printerda chop etiladi (ofitsiant, kassir, taomlar, summa bilan)
   - Ofitsiant xizmati % sozlamalardan avtomatik to'lovga qo'shiladi
   - Hammasi ERP sales tarixiga yoziladi (sana, soat, ofitsiant, kassir)
+
+---
+Task ID: ERP-009
+Agent: Main agent (Super Z)
+Task: Professional ERP darajaga ko'tarish - 8 ta yangi modul qo'shish (mavjud funksiyalarni yo'qotmasdan)
+
+Work Log:
+- Mavjud funksiyalar SAQLANDI - hech narsa o'zgartirilmadi
+- Prisma schema'ga 5 ta yangi model qo'shildi:
+  1. Shift - kassir smenasi (open/close, opening/closing cash, Z-otchet)
+  2. Reservation - stol rezervatsiyasi (status: pending/confirmed/seated/cancelled/no_show)
+  3. Coupon - chegirma kuponlari (percent/fixed, maxUses, validUntil)
+  4. CustomerDebt - mijoz qarzlari (amount, paidAmount, remaining, status)
+  5. Notification - bildirishnomalar (type, audience, isRead)
+
+- Restaurant modeliga qo'shildi:
+  - vatRate Float (QQS solig'i %)
+  - telegramBotToken, telegramChatId (Telegram bot uchun)
+
+- Customer modeliga qo'shildi:
+  - loyaltyPoints Int (loyalty dasturi ballari)
+  - birthday DateTime
+
+- Order modeliga qo'shildi:
+  - kitchenStatus (new/cooking/ready/served) - KDS uchun
+  - kitchenStartedAt, kitchenReadyAt - vaqt kuzatuvi
+  - shiftId - smenaga bog'lash
+
+- Yangi API endpointlar (15+ ta):
+  - /api/shifts (GET, POST) - smena ro'yxati va ochish
+  - /api/shifts/current (GET) - joriy smena + live totals
+  - /api/shifts/close (POST) - smena yopish + Z-otchet
+  - /api/reservations (GET, POST) + /api/reservations/[id] (PUT, DELETE)
+  - /api/coupons (GET, POST) + /api/coupons/[id] (PUT, DELETE)
+  - /api/coupons/[id]/validate (POST) - kupon validatsiyasi
+  - /api/customer-debts (GET, POST) + /api/customer-debts/[id] (PUT, DELETE)
+  - /api/customer-debts/[id]/pay (POST) - qarz to'lash
+  - /api/kitchen/orders (GET) - oshpaz uchun buyurtmalar
+  - /api/kitchen/orders/[id] (PUT) - kitchen status o'zgartirish
+  - /api/export/sales, /api/export/products, /api/export/customals - CSV eksport
+  - /api/notifications (GET) + /api/notifications/[id]/read (POST)
+  - /api/audit-logs (GET) - admin harakatlar tarixi
+
+- staff/settings API yangilandi: vatRate, telegramBotToken, telegramChatId qo'shildi
+
+- Yangi UI komponentlar:
+  1. ShiftsView - smena ochish/yopish + Z-otchet modal (kassir summasi, farq, ortiqcha/yo'qotish)
+  2. KitchenDisplayView - oshpaz ekrani (kartochkalar, auto-refresh 10s, status tugmalari)
+  3. ExportView - eksport markazi (3 ta: sales, products, customers CSV)
+  4. NotificationsView - bildirishnomalar (filter, mark read, type-based colors)
+  5. ReservationsView, CouponsView, DebtsView (CrudViews.tsx ga qo'shildi)
+
+- DashboardLayout yangilandi:
+  - 22 ta modul (avval 14 ta edi)
+  - Yangi sidebar bo'limlari: Marketing (Kuponlar, Rezervatsiyalar)
+  - Boshqaruv'ga: Smenalar, Oshpaz ekrani, Eksport qo'shildi
+  - Asosiy'ga: Bildirishnomalar qo'shildi
+
+- SettingsView yangilandi:
+  - 🏛️ QQS solig'i foizi sozlamasi
+  - 📱 Telegram bot integratsiyasi (Bot Token + Chat ID)
+
+- Test natijalari (API + browser verified):
+  ✅ Smena ochish: 50,000 UZS boshlang'ich
+  ✅ Smena yopish: 55,000 haqiqiy, farq +5,000 (ortiqcha)
+  ✅ Z-otchet to'liq ma'lumot bilan
+  ✅ KDS workflow: new → cooking (kitchenStartedAt) → ready (kitchenReadyAt)
+  ✅ Kupon validatsiyasi: 100,000 + 25% = 25,000 chegirma
+  ✅ Qarz yaratish: 150,000 UZS
+  ✅ Qarz to'lash: 50,000 → status partial, qolgan 100,000
+  ✅ Export sales CSV (UTF-8 BOM bilan - Excel da o'zbek harflari to'g'ri)
+  ✅ Export products CSV
+  ✅ Notifications: 4 ta (debt, kitchen_ready, reservation)
+  ✅ Barcha 22 ta modul sidebar'da ko'rinmoqda
+  ✅ Lint: 0 xato
+
+Stage Summary:
+- Mavjud funksiyalar yo'qotilmadi
+- 8 ta yangi professional modul qo'shildi
+- 22 ta modul bilan to'liq enterprise ERP
+- 15+ yangi API endpoint
+- 5 ta yangi Prisma model
+- Production schema (PostgreSQL) ham yangilandi

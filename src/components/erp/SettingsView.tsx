@@ -30,10 +30,18 @@ export default function SettingsView({
 }) {
   const [confirming, setConfirming] = useState(false)
   const [serviceCharge, setServiceCharge] = useState(0)
+  const [vatRate, setVatRate] = useState(0)
+  const [telegramToken, setTelegramToken] = useState('')
+  const [telegramChatId, setTelegramChatId] = useState('')
   const [savingCharge, setSavingCharge] = useState(false)
+  const [savingVat, setSavingVat] = useState(false)
+  const [savingTelegram, setSavingTelegram] = useState(false)
 
   useEffect(() => {
-    api('/api/staff/settings').then(r => setServiceCharge(r.serviceChargePercent || 0)).catch(() => {})
+    api('/api/staff/settings').then(r => {
+      setServiceCharge(r.serviceChargePercent || 0)
+      setVatRate(r.vatRate || 0)
+    }).catch(() => {})
   }, [])
 
   const saveServiceCharge = async () => {
@@ -48,6 +56,39 @@ export default function SettingsView({
       toast.error(e.message)
     } finally {
       setSavingCharge(false)
+    }
+  }
+
+  const saveVat = async () => {
+    setSavingVat(true)
+    try {
+      await api('/api/staff/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ vatRate })
+      })
+      toast.success('QQS solig\'i saqlandi')
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setSavingVat(false)
+    }
+  }
+
+  const saveTelegram = async () => {
+    setSavingTelegram(true)
+    try {
+      await api('/api/staff/settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          telegramBotToken: telegramToken || null,
+          telegramChatId: telegramChatId || null
+        })
+      })
+      toast.success('Telegram bot sozlamalari saqlandi')
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setSavingTelegram(false)
     }
   }
 
@@ -113,6 +154,80 @@ export default function SettingsView({
         </div>
         <div className="mt-3 text-xs text-slate-500">
           Misol: 100,000 UZS buyurtma + 10% xizmat = <span className="font-semibold text-emerald-600">110,000 UZS</span>
+        </div>
+      </div>
+
+      {/* VAT / QQS settings */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <h3 className="font-bold text-slate-900 mb-2">🏛️ QQS solig'i foizi</h3>
+        <p className="text-slate-500 text-sm mb-4">
+          Chek va hisobotlarda QQS alohida ko'rsatiladi. O'zbekistonda odatda 12%.
+        </p>
+        <div className="flex gap-3 items-center">
+          <div className="flex-1">
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={vatRate}
+                onChange={e => setVatRate(parseFloat(e.target.value) || 0)}
+                className="erp-input pr-12"
+                placeholder="0"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">%</span>
+            </div>
+          </div>
+          <button
+            onClick={saveVat}
+            disabled={savingVat}
+            className="px-6 py-3 rounded-xl bg-emerald-500 text-white font-bold disabled:opacity-50 hover:bg-emerald-600"
+          >
+            {savingVat ? 'Saqlanmoqda...' : 'Saqlash'}
+          </button>
+        </div>
+        <div className="mt-3 text-xs text-slate-500">
+          Misol: 100,000 UZS + 12% QQS = <span className="font-semibold text-slate-700">112,000 UZS</span>
+        </div>
+      </div>
+
+      {/* Telegram bot settings */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <h3 className="font-bold text-slate-900 mb-2">📱 Telegram bot integratsiyasi</h3>
+        <p className="text-slate-500 text-sm mb-4">
+          Yangi buyurtma, smena yopilish, ombor tugashi kabi holatlarda Telegram'ga xabar yuboriladi.
+        </p>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Bot Token</label>
+            <input
+              type="text"
+              value={telegramToken}
+              onChange={e => setTelegramToken(e.target.value)}
+              className="erp-input font-mono text-sm"
+              placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+            />
+            <p className="text-xs text-slate-500 mt-1">@BotFather dan oling</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Chat ID</label>
+            <input
+              type="text"
+              value={telegramChatId}
+              onChange={e => setTelegramChatId(e.target.value)}
+              className="erp-input font-mono text-sm"
+              placeholder="-1001234567890"
+            />
+            <p className="text-xs text-slate-500 mt-1">@userinfobot dan oling yoki kanal ID si</p>
+          </div>
+          <button
+            onClick={saveTelegram}
+            disabled={savingTelegram}
+            className="px-6 py-2.5 rounded-xl bg-blue-500 text-white font-bold disabled:opacity-50 hover:bg-blue-600"
+          >
+            {savingTelegram ? 'Saqlanmoqda...' : '💬 Telegram sozlash'}
+          </button>
         </div>
       </div>
 
