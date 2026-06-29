@@ -19,6 +19,7 @@ import IntegrationsView from './IntegrationsView'
 import MenuView from './MenuView'
 import PrintersView from './PrintersView'
 import PrintQueueView from './PrintQueueView'
+import AutoPrintMonitor from './AutoPrintMonitor'
 import { CustomersView, StaffView, TablesViewWithRooms, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView, RoomsView } from './CrudViews'
 
 type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'printqueue'
@@ -269,6 +270,9 @@ export default function DashboardLayout({
           {renderView()}
         </div>
       </main>
+
+      {/* AutoPrintMonitor - avtomatik print (har sahifada ishlaydi, staffmode bundan tashqari) */}
+      {view !== 'staffmode' && <AutoPrintMonitor />}
     </div>
   )
 }

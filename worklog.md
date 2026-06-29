@@ -833,3 +833,57 @@ Stage Summary:
 - Kassir print queue'da har bir printer uchun cheklarni bosib chiqaradi
 - Hammasi kassa kompyuterida (printerlar kassaga ulangan)
 - Endi jami 27 ta professional modul
+
+---
+Task ID: ERP-015
+Agent: Main agent (Super Z)
+Task: Avtomatik print - ofitsiant buyurtma bosganda, kassir aralashmasdan avtomatik print
+
+Work Log:
+- Mavjud funksiyalar yo'qotilmadi
+- Prisma schema yangilandi:
+  - PrinterStation ga: autoPrint Boolean (default true), printerIp String?
+  - PrintJob ga: autoPrintReady Boolean (default false) - avtomatik print uchun flag
+
+- Yangi API: /api/print-jobs/auto
+  - autoPrintReady=true va status=pending bo'lgan joblarni qaytaradi
+  - AutoPrintMonitor komponenti har 2s chaqiradi
+
+- staff/orders POST yangilandi:
+  - Print job yaratganda autoPrintReady=station.autoPrint qiladi
+  - Agar printerda autoPrint yoqilgan bo'lsa, job avtomatik print uchun tayyor
+
+- Yangi UI: AutoPrintMonitor.tsx - avtomatik print monitoring
+  - Har 2 soniyada /api/print-jobs/auto ni tekshiradi
+  - Yangi job bo'lsa, hidden iframe yaratadi
+  - Iframe ga chek content yoziladi (80mm format)
+  - iframe.contentWindow.print() avtomatik chaqiriladi
+  - Print dialog ochiladi - printer tanlanadi
+  - Print tugagach job "printed" deb belgilanadi
+  - Dublicat oldini olish: printingJobs Set
+  - UI: pastki o'ng burchakda status indikator (yashil nuqta)
+  - Print paytida: yuqori o'ng burchakda notification (printer nomi, stol)
+
+- PrintersView yangilandi:
+  - Printer formaga autoPrint toggle qo'shildi (⚡ Avtomatik print)
+  - Printer IP maydoni qo'shildi (kelajak uchun)
+  - Printer kartochkasida "⚡ Avto-print" yoki "Qo'lda" badge
+
+- DashboardLayout yangilandi:
+  - AutoPrintMonitor har sahifada ishlaydi (staffmode bundan tashqari)
+  - Background da ishlaydi - foydalanuvchi ko'rmaydi
+
+- Test natijalari:
+  ✅ 3 ta printerda autoPrint=True (Shashlik, Oshpaz, Bar)
+  ✅ Ofitsiant 3 shashlik + 2 cola buyurtma bosdi
+  ✅ 2 ta print job autoPrintReady=true bilan yaratildi
+  ✅ /api/print-jobs/auto: 2 ta job qaytardi
+  ✅ AutoPrintMonitor browser'da render qilingan (yashil nuqta indikator)
+  ✅ Lint: 0 xato
+
+Stage Summary:
+- Kassir aralashmaydi - ofitsiant buyurtma bosganda avtomatik print
+- Har 2 soniyada tekshiriladi, yangi job bo'lsa darhol print
+- Brauzer print dialogi avtomatik ochiladi (har printer uchun alohida)
+- Sozlamalarda har printer uchun autoPrint yoqib/o'chiriladi
+- Mavjud 27 ta modul yo'qotilmadi

@@ -189,13 +189,20 @@ export async function POST(req: NextRequest) {
     }
 
     // Create a print job for each printer station
+    // autoPrintReady = true agar printerda autoPrint yoqilgan bo'lsa
     for (const [printerStationId, stationItems] of printJobMap) {
+      // Get printer station to check autoPrint setting
+      const station = await db.printerStation.findUnique({
+        where: { id: printerStationId }
+      })
+
       const content = JSON.stringify({
         orderNo: order.invoiceNo,
         table: order.table.name,
         waiter: order.waiter.name,
         createdAt: order.createdAt,
-        items: stationItems
+        items: stationItems,
+        printerStationName: station?.name || 'Printer'
       })
 
       await db.printJob.create({
@@ -204,7 +211,8 @@ export async function POST(req: NextRequest) {
           orderId: order.id,
           printerStationId,
           status: 'pending',
-          content
+          content,
+          autoPrintReady: station?.autoPrint ?? true
         }
       })
     }

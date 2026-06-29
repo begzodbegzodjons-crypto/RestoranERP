@@ -132,13 +132,22 @@ export default function PrintersView() {
                   <button onClick={() => del(s)} className="text-xs px-2 py-1 rounded bg-red-50 text-red-600 hover:bg-red-100">🗑️</button>
                 </div>
               </div>
-              <div className="flex gap-3 text-xs">
+              <div className="flex gap-3 text-xs flex-wrap">
                 <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
                   {s._count?.categories || 0} ta kategoriya
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                   {s._count?.printJobs || 0} ta print job
                 </span>
+                {s.autoPrint !== false ? (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">
+                    ⚡ Avto-print
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                    Qo'lda
+                  </span>
+                )}
               </div>
             </div>
           ))
@@ -212,7 +221,9 @@ function PrinterForm({ station, onClose, onSaved }: {
     name: station?.name || '',
     description: station?.description || '',
     sortOrder: station?.sortOrder || 0,
-    isActive: station?.isActive ?? true
+    isActive: station?.isActive ?? true,
+    autoPrint: station?.autoPrint ?? true,
+    printerIp: station?.printerIp || ''
   })
   const [saving, setSaving] = useState(false)
 
@@ -257,6 +268,40 @@ function PrinterForm({ station, onClose, onSaved }: {
             placeholder="Masalan: Gril taomlar uchun printer"
           />
         </div>
+
+        {/* Auto-print toggle */}
+        <div className={`rounded-xl p-4 border-2 ${form.autoPrint ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.autoPrint}
+              onChange={e => setForm({ ...form, autoPrint: e.target.checked })}
+              className="w-5 h-5 mt-0.5"
+            />
+            <div>
+              <div className="font-semibold text-slate-900 flex items-center gap-2">
+                ⚡ Avtomatik print
+                {form.autoPrint && <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Yoqilgan</span>}
+              </div>
+              <p className="text-xs text-slate-600 mt-1">
+                Ofitsiant buyurtma bosganda, chek avtomatik shu printerdan chop etiladi.
+                Kassir aralashmaydi — brauzer print dialogi avtomatik ochiladi.
+              </p>
+            </div>
+          </label>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Printer IP (ixtiyoriy, kelajak uchun)</label>
+          <input
+            className="erp-input font-mono text-sm"
+            value={form.printerIp}
+            onChange={e => setForm({ ...form, printerIp: e.target.value })}
+            placeholder="192.168.1.100"
+          />
+          <p className="text-xs text-slate-500 mt-1">Local network printer IP manzili (Ethernet printer uchun)</p>
+        </div>
+
         <div className="flex gap-3 pt-2">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">Bekor</button>
           <button onClick={save} disabled={saving} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-bold disabled:opacity-50">

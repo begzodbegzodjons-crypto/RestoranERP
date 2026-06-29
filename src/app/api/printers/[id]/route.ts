@@ -21,7 +21,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         name: body.name,
         description: body.description,
         sortOrder: parseInt(body.sortOrder) || 0,
-        isActive: body.isActive
+        isActive: body.isActive,
+        autoPrint: body.autoPrint,
+        printerIp: body.printerIp || undefined
       }
     })
     return NextResponse.json({ item: updated })

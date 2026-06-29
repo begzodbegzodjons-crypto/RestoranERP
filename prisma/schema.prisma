@@ -689,6 +689,11 @@ model PrinterStation {
   description   String?
   sortOrder     Int      @default(0)
   isActive      Boolean  @default(true)
+  // Avtomatik print - ofitsiant buyurtma bosganda, print job avtomatik print queue'ga tushadi
+  // Kassir aralashmasdan, brauzer print dialog ochiladi
+  autoPrint     Boolean  @default(true)
+  // Printer IP manzili (local network printer uchun, kelajakda)
+  printerIp     String?
   createdAt     DateTime @default(now())
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -711,6 +716,9 @@ model PrintJob {
   content       String
   createdAt     DateTime @default(now())
   printedAt     DateTime?
+  // Avtomatik print uchun - ofitsiant buyurtma bosganda true bo'ladi
+  // AutoPrintMonitor komponenti bu flag bor joblarni avtomatik print qiladi
+  autoPrintReady Boolean @default(false)
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -718,4 +726,5 @@ model PrintJob {
 
   @@index([restaurantId, status])
   @@index([printerStationId, status])
+  @@index([autoPrintReady, status])
 }

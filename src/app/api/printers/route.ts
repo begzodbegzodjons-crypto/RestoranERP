@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
         name: body.name,
         description: body.description || null,
         sortOrder: parseInt(body.sortOrder) || 0,
-        isActive: body.isActive !== false
+        isActive: body.isActive !== false,
+        autoPrint: body.autoPrint !== false,
+        printerIp: body.printerIp || null
       }
     })
     return NextResponse.json({ item })
