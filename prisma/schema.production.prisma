@@ -27,6 +27,8 @@ model Restaurant {
   logoUrl         String?
   currency        String   @default("UZS")
   taxRate         Float    @default(0.0)
+  // Ofitsiant xizmati foizi (avtomatik to'lovga qo'shiladi)
+  serviceChargePercent Float @default(0.0)
 
   // Trial / Activation logic
   status          String   @default("trial") // trial | active | blocked
@@ -59,6 +61,7 @@ model Restaurant {
   staff           Staff[]
   tables          RestaurantTable[]
   sessions        Session[]
+  orders          Order[]
 }
 
 // Session for restaurant login
@@ -143,6 +146,7 @@ model Product {
   category      Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   recipes       Recipe[]
   saleItems     SaleItem[]
+  orderItems    OrderItem[]
 
   @@index([restaurantId])
   @@index([categoryId])
@@ -361,12 +365,34 @@ model Staff {
   position      String?  // waiter, chef, manager, cashier
   salary        Float    @default(0)
   status        String   @default("active") // active | inactive
+
+  // Login uchun: PIN (4-6 raqamli) yoki parol
+  pin           String?  // 4-6 digit PIN for fast login
+  passwordHash  String?  // optional password (PIN bo'lmasa)
+
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   sales         Sale[]
+  staffSessions StaffSession[]
+  ordersAsWaiter  Order[] @relation("OrderWaiter")  // ofitsiant yaratgan buyurtmalar
+  ordersAsCashier Order[] @relation("OrderCashier") // kassir yopgan buyurtmalar
 
   @@index([restaurantId])
+}
+
+// Staff session (kassir/ofitsiant uchun alohida)
+model StaffSession {
+  id            String   @id @default(cuid())
+  staffId       String
+  token         String   @unique
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  staff         Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
 }
 
 // ============================================================
@@ -382,12 +408,66 @@ model RestaurantTable {
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   sales         Sale[]
+  orders        Order[]
 
   @@index([restaurantId])
 }
 
 // ============================================================
-// EXPENSES - chiqimlar
+// ORDERS - ofitsiant yaratgan, kassir yopadigan buyurtmalar
+// ============================================================
+model Order {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  tableId       String
+  waiterId      String   // ofitsiant (Staff)
+  cashierId     String?  // kassir (Staff) - to'lovni qabul qilgan
+  status        String   @default("open") // open (ofitsiant yubordi) | paid (kassir yopdi) | cancelled
+  invoiceNo     String?
+
+  subtotal      Float    @default(0)
+  serviceChargePercent Float @default(0)
+  serviceChargeAmount  Float  @default(0)
+  discount      Float    @default(0)
+  total         Float    @default(0)
+
+  // To'lov ma'lumotlari (kassir to'ldiradi)
+  paymentMethod String?  // cash | card | transfer
+  paidAt        DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table         RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  waiter        Staff @relation("OrderWaiter", fields: [waiterId], references: [id], onDelete: Cascade)
+  cashier       Staff? @relation("OrderCashier", fields: [cashierId], references: [id], onDelete: SetNull)
+  items         OrderItem[]
+
+  @@index([restaurantId])
+  @@index([tableId])
+  @@index([waiterId])
+  @@index([status])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Float
+  unitPrice     Float
+  unitCost      Float
+  total         Float
+  totalCost     Float
+  notes         String?  // ofitsiant izohi (masalan: "achchiqroq qiling")
+  createdAt     DateTime @default(now())
+
+  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
+}
 // ============================================================
 model Expense {
   id            String   @id @default(cuid())

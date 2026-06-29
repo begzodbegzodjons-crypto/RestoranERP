@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { toast } from './utils'
+import { useState, useEffect } from 'react'
+import { toast, api, formatMoney } from './utils'
 
 type Restaurant = {
   id: string
@@ -29,6 +29,27 @@ export default function SettingsView({
   onLogout: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
+  const [serviceCharge, setServiceCharge] = useState(0)
+  const [savingCharge, setSavingCharge] = useState(false)
+
+  useEffect(() => {
+    api('/api/staff/settings').then(r => setServiceCharge(r.serviceChargePercent || 0)).catch(() => {})
+  }, [])
+
+  const saveServiceCharge = async () => {
+    setSavingCharge(true)
+    try {
+      await api('/api/staff/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ serviceChargePercent: serviceCharge })
+      })
+      toast.success('Ofitsiant xizmati foizi saqlandi')
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setSavingCharge(false)
+    }
+  }
 
   const stateInfo = {
     trial: { label: 'Bepul sinov', cls: 'bg-amber-100 text-amber-700' },
@@ -57,6 +78,41 @@ export default function SettingsView({
             <div className="text-xl font-bold">{new Date(access.endDate).toLocaleDateString('uz-UZ')}</div>
             {access.daysLeft > 0 && <div className="text-emerald-50 text-sm mt-1">{access.daysLeft} kun qoldi</div>}
           </div>
+        </div>
+      </div>
+
+      {/* Service charge settings */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6">
+        <h3 className="font-bold text-slate-900 mb-2">💼 Ofitsiant xizmati foizi</h3>
+        <p className="text-slate-500 text-sm mb-4">
+          Kassir to'lov qabul qilganda avtomatik shu foiz to'lovga qo'shiladi (ofitsiant xizmati uchun).
+        </p>
+        <div className="flex gap-3 items-center">
+          <div className="flex-1">
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.5"
+                value={serviceCharge}
+                onChange={e => setServiceCharge(parseFloat(e.target.value) || 0)}
+                className="erp-input pr-12"
+                placeholder="0"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">%</span>
+            </div>
+          </div>
+          <button
+            onClick={saveServiceCharge}
+            disabled={savingCharge}
+            className="px-6 py-3 rounded-xl bg-emerald-500 text-white font-bold disabled:opacity-50 hover:bg-emerald-600"
+          >
+            {savingCharge ? 'Saqlanmoqda...' : 'Saqlash'}
+          </button>
+        </div>
+        <div className="mt-3 text-xs text-slate-500">
+          Misol: 100,000 UZS buyurtma + 10% xizmat = <span className="font-semibold text-emerald-600">110,000 UZS</span>
         </div>
       </div>
 

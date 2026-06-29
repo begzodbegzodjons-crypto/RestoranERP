@@ -320,3 +320,84 @@ Stage Summary:
 - Aktivlashtirish funksiyasi ishlaydi (N kunga, extension bilan)
 - Blokdan chiqarish funksiyasi ishlaydi
 - Barcha funksiyalar ro'yxatda va detail modalda mavjud
+
+---
+Task ID: ERP-008
+Agent: Main agent (Super Z)
+Task: Staff (ofitsiant/kassir) POS tizimi - PIN login, buyurtma yuborish, to'lov qabul qilish, chek chop etish, ofitsiant xizmati %
+
+Work Log:
+- Prisma schema yangilandi:
+  - Restaurant: serviceChargePercent Float @default(0.0) - ofitsiant xizmati foizi
+  - Staff: pin String? (4-6 raqamli PIN) + passwordHash String?
+  - Yangi model: StaffSession (staff uchun alohida session)
+  - Yangi model: Order (ofitsiant yuboradi, kassir yopadi)
+  - Yangi model: OrderItem (buyurtma elementlari)
+  - RestaurantTable: orders relation qo'shildi
+  - Product: orderItems relation qo'shildi
+  - Production schema (PostgreSQL) ham yangilandi
+  - Prisma client regenerate qilindi
+
+- Yangi lib/staff-auth.ts:
+  - generateStaffToken, createStaffSession, getCurrentStaff, deleteStaffSession
+
+- Yangi API endpointlar (8 ta):
+  1. POST /api/staff/login - PIN bilan kirish
+  2. GET/POST /api/staff/me - joriy staff va logout
+  3. GET/POST /api/staff/orders - buyurtma ro'yxati va yangi buyurtma yuborish
+  4. GET/DELETE /api/staff/orders/[id] - bitta buyurtma va bekor qilish
+  5. POST /api/staff/orders/[id]/pay - kassir to'lov qabul qiladi (Sale yaratadi, inventory consume, chek tayyor)
+  6. GET /api/staff/tables - stollar + openOrder bilan
+  7. GET /api/staff/products - mahsulotlar POS uchun
+  8. GET/PUT /api/staff/settings - service charge foizini sozlash
+
+- Staff API (CRUD) yangilandi:
+  - POST /api/staff - PIN qo'shish (ofitsiant/kassir uchun majburiy, unique)
+  - PUT /api/staff/[id] - PIN yangilash
+
+- Yangi UI komponentlar:
+  1. StaffMode.tsx - asosiy staff POS tizimi:
+     - StaffLogin: PIN kiritish ekrani (number pad, 4-6 raqam)
+     - WaiterView: stol tanlash → menyu → savatcha → buyurtma yuborish
+     - CashierView: band stollar ko'rinishi → to'lov modal → chek
+     - ReceiptModal: chek chop etish (window.print orqali)
+
+  2. DashboardLayout.tsx ga "👤 Xodim kirishi (POS)" tugmasi qo'shildi
+  3. SettingsView ga "💼 Ofitsiant xizmati foizi" sozlamasi qo'shildi
+  4. StaffView (CrudViews) ga PIN maydoni qo'shildi
+
+- Avtomatik hisob-kitob:
+  - Ofitsiant buyurtma yuborganda: subtotal + serviceCharge% avtomatik hisoblanadi
+  - Kassir to'lov qabul qilganda: Sale yozuvi yaratiladi, inventory consume qilinadi, stol free bo'ladi
+  - Sale da: waiter, cashier, sana, soat, paymentMethod - hammasi saqlanadi
+  - Chek: restoran nomi, chek #, stol, sana, ofitsiant, kassir, mahsulotlar, summa, xizmat foizi
+
+- Chek formati (80mm termal printer uchun):
+  - Restoran nomi (katta)
+  - Stol, sana, chek #
+  - Ofitsiant, Kassir
+  - Mahsulotlar ro'yxati (nomi, miqdor, narx, summa)
+  - Oraliq, xizmat foizi, chegirma, jami
+  - To'lov turi va summasi
+  - "Rahmat! Yana keling!"
+
+- Test natijalari (API + browser):
+  1. ✅ Ofitsiant PIN 1234 bilan kirdi (Akmal Ofitsiant)
+  2. ✅ Stol tanlab, 4× Manti buyurtma yubordi (100,000 + 10% = 110,000 UZS)
+  3. ✅ Stol "occupied" holatga o'tdi
+  4. ✅ Kassir PIN 5678 bilan kirdi (Bekzod Kassir)
+  5. ✅ Band stol ko'rindi (ofitsiant, vaqt, summa bilan)
+  6. ✅ To'lov qabul qilindi - chek INV-20260629-3924
+  7. ✅ Sale ERP tarixiga yozildi (110,000 UZS, foyda 82,400 UZS)
+  8. ✅ Stol yana "free" bo'ldi
+  9. ✅ Chek chop etish tugmasi ishlamoqda (window.print)
+  10. ✅ Ofitsiant xizmati 10% avtomatik qo'shildi
+  11. ✅ Lint: 0 xato
+
+Stage Summary:
+- To'liq POS tizimi yaratildi:
+  - Ofitsiant PIN bilan kirib, stol tanlab, menyudan taom tanlab, buyurtma yuboradi
+  - Kassir PIN bilan kirib, band stollarni ko'rib, to'lov qabul qiladi
+  - Chek printerda chop etiladi (ofitsiant, kassir, taomlar, summa bilan)
+  - Ofitsiant xizmati % sozlamalardan avtomatik to'lovga qo'shiladi
+  - Hammasi ERP sales tarixiga yoziladi (sana, soat, ofitsiant, kassir)

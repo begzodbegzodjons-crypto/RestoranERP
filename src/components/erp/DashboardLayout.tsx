@@ -9,9 +9,10 @@ import PurchasesView from './PurchasesView'
 import SalesView from './SalesView'
 import ReportsView from './ReportsView'
 import SettingsView from './SettingsView'
+import StaffMode from './StaffMode'
 import { CustomersView, StaffView, TablesView, SuppliersView, CategoriesView, ExpensesView } from './CrudViews'
 
-type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'suppliers' | 'expenses' | 'reports' | 'settings'
+type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode'
 
 type Restaurant = {
   id: string
@@ -68,6 +69,12 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'expenses', label: 'Chiqimlar', icon: '💸' },
       { key: 'settings', label: 'Sozlamalar', icon: '⚙️' }
     ]
+  },
+  {
+    section: 'POS tizimi',
+    items: [
+      { key: 'staffmode', label: '👤 Xodim kirishi (POS)', icon: '🔌' }
+    ]
   }
 ]
 
@@ -106,6 +113,15 @@ export default function DashboardLayout({
       case 'expenses': return <ExpensesView />
       case 'reports': return <ReportsView />
       case 'settings': return <SettingsView restaurant={restaurant} access={access} onLogout={onLogout} />
+      case 'staffmode': return (
+        <div className="-m-4 sm:-m-6 lg:-m-8">
+          <StaffMode
+            restaurantId={restaurant.id}
+            restaurantName={restaurant.name}
+            onExit={() => setView('dashboard')}
+          />
+        </div>
+      )
       default: return null
     }
   }

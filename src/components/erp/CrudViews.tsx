@@ -260,10 +260,11 @@ export function StaffView() {
       { key: 'position', label: 'Lavozim', type: 'select', options: [
         { value: 'manager', label: 'Menejer' },
         { value: 'chef', label: 'Oshpaz' },
-        { value: 'waiter', label: 'Ofitsiant' },
-        { value: 'cashier', label: 'Kassir' },
+        { value: 'waiter', label: 'Ofitsiant (POS kirish)' },
+        { value: 'cashier', label: 'Kassir (POS kirish)' },
         { value: 'helper', label: 'Yordamchi' }
       ]},
+      { key: 'pin', label: 'PIN (4-6 raqam)', placeholder: '1234 - ofitsiant/kassir uchun majburiy' },
       { key: 'salary', label: 'Maosh (UZS)', type: 'number' },
       { key: 'status', label: 'Holat', type: 'select', options: [
         { value: 'active', label: 'Faol' },
@@ -272,7 +273,11 @@ export function StaffView() {
     ]}
     columns={[
       { key: 'name', label: 'Ism', render: (i: any) => <div className="font-semibold text-slate-900">{i.name}</div> },
-      { key: 'position', label: 'Lavozim', render: (i: any) => i.position || '—' },
+      { key: 'position', label: 'Lavozim', render: (i: any) => {
+        const m: Record<string, string> = { manager: '👔 Menejer', chef: '👨‍🍳 Oshpaz', waiter: '🍽️ Ofitsiant', cashier: '💳 Kassir', helper: '📦 Yordamchi' }
+        return <span>{m[i.position] || i.position || '—'}</span>
+      }},
+      { key: 'pin', label: 'PIN', render: (i: any) => i.pin ? <code className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">{i.pin}</code> : <span className="text-slate-300 text-xs">—</span> },
       { key: 'phone', label: 'Telefon', render: (i: any) => i.phone || '—' },
       { key: 'salary', label: 'Maosh', className: 'text-right', render: (i: any) => formatMoney(i.salary) },
       { key: 'status', label: 'Holat', render: (i: any) => (

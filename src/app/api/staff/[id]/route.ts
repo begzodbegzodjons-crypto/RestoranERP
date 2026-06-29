@@ -22,7 +22,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         phone: body.phone,
         position: body.position,
         salary: parseFloat(body.salary) || 0,
-        status: body.status
+        status: body.status,
+        // Only update PIN if provided
+        ...(body.pin !== undefined && body.pin !== '' ? { pin: body.pin } : {})
       }
     })
     return NextResponse.json({ item: updated })
