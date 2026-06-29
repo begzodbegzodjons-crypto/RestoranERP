@@ -191,3 +191,30 @@ Stage Summary:
 - "bir tizimda" so'zi maxsus cyan gradient + drop-shadow glow bilan ajralib turadi
 - 8 ta sparkle yozuv atrofida twinkle qiladi
 - So'zlar ketma-ket paydo bo'ladi (bounce easing)
+
+---
+Task ID: ERP-005 (Revert)
+Agent: Main agent (Super Z)
+Task: Animatsiya effektlarini olib tashlab, avvalgi oddiy holiga qaytarish
+
+Work Log:
+- Foydalanuvchi fikri: effektlar "Restoraningizni" va "boshqaring" so'zlarini ko'rinmas qilib qo'ygan
+- AuthPage.tsx dan `<HeroTitle />` olib tashlandi
+- Avvalgi oddiy H1 qaytarildi:
+  ```jsx
+  <h1 className="text-5xl xl:text-6xl 2xl:text-7xl font-bold leading-tight tracking-tight">
+    Restoraningizni <span className="shimmer-text">bir tizimda</span> boshqaring
+  </h1>
+  ```
+- HeroTitle import olib tashlandi
+- Bu referens saytdagi (edu-markaz-five.vercel.app) asl effekt — faqat "bir tizimda" so'zida shimmer
+
+- Test natijalari:
+  - h1 to'liq matn ko'rinmoqda: "Restoraningizni bir tizimda boshqaring"
+  - shimmer-text "bir tizimda" so'zida yorqin emerald-teal gradient (348x70px)
+  - Mobil va desktop responsiv
+  - Lint: 0 xato
+
+Stage Summary:
+- Avvalgi oddiy holga qaytarildi
+- Faqat "bir tizimda" so'zida shimmer-text effekti qoldi (referens sayt bilan bir xil)
