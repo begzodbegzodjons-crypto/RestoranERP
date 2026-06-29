@@ -52,3 +52,22 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Environment (secrets - NEVER commit)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Database
+*.db
+*.db-journal
+/db/
+prisma/*.db
+prisma/*.db-journal
+
+# Keep .env.example tracked
+!.env.example
+
+# Test files
+test-*.png
+ref-*.png

@@ -1,49 +1,112 @@
 # OshxonaERP - Worklog
 
-## Task ID: ERP-001
+## Task ID: ERP-002 (Update)
 **Agent**: Main agent (Super Z)
-**Task**: Restoranlar uchun professional ERP/CRM/POS dasturi yaratish
+**Task**: GitHub + Supabase + Vercel deployment uchun moslash + admin panel'ni kengaytirish
 
 ## Work Log:
-- Tahlil qilindi: Referens dizayn (edu-markaz-five.vercel.app) - emerald/teal gradient, glass morphism, aurora blobs, split-layout login
-- Prisma sxemasi yaratildi: 16 ta model (Restaurant, ActivationCode, Branch, Category, Product, Ingredient, Recipe, InventoryItem, Supplier, Purchase, PurchaseItem, Sale, SaleItem, Customer, Staff, RestaurantTable, Expense, AdminLog) - multi-tenant (har bir restoran alohida)
-- Auth API yaratildi: register (10 kun trial bilan), login, me, logout (PBKDF2 parol hashing, 7-kunlik session cookie)
-- Admin API yaratildi: /api/admin/login (Balandtoglar1 parol), /api/admin/codes (GET/POST - kod generatsiya), /api/admin/restaurants (GET - ro'yxat)
-- Aktivatsiya API yaratildi: /api/activation/activate - 8 xonali kod, 1-marta ishlatish, 30 kun amal qilish, noto'g'ri/qayta kodlarni rad etish
-- Biznes API yaratildi (20+ endpoint): categories, products (+[id]), recipes (+[id]), ingredients (+[id]), inventory, suppliers (+[id]), purchases (+[id]), sales (+[id]), customers (+[id]), staff (+[id]), tables (+[id]), expenses (+[id]), dashboard, reports
-- Avtomatik hisob-kitob:
-  - recalcProductCost: retsept ingredientlari narxlari yig'indisi → product.cost (avtomatik yangilanadi)
-  - addInventoryFromPurchase: kirim → weighted average unit price bilan stock yangilanadi
-  - consumeInventoryForSale: savdo → har bir retsept ingredientidan miqdor * savdo soni kamayadi
-  - Sale yaratishda: subtotal, discount, tax, total, COGS, profit avtomatik hisoblanadi
-- Frontend komponentlar yaratildi:
-  - AuthPage.tsx: login/register (referens dizayn bilan bir xil emerald/teal)
-  - BlockedScreen.tsx: bloklangan holat + aktivatsiya kodi kiritish
-  - AdminPanel.tsx: kod generatsiya, restoranlar ro'yxati
-  - DashboardLayout.tsx: sidebar + 14 ta modul
-  - DashboardView.tsx: statistika, 7-kunlik chart, top mahsulotlar
-  - POSView.tsx: mahsulot tanlash, savatcha, to'lash (cash/card/transfer)
-  - ProductsView.tsx: mahsulot + retsept boshqaruvi (avto tannarx hisoblash)
-  - IngredientsView.tsx: ombor + harakatlar tarixi
-  - PurchasesView.tsx: kirim (avtomatik omborga qo'shadi)
-  - SalesView.tsx: savdo tarixi + chek ko'rish
-  - ReportsView.tsx: davr bo'yicha hisobot (kategoriya, mahsulot, to'lov turi, kunlik)
-  - CrudViews.tsx: generic CRUD (customers, staff, tables, suppliers, expenses, categories)
-  - SettingsView.tsx: obuna holati, restoran ma'lumotlari, logout
-- page.tsx: state-based routing (?adminkod → admin, authed+active → dashboard, authed+blocked → blocked screen, default → login)
-- globals.css: emerald/teal primary ranglar, glass, aurora-blob, shimmer-text animatsiyalari
-- layout.tsx: OshxonaERP metadata
-- Tuzatildi: admin _helper.ts → lib/admin-auth.ts (Next.js _ fayllarni route deb hisoblamaydi)
-- ESLint muvaffaqiyatli (0 xato)
+- Tahlil: Foydalanuvchi dasturni GitHub + Supabase + Vercel stack'ida ishlatmoqchi
+- Prisma dual-schema yondashuvi:
+  - `prisma/schema.prisma` - SQLite (local dev uchun, mavjud)
+  - `prisma/schema.production.prisma` - PostgreSQL (Supabase production uchun)
+  - Prisma `env()` provider'ni qo'llab-quvvatlamagani uchun ikki fayl yondashuvi tanlandi
+- package.json yangilandi:
+  - `db:push:prod` - production schema bilan ishlash
+  - `db:generate:prod` - production Prisma client generatsiya
+  - `vercel-build` - Vercel deployment uchun: prisma generate + db push + next build
+- `.env.example` yaratildi - Supabase connection string format bilan
+- `.gitignore` yangilandi - .env, db fayllar, test screenshot'lari yuklanmaydi
+- `next.config.ts` - Vercel serverless uchun `serverExternalPackages: ["@prisma/client"]` qo'shildi
+- `README.md` - to'liq loyiha hujjati
+- `DEPLOYMENT.md` - 4 qadamli deployment qo'llanmasi (GitHub → Supabase → Vercel → First run)
+
+### Yangi Admin API'lar:
+1. `GET /api/admin/stats` - global admin dashboard statistikasi:
+   - Restoranlar: jami/aktiv/sinovda/bloklangan/oylik yangilar
+   - Savdo: jami/bugungi/oylik daromad, foyda, buyurtmalar
+   - Katalog: jami taomlar, ingredientlar, mijozlar, xodimlar
+   - 7-kunlik grafiklar (yangi restoranlar, daromad)
+   - Aktivatsiya kodlari statistikasi
+
+2. `GET /api/admin/restaurants/[id]/stats` - bitta restoran to'liq statistikasi:
+   - Restoran ma'lumotlari (admin maydonlari bilan)
+   - Countlar: taomlar, ingredientlar, mijozlar, xodimlar, stollar, kategoriya, yetkazib beruvchilar
+   - Savdo aggregations: jami/bugungi/oylik daromad, foyda, COGS, buyurtmalar
+   - Oylik xarajatlar, kirim summasi, sof foyda
+   - Ombor qiymati, tugagan mahsulotlar
+   - Top 10 mahsulotlar (30 kun)
+   - So'nggi 10 savdo
+   - 14-kunlik kunlik daromad grafigi
+   - To'lov turlari bo'yicha taqsimot
+
+3. `POST /api/admin/restaurants/[id]/block` - restoranni admin bloklash
+   - Body: { reason?: string }
+   - Barcha sessiyalarni o'chiradi (force logout)
+   - AdminLog'ga yoziladi
+
+4. `DELETE /api/admin/restaurants/[id]/block` - blokdan chiqarish
+   - Avtomatik yangi holat belgilaydi (aktiv/sinov/blok)
+
+5. `POST /api/admin/restaurants/[id]/activate` - admin tomonidan kodsiz aktivlashtirish
+   - Body: { days: number, note?: string }
+   - Agar hozir aktiv bo'lsa - kunlar qo'shiladi (extension)
+   - Aks holda - yangidan boshlab N kun aktivlashtiriladi
+   - AdminLog'ga yoziladi
+
+6. `GET /api/admin/restaurants` (yangilandi) - endi har restoran uchun:
+   - stats: products, ingredients, customers, sales, totalRevenue, totalProfit
+   - access: to'liq holat (admin blok, daysLeft, message)
+
+### Auth mantiqi yangilandi:
+- `getAccessStatus()` funksiyasi endi `blockedByAdmin` maydonini tekshiradi
+- Admin bloki eng yuqori ustuvorlikka ega (aktivatsiya/trial'dan ustun)
+- BlockedScreen admin sababini ko'rsatadi
+
+### AdminPanel UI to'liq qayta yozildi:
+- 3 ta tab: Umumiy / Restoranlar / Aktivatsiya kodlari
+- Umumiy tab:
+  - 8 ta katta statistika kartalari (restoranlar, daromad)
+  - 7-kunlik grafiklar (yangi restoranlar, daromad)
+  - Katalog statistikasi
+  - Kodlar holati
+- Restoranlar tab:
+  - Qidiruv (nom/email/telefon)
+  - Holat bo'yicha filter (hammasi/aktiv/sinov/blok)
+  - Jadval: restoran, holat, taomlar, savdo, daromad, foyda, qolgan kun, boshqaruv
+  - Tez amallar: +30k (tez aktivlashtirish), 🚫 (bloklash), 🔓 (blokdan chiqarish)
+  - Restoranni bossangiz - to'liq detail modal ochiladi
+- Detail modal:
+  - Gradient header (restoran nomi, holat, qolgan kun)
+  - Admin blok ogohlantirishi (agar bloklangan bo'lsa)
+  - 8 ta statistika kartalari (daromad, foyda, savdo, o'rtacha chek va h.k.)
+  - 6 ta katalog countlari (taomlar, kategoriya, ombor, mijozlar, xodimlar, stollar)
+  - Ombor qiymati va tugagan mahsulotlar soni
+  - 14-kunlik daromad grafigi
+  - Top 10 mahsulotlar
+  - So'nggi 10 savdo
+  - Boshqaruv bo'limi:
+    - Kodsiz aktivlashtirish formasi (kun + izoh)
+    - Bloklash/Blokdan chiqarish tugmasi
+    - Admin izohlari (agar bo'lsa)
+
+### Test natijalari (agent-browser):
+- ✅ Admin login ishlaydi (Balandtoglar1)
+- ✅ Umumiy tab to'liq ko'rinmoqda (statistika, grafiklar)
+- ✅ Restoranlar ro'yxati statistika bilan ko'rinmoqda
+- ✅ Restoran detali modal to'liq ishlamoqda
+- ✅ Bloklash funksiyasi ishlaydi (prompt bilan sabab so'raydi)
+- ✅ Bloklangan foydalanuvchi tizimga kirsa - blok ekrani ko'rinadi
+- ✅ Kodsiz aktivlashtirish 60 kunga ishladi
+- ✅ Aktivlashtirilgan foydalanuvchi dashboard'ga kirdi
+- ✅ Qolgan kun to'g'ri yangilandi (60k)
+- ✅ Lint: 0 xato
+- ✅ Dev log: 0 runtime error
 
 ## Stage Summary:
-- To'liq ishlaydigan restaurant ERP/CRM/POS tizimi yaratildi
-- 20+ API endpoint, 14 ta dashboard modul
-- Multi-tenant: har bir restoran ma'lumotlari to'liq izolyatsiya qilingan
-- Avtomatik hisob-kitoblar: retsept → tannarx, savdo → ombor kamayishi, foyda hisobi
-- 10 kunlik bepul sinov → blok → aktivatsiya kodi (1-marta, 30 kun)
-- Maxfiy admin panel: ?adminkod + Balandtoglar1 parol bilan kirish
-- Barcha aktivatsiya kodlari 1-marta ishlatiladi, boshqa akkauntga ishlamaydi
-- Agent-browser orqali to'liq test o'tkazildi: ro'yxatdan o'tish → blok → kod aktivatsiya → ingredient qo'shish → retsept yaratish → kirim → savdo → ombor avtomatik kamayishi → dashboard statistika
-- Test natijalari: Manti narxi 25000 UZS, tannarx (avto) 4400 UZS, foyda 20600 UZS/dona - 4 dona savdo: 100000 UZS savdo, 82400 UZS foyda - to'g'ri hisoblandi
-- Mobil va desktop responsiv dizayn
+- Loyiha to'liq GitHub + Supabase + Vercel stack'iga moslashtirildi
+- Dual Prisma schema (SQLite local + PostgreSQL production)
+- Admin panel to'liq kengaytirildi: global stats, per-restaurant stats, block/unblock, manual activation
+- Batafsil deployment hujjati (DEPLOYMENT.md) yaratildi
+- Production build script (`vercel-build`) qo'shildi
+- Auth mantiqi admin blokirovkasini qo'llab-quvvatlaydi
+- Barcha yangi funksiyalar browser testlari orqali verified

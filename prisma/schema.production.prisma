@@ -1,8 +1,8 @@
 // OshxonaERP - Professional Restaurant ERP/CRM/POS System
 // Multi-tenant: har bir restoran alohida ma'lumotlar bazasiga ega
 //
-// THIS FILE: SQLite (LOCAL DEV)
-// For PRODUCTION (Vercel + Supabase), use prisma/schema.production.prisma
+// THIS FILE: PostgreSQL (PRODUCTION - Vercel + Supabase)
+// For LOCAL DEV, use prisma/schema.prisma (SQLite)
 // See DEPLOYMENT.md for instructions
 
 generator client {
@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

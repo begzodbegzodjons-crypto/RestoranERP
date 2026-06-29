@@ -42,6 +42,8 @@ export type AccessStatus = {
   daysLeft: number
   endDate: Date
   message: string
+  blockedByAdmin?: boolean
+  blockedReason?: string | null
 }
 
 export function getAccessStatus(restaurant: {
@@ -49,8 +51,22 @@ export function getAccessStatus(restaurant: {
   trialEnd: Date
   activatedAt: Date | null
   activationEnd: Date | null
+  blockedByAdmin?: boolean
+  blockedReason?: string | null
 }): AccessStatus {
   const now = new Date()
+
+  // Admin block - highest priority (overrides everything)
+  if (restaurant.blockedByAdmin) {
+    return {
+      state: 'blocked',
+      daysLeft: 0,
+      endDate: restaurant.trialEnd,
+      message: restaurant.blockedReason || 'Admin tomonidan bloklangan. Iltimos, @norinkomp bilan bog\'laning.',
+      blockedByAdmin: true,
+      blockedReason: restaurant.blockedReason
+    }
+  }
 
   // If activation is active and not expired
   if (restaurant.activatedAt && restaurant.activationEnd && restaurant.activationEnd > now) {
@@ -74,7 +90,7 @@ export function getAccessStatus(restaurant: {
     }
   }
 
-  // Blocked
+  // Blocked (trial expired)
   return {
     state: 'blocked',
     daysLeft: 0,

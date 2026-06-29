@@ -1,6 +1,6 @@
 {
-  "name": "nextjs_tailwind_shadcn_ts",
-  "version": "0.2.0",
+  "name": "oshxona-erp",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
@@ -10,7 +10,10 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "db:push:prod": "prisma db push --schema=prisma/schema.production.prisma",
+    "db:generate:prod": "prisma generate --schema=prisma/schema.production.prisma",
+    "vercel-build": "prisma generate --schema=prisma/schema.production.prisma && prisma db push --schema=prisma/schema.production.prisma --accept-data-loss && next build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
