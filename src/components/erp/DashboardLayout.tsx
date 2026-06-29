@@ -14,9 +14,11 @@ import ShiftsView from './ShiftsView'
 import KitchenDisplayView from './KitchenDisplayView'
 import ExportView from './ExportView'
 import NotificationsView from './NotificationsView'
+import AnalyticsView from './AnalyticsView'
+import IntegrationsView from './IntegrationsView'
 import { CustomersView, StaffView, TablesViewWithRooms, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView, RoomsView } from './CrudViews'
 
-type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications'
+type View = 'dashboard' | 'pos' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations'
 
 type Restaurant = {
   id: string
@@ -40,7 +42,8 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     items: [
       { key: 'dashboard', label: 'Boshqaruv paneli', icon: '📊' },
       { key: 'pos', label: 'POS Kassa', icon: '💳' },
-      { key: 'reports', label: 'Hisobotlar', icon: '📈' },
+      { key: 'analytics', label: 'Biznes analitikasi', icon: '📈' },
+      { key: 'reports', label: 'Hisobotlar', icon: '📋' },
       { key: 'notifications', label: 'Bildirishnomalar', icon: '🔔' }
     ]
   },
@@ -84,6 +87,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'shifts', label: 'Smenalar (Kassa)', icon: '💰' },
       { key: 'kitchen', label: 'Oshpaz ekrani (KDS)', icon: '🍳' },
       { key: 'export', label: 'Eksport (Excel)', icon: '📤' },
+      { key: 'integrations', label: 'Integratsiyalar', icon: '🔌' },
       { key: 'settings', label: 'Sozlamalar', icon: '⚙️' }
     ]
   },
@@ -130,6 +134,8 @@ export default function DashboardLayout({
       case 'suppliers': return <SuppliersView />
       case 'expenses': return <ExpensesView />
       case 'reports': return <ReportsView />
+      case 'analytics': return <AnalyticsView />
+      case 'integrations': return <IntegrationsView />
       case 'settings': return <SettingsView restaurant={restaurant} access={access} onLogout={onLogout} />
       case 'shifts': return <ShiftsView />
       case 'kitchen': return <KitchenDisplayView />

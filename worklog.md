@@ -550,3 +550,102 @@ Stage Summary:
 - 3 ta UI yangilandi (RoomsView, TablesViewWithRooms, StaffMode)
 - Restoran endi xonalarga ega: Zal, VIP, Tashqi terassa, ...
 - Har xonada o'z stollari, ofitsiant va kassir xona bo'yicha filterlay oladi
+
+---
+Task ID: ERP-011
+Agent: Main agent (Super Z)
+Task: Biznes analitikasi (BI) + Tashqi integratsiyalar (1C, Maps)
+
+Work Log:
+- Mavjud funksiyalar yo'qotilmadi
+- 7 ta yangi API endpoint yaratildi:
+
+### Biznes analitikasi (5 ta):
+1. GET /api/analytics/hourly - soatlik savdo grafigi
+   - 24 soatlik grid, eng band soatlar (TOP 3)
+   - Kun davomida tahlil: Ertalab/Tushdan keyin/Kechqurun/Tunda
+   - Avtomatik peak hour aniqlash
+
+2. GET /api/analytics/profitable-dishes - eng foydali taomlar
+   - Top profitable (foyda bo'yicha)
+   - Top margin (marja % bo'yicha)
+   - Top selling (sotilgan miqdor bo'yicha)
+   - Least profitable (eng kam foydali - ogohlantirish)
+
+3. GET /api/analytics/customer-behavior - mijoz xatti-harakatlari
+   - Returning customers (2+ buyurtma)
+   - Retention rate (%)
+   - VIP mijozlar (500,000+ sarflagan)
+   - Churn risk (30+ kun kelmagan)
+   - O'rtacha buyurtmalar orasi (kunlarda)
+   - Frequency distribution (1 marta, 2-3, 4-10, 10+)
+   - Top spenders (TOP 10)
+
+4. GET /api/analytics/forecast - oylik trend va prognoz (OTS)
+   - 6 oylik tarixiy ma'lumot
+   - OTS (Oddiy Trend Satri) - linear regression
+   - Keyingi 3 oy prognoz
+   - Trend direction: growing/declining/stable
+   - Oylik o'sish sur'ati (%)
+   - Mavsumiylik tahlili (Qish/Bahor/Yoz/Kuz)
+
+5. GET /api/analytics/ab-tests - narx A/B test (avtomatik)
+   - Mahsulot narxi o'zgartirilgan sanani topib
+   - 14 kun oldin vs 14 kun keyin savdoni solishtiradi
+   - Narx o'zgarishi %, miqdor o'zgarishi %, daromad o'zgarishi %
+   - Talab elastikligi (elasticity)
+   - Avtomatik tavsiyalar (success/danger/warning/neutral)
+
+### Tashqi integratsiyalar (2 ta):
+6. GET /api/integrations/1c-export - 1C Buxgalteriya uchun XML eksport
+   - CommerceML 2.0 formatida (1C da import qilinadi)
+   - Rus tilidagi teglar (KommercheskayaInformatsiya, Dokument, Tovary)
+   - Savdo hujjatlari (chek raqami, sana, summa, QQS)
+   - Xarajatlar (kategoriya, summa)
+   - Xaridlar (yetkazib beruvchi, ingredientlar)
+   - Avtomatik QQS hisoblash (vatRate dan)
+
+7. POST /api/integrations/maps - Yandex/Google Maps integratsiyasi
+   - Restoran manzili -> mijoz manzili marshrut
+   - Yandex Maps URL + embed
+   - Google Maps URL + embed
+   - To'g'ridan-to'g'ri app da ochish linklari
+
+- Yangi UI komponentlar:
+  1. AnalyticsView.tsx - BI dashboard (5 tab bilan):
+     - HourlyAnalytics: 24 soatlik grafik, kun qismlari, TOP 3 band soatlar
+     - ProfitableDishes: 4 ro'yxat (foyda, marja, sotuv, kam foydali)
+     - CustomerBehavior: retention, VIP, churn, frequency, top spenders
+     - ForecastAnalytics: trend banner, OTS grafik, o'sish sur'ati, mavsumiylik
+     - ABTestsAnalytics: narx o'zgartirish natijalari, tavsiyalar
+  
+  2. IntegrationsView.tsx - integratsiyalar markazi:
+     - 1C Buxgalteriya eksport (sana oralig'i tanlash, XML yuklab olish)
+     - Yandex/Google Maps (mijoz manzili -> xarita + marshrut)
+     - Tezkor linklar (Telegram bot, 1C dokumentatsiyasi)
+     - Maps modal: iframe preview, app da ochish tugmalari
+
+- DashboardLayout yangilandi:
+  - Asosiy bo'limiga "📈 Biznes analitikasi" qo'shildi
+  - Boshqaruv'ga "🔌 Integratsiyalar" qo'shildi
+  - Endi jami 24 ta modul (avval 22 ta edi)
+
+- Test natijalari (API + browser verified):
+  ✅ Hourly: totalSales=320,000, peakHour=10:00
+  ✅ Profitable: Manti 82.4% marja, 247,200 foyda
+  ✅ Forecast: trend=growing, nextMonth=213,333 UZS, bestSeason=Bahor
+  ✅ AB-tests: 0 results (narx o'zgartirilmagan)
+  ✅ 1C export: Rus tilidagi XML (CommerceML 2.0)
+  ✅ Maps: Yandex + Google URL va embed'lar
+  ✅ AnalyticsView 5 tab ishlamoqda
+  ✅ IntegrationsView 1C + Maps ishlamoqda
+  ✅ Maps modal: manzil kiritib xarita yaratildi
+  ✅ Lint: 0 xato
+
+Stage Summary:
+- Mavjud 22 ta modul yo'qotilmadi
+- 2 ta yangi modul qo'shildi (Biznes analitikasi, Integratsiyalar)
+- 7 ta yangi API endpoint
+- Avtomatik tahlil: soatlik, foyda, mijozlar, prognoz, A/B test
+- Tashqi integratsiyalar: 1C Buxgalteriya (XML), Yandex/Google Maps
+- Endi jami 24 ta professional modul
