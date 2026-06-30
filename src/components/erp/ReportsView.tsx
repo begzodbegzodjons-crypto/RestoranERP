@@ -159,6 +159,58 @@ export default function ReportsView() {
       {/* By category and product */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <h3 className="font-bold text-slate-900 mb-4">👤 Ofitsiantlar bo'yicha</h3>
+          {(!report.byWaiter || report.byWaiter.length === 0) ? (
+            <p className="text-center text-slate-400 py-8">Ma'lumot yo'q</p>
+          ) : (
+            <div className="space-y-2">
+              {report.byWaiter.map((w: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}`}>
+                      {i + 1}
+                    </div>
+                    <div>
+                      <div className="font-medium text-slate-900">{w.name}</div>
+                      <div className="text-xs text-slate-500">{w.orders} ta buyurtma</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-slate-900">{formatMoney(w.revenue)}</div>
+                    <div className="text-xs text-emerald-600">+{formatMoney(w.profit)} foyda</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <h3 className="font-bold text-slate-900 mb-4">🪑 Stollar bo'yicha</h3>
+          {(!report.byTable || report.byTable.length === 0) ? (
+            <p className="text-center text-slate-400 py-8">Ma'lumot yo'q</p>
+          ) : (
+            <div className="space-y-2 max-h-72 overflow-y-auto custom-scroll">
+              {report.byTable.map((t: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🪑</span>
+                    <div>
+                      <div className="font-medium text-slate-900">{t.name}</div>
+                      <div className="text-xs text-slate-500">{t.orders} ta buyurtma</div>
+                    </div>
+                  </div>
+                  <div className="font-semibold text-slate-900">{formatMoney(t.revenue)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* By category and product */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <h3 className="font-bold text-slate-900 mb-4">🏷️ Kategoriyalar bo'yicha</h3>
           {report.byCategory.length === 0 ? (
             <p className="text-center text-slate-400 py-8">Ma'lumot yo'q</p>
@@ -209,11 +261,16 @@ export default function ReportsView() {
               <p className="text-center text-slate-400 py-6">Savdo yo'q</p>
             ) : report.recentSales.map((s: any) => (
               <div key={s.id} className="flex items-center justify-between p-2 border-b border-slate-50 last:border-0">
-                <div>
+                <div className="min-w-0">
                   <div className="font-medium text-sm text-slate-900">{s.invoiceNo}</div>
                   <div className="text-xs text-slate-400">{formatDateTime(s.createdAt)}</div>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {s.tableName && <span className="text-xs text-slate-500">🪑 {s.tableName}</span>}
+                    {s.waiterName && <span className="text-xs text-slate-500">👤 {s.waiterName}</span>}
+                    {s.kassir && <span className="text-xs text-slate-400">💳 {s.kassir}</span>}
+                  </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex-shrink-0">
                   <div className="font-bold text-slate-900">{formatMoney(s.total)}</div>
                   <div className="text-xs text-emerald-600">+{formatMoney(s.profit)}</div>
                 </div>

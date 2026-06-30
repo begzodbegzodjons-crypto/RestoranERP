@@ -20,7 +20,9 @@ export async function GET(req: NextRequest) {
         status: 'completed'
       },
       include: {
-        items: { include: { product: { include: { category: true } } } }
+        items: { include: { product: { include: { category: true } } } },
+        staff: true,
+        table: true
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -98,6 +100,29 @@ export async function GET(req: NextRequest) {
     }
     const byDay = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date))
 
+    // By waiter (ofitsiant)
+    const waiterMap = new Map<string, { name: string; orders: number; revenue: number; profit: number }>()
+    for (const sale of sales) {
+      if (!sale.staff) continue
+      const existing = waiterMap.get(sale.staffId!) || { name: sale.staff.name, orders: 0, revenue: 0, profit: 0 }
+      existing.orders += 1
+      existing.revenue += sale.total
+      existing.profit += sale.profit
+      waiterMap.set(sale.staffId!, existing)
+    }
+    const byWaiter = Array.from(waiterMap.values()).sort((a, b) => b.revenue - a.revenue)
+
+    // By table (stol)
+    const tableMap = new Map<string, { name: string; orders: number; revenue: number }>()
+    for (const sale of sales) {
+      if (!sale.table) continue
+      const existing = tableMap.get(sale.tableId!) || { name: sale.table.name, orders: 0, revenue: 0 }
+      existing.orders += 1
+      existing.revenue += sale.total
+      tableMap.set(sale.tableId!, existing)
+    }
+    const byTable = Array.from(tableMap.values()).sort((a, b) => b.revenue - a.revenue)
+
     return NextResponse.json({
       range: { from, to },
       summary: {
@@ -115,6 +140,8 @@ export async function GET(req: NextRequest) {
       byProduct,
       byPayment,
       byDay,
+      byWaiter,
+      byTable,
       recentSales: sales.slice(0, 20).map(s => ({
         id: s.id,
         invoiceNo: s.invoiceNo,
@@ -122,7 +149,10 @@ export async function GET(req: NextRequest) {
         total: s.total,
         profit: s.profit,
         paymentMethod: s.paymentMethod,
-        itemCount: s.items.length
+        itemCount: s.items.length,
+        waiterName: s.staff?.name || null,
+        tableName: s.table?.name || null,
+        kassir: s.notes?.includes('Kassir:') ? s.notes.split('Kassir:')[1].trim() : null
       })),
       expenses: expenses.slice(0, 50),
       purchases: purchases.slice(0, 50)

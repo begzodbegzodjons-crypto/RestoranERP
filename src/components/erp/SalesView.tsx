@@ -87,7 +87,9 @@ export default function SalesView() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Chek #</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Sana</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Mahsulotlar</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Stol</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Ofitsiant</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Pozitsiya</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">To'lov</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Summa</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Foyda</th>
@@ -97,17 +99,27 @@ export default function SalesView() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-slate-400">Savdo yo'q</td></tr>
+                <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-400">Savdo yo'q</td></tr>
               )}
               {filtered.map(s => (
                 <tr key={s.id} className="hover:bg-slate-50 cursor-pointer" onClick={() => setView(s)}>
                   <td className="px-4 py-3 font-mono font-semibold text-slate-900">{s.invoiceNo}</td>
                   <td className="px-4 py-3 text-slate-600 text-sm">{formatDateTime(s.createdAt)}</td>
-                  <td className="px-4 py-3 text-slate-600 text-sm">
-                    {s.items.length} ta pozitsiya
-                    {s.table && <span className="ml-2 text-xs text-slate-400">🪑 {s.table.name}</span>}
-                    {s.staff && <span className="ml-2 text-xs text-slate-400">👤 {s.staff.name}</span>}
+                  <td className="px-4 py-3 text-sm">
+                    {s.table ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 font-medium text-slate-700">
+                        🪑 {s.table.name}
+                      </span>
+                    ) : <span className="text-slate-300">—</span>}
                   </td>
+                  <td className="px-4 py-3 text-sm">
+                    {s.staff ? (
+                      <span className="inline-flex items-center gap-1 font-medium text-slate-700">
+                        👤 {s.staff.name}
+                      </span>
+                    ) : <span className="text-slate-300">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 text-sm">{s.items.length} ta</td>
                   <td className="px-4 py-3 text-slate-600 text-sm">
                     {s.paymentMethod === 'cash' ? '💵 Naqd' : s.paymentMethod === 'card' ? '💳 Karta' : '🔄 O\'tkazma'}
                   </td>
@@ -131,20 +143,38 @@ export default function SalesView() {
       {view && (
         <Modal open onClose={() => setView(null)} title={`Chek: ${view.invoiceNo}`} size="md">
           <div className="space-y-4">
-            <div className="bg-slate-50 rounded-xl p-4 grid grid-cols-2 gap-3 text-sm">
+            {/* Staff & Table info - prominent */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 grid grid-cols-2 gap-3 text-sm border border-emerald-100">
               <div>
-                <div className="text-slate-500 text-xs">Sana</div>
-                <div className="font-medium">{formatDateTime(view.createdAt)}</div>
+                <div className="text-emerald-700 text-xs font-semibold">🪑 Stol</div>
+                <div className="font-bold text-slate-900">{view.table?.name || '—'}</div>
               </div>
               <div>
-                <div className="text-slate-500 text-xs">To'lov turi</div>
-                <div className="font-medium">
+                <div className="text-emerald-700 text-xs font-semibold">👤 Ofitsiant</div>
+                <div className="font-bold text-slate-900">{view.staff?.name || '—'}</div>
+              </div>
+              <div>
+                <div className="text-emerald-700 text-xs font-semibold">💳 Kassir</div>
+                <div className="font-bold text-slate-900">
+                  {view.notes?.includes('Kassir:') ? view.notes.split('Kassir:')[1].trim() : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-emerald-700 text-xs font-semibold">📅 Sana</div>
+                <div className="font-bold text-slate-900">{formatDateTime(view.createdAt)}</div>
+              </div>
+              <div>
+                <div className="text-emerald-700 text-xs font-semibold">💰 To'lov turi</div>
+                <div className="font-bold text-slate-900">
                   {view.paymentMethod === 'cash' ? '💵 Naqd' : view.paymentMethod === 'card' ? '💳 Karta' : '🔄 O\'tkazma'}
                 </div>
               </div>
-              {view.customer && <div><div className="text-slate-500 text-xs">Mijoz</div><div className="font-medium">{view.customer.name}</div></div>}
-              {view.staff && <div><div className="text-slate-500 text-xs">Ofitsiant</div><div className="font-medium">{view.staff.name}</div></div>}
-              {view.table && <div><div className="text-slate-500 text-xs">Stol</div><div className="font-medium">{view.table.name}</div></div>}
+              {view.customer && (
+                <div>
+                  <div className="text-emerald-700 text-xs font-semibold">👥 Mijoz</div>
+                  <div className="font-bold text-slate-900">{view.customer.name}</div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
