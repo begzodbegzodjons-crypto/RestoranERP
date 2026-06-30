@@ -108,7 +108,7 @@ export default function DashboardLayout({
   access: Access
   onLogout: () => void
 }) {
-  const [view, setView] = useState<View>('dashboard')
+  const [view, setView] = useState<View>('staffmode')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const stateBadge = {
