@@ -185,6 +185,44 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
     }
   }
 
+  const [deleteModal, setDeleteModal] = useState<Restaurant | null>(null)
+  const [deleteActivity, setDeleteActivity] = useState<any | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+
+  const checkActivity = async (r: Restaurant) => {
+    setDeleteModal(r)
+    setDeleteActivity(null)
+    setDeleteConfirm('')
+    try {
+      const res = await api(`/api/admin/restaurants/${r.id}/delete`)
+      setDeleteActivity(res)
+    } catch (e: any) {
+      toast.error(e.message)
+    }
+  }
+
+  const deleteRestaurant = async () => {
+    if (!deleteModal) return
+    if (deleteConfirm !== deleteModal.name) {
+      toast.error('Tasdiqlash uchun restoran nomini to\'g\'ri kiriting')
+      return
+    }
+    setDeleteLoading(true)
+    try {
+      const res = await api(`/api/admin/restaurants/${deleteModal.id}/delete`, { method: 'DELETE' })
+      toast.success(res.message)
+      setDeleteModal(null)
+      setDeleteActivity(null)
+      setDeleteConfirm('')
+      loadData()
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   const logout = async () => {
     await fetch('/api/admin/login', { method: 'DELETE' })
     setStep('login')
@@ -393,6 +431,14 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                   <option value="trial">Sinovda</option>
                   <option value="blocked">Bloklangan</option>
                 </select>
+                <button
+                  onClick={() => {
+                    toast.info("Har bir restoran yonidagi 📊 tugmasini bosing")
+                  }}
+                  className="px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium hover:bg-slate-200"
+                >
+                  📊 Faollik
+                </button>
               </div>
             </div>
 
@@ -454,6 +500,7 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                                   <button onClick={() => blockRestaurant(r)} className="px-2 py-1 rounded text-xs bg-red-50 text-red-600 hover:bg-red-100 font-medium" title="Bloklash">🚫</button>
                                 </>
                               )}
+                              <button onClick={() => checkActivity(r)} className="px-2 py-1 rounded text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium" title="Faollik va o'chirish">📊</button>
                             </div>
                           </td>
                         </tr>
@@ -464,6 +511,125 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
               </div>
             )}
           </div>
+        )}
+
+        {/* Delete / Activity Modal */}
+        {deleteModal && (
+          <Modal open onClose={() => { setDeleteModal(null); setDeleteActivity(null); setDeleteConfirm('') }} title={`📊 ${deleteModal.name} — faollik va o'chirish`} size="md">
+            <div className="space-y-4">
+              {!deleteActivity ? (
+                <div className="flex items-center justify-center py-8">
+                  <svg className="animate-spin h-8 w-8 text-emerald-500" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                </div>
+              ) : (
+                <>
+                  {/* Activity status */}
+                  <div className={`rounded-xl p-4 border-2 ${
+                    deleteActivity.activity.status === 'active' ? 'bg-emerald-50 border-emerald-200' :
+                    deleteActivity.activity.status === 'idle' ? 'bg-amber-50 border-amber-200' :
+                    'bg-red-50 border-red-200'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-slate-600">Faollik holati</div>
+                        <div className="text-xl font-bold">
+                          {deleteActivity.activity.status === 'active' ? '🟢 Aktiv' :
+                           deleteActivity.activity.status === 'idle' ? '🟡 Kam faol' :
+                           '🔴 Faol emas'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-slate-600">Oxirgi faollik</div>
+                        <div className="font-bold">{deleteActivity.activity.daysSinceActive} kun oldin</div>
+                        <div className="text-xs text-slate-500">{formatDateTime(deleteActivity.activity.lastActivity)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Taomlar</div>
+                      <div className="font-bold">{deleteActivity.activity.productsCount}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Rasmlar</div>
+                      <div className="font-bold">{deleteActivity.activity.imagesCount}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Mijozlar</div>
+                      <div className="font-bold">{deleteActivity.activity.customersCount}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Xodimlar</div>
+                      <div className="font-bold">{deleteActivity.activity.staff}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Savdo (7 kun)</div>
+                      <div className="font-bold">{deleteActivity.activity.salesCount7}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Savdo (30 kun)</div>
+                      <div className="font-bold">{deleteActivity.activity.salesCount30}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Buyurtmalar</div>
+                      <div className="font-bold">{deleteActivity.activity.ordersCount}</div>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-2 text-center">
+                      <div className="text-xs text-slate-500">Server joyi</div>
+                      <div className="font-bold">{deleteActivity.activity.storageMB} MB</div>
+                    </div>
+                  </div>
+
+                  {/* Delete section */}
+                  {deleteActivity.activity.status !== 'active' && (
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                      <div className="font-bold text-red-900 mb-2">⚠️ Akkauntni o'chirish</div>
+                      <p className="text-sm text-red-800 mb-3">
+                        Bu restoran {deleteActivity.activity.daysSinceActive} kundan beri faol emas.
+                        O'chirilsa, barcha ma'lumotlar (taomlar, rasmlar, savdolar, mijozlar) <b>tagi bilan butunlay o'chiriladi</b> va server joyi tozalanadi.
+                      </p>
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-red-700 mb-1">
+                          Tasdiqlash uchun restoran nomini kiriting: <span className="font-mono font-bold">{deleteModal.name}</span>
+                        </label>
+                        <input
+                          value={deleteConfirm}
+                          onChange={e => setDeleteConfirm(e.target.value)}
+                          className="erp-input"
+                          placeholder={deleteModal.name}
+                        />
+                      </div>
+                      <button
+                        onClick={deleteRestaurant}
+                        disabled={deleteLoading || deleteConfirm !== deleteModal.name}
+                        className="w-full py-3 rounded-xl bg-red-500 text-white font-bold disabled:opacity-50 hover:bg-red-600"
+                      >
+                        {deleteLoading ? 'O\'chirilmoqda...' : `🗑️ ${deleteModal.name} ni tagi bilan o'chirish`}
+                      </button>
+                    </div>
+                  )}
+
+                  {deleteActivity.activity.status === 'active' && (
+                    <div className="bg-emerald-50 rounded-xl p-3 text-center text-sm text-emerald-700">
+                      ✓ Bu restoran faol — o'chirish tavsiya etilmaydi
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => { setDeleteModal(null); setDeleteActivity(null); setDeleteConfirm('') }}
+                    className="w-full py-2 text-slate-500 text-sm font-medium"
+                  >
+                    Yopish
+                  </button>
+                </>
+              )}
+            </div>
+          </Modal>
         )}
 
         {/* CODES TAB */}
