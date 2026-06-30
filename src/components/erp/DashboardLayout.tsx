@@ -43,6 +43,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
   {
     section: 'Asosiy',
     items: [
+      { key: 'staffmode', label: '👤 Xodim kirishi (POS)', icon: '🔌' },
       { key: 'dashboard', label: 'Boshqaruv paneli', icon: '📊' },
       { key: 'pos', label: 'POS Kassa', icon: '💳' },
       { key: 'analytics', label: 'Biznes analitikasi', icon: '📈' },
@@ -94,12 +95,6 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'export', label: 'Eksport (Excel)', icon: '📤' },
       { key: 'integrations', label: 'Integratsiyalar', icon: '🔌' },
       { key: 'settings', label: 'Sozlamalar', icon: '⚙️' }
-    ]
-  },
-  {
-    section: 'POS tizimi',
-    items: [
-      { key: 'staffmode', label: '👤 Xodim kirishi (POS)', icon: '🔌' }
     ]
   }
 ]
