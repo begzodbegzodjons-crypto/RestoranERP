@@ -57,7 +57,7 @@ export default function AuthPage({ onAuthed }: { onAuthed: () => void }) {
               </svg>
             </div>
             <div>
-              <div className="text-3xl font-bold tracking-tight">OshxonaERP</div>
+              <div className="text-3xl font-bold tracking-tight">RestoranERP</div>
               <div className="text-base text-emerald-600 font-medium">ERP • CRM • POS Tizimi</div>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function AuthPage({ onAuthed }: { onAuthed: () => void }) {
                   <circle cx="15" cy="15" r="1" />
                 </svg>
               </div>
-              <div className="text-2xl font-bold">OshxonaERP</div>
+              <div className="text-2xl font-bold">RestoranERP</div>
             </div>
 
             {/* Tabs */}
