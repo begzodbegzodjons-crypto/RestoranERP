@@ -54,7 +54,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
   {
     section: 'Mahsulotlar',
     items: [
-      { key: 'menu', label: '📋 Menyu (rasmli)', icon: '📋' },
+      { key: 'menu', label: '📋 Menyu', icon: '📋' },
       { key: 'products', label: 'Taomlar & Retsept', icon: '🍽️' },
       { key: 'categories', label: 'Kategoriyalar', icon: '🏷️' }
     ]
