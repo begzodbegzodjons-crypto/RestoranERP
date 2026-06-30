@@ -887,3 +887,60 @@ Stage Summary:
 - Brauzer print dialogi avtomatik ochiladi (har printer uchun alohida)
 - Sozlamalarda har printer uchun autoPrint yoqib/o'chiriladi
 - Mavjud 27 ta modul yo'qotilmadi
+
+---
+Task ID: ERP-016
+Agent: Main agent (Super Z)
+Task: Printer sozlamalarini kengaytirish - tartibni o'zgartirish, qayta bog'lash
+
+Work Log:
+- Mavjud funksiyalar yo'qotilmadi
+
+- Yangi API: POST /api/printers/[id]/reorder
+  - direction: 'up' | 'down'
+  - sortOrder'larni almashtiradi
+  - Chegaralar tekshiriladi (birinchi/past)
+
+- PrintersView to'liq qayta yozildi (kengaytirildi):
+  1. ↑↓ TUGMALARI - har printer kartochkasida yuqori/pastga ko'chirish
+  2. RAQAMLI TARTIB - har printer yonida tartib raqami (1, 2, 3...)
+  3. HAR PRINTER KARTOCHKASIDA:
+     - Qora header (slate-800): nom, tartib raqami, ↑↓ tugmalar
+     - Avto/Qo'lda badge (⚡ Avto yoki Qo'lda)
+     - "⚡ Avto yoqilgan/o'chiq" tugma (bir bosishda toggle)
+     - "✏️ Tahrirlash" va "🗑️ O'chirish" tugmalari
+     - 📎 Bog'langan kategoriyalar ro'yxati (kartochkalar ko'rinishida)
+     - Har bog'langan kategoriyada 🔄 ko'chirish tugmasi
+  
+  4. KATEGORIYA BOG'LASH JADVALI:
+     - Kategoriya nomi, taomlar soni
+     - Joriy printer (badge bilan)
+     - Dropdown dan o'zgartirish (tez)
+     - "🔄 Ko'chirish" tugmasi (modal ochiladi)
+  
+  5. REASSIGN MODAL:
+     - "Bu kategoriyadagi taomlar qaysi printerga yuborilsin?"
+     - Hamma printerlar ro'yxati (kartochka ko'rinishida)
+     - 🚫 Printerga bog'lamaslik varianti
+     - Har variantda printer nomi, tavsif, ⚡ Avto badge
+     - Joriy printer belgilangan (emerald border)
+  
+  6. OGOHLANTIRISH:
+     - Bog'lanmagan kategoriyalar uchun sariq banner
+     - "Bu kategoriyalardagi taomlar uchun chek chiqmaydi"
+
+- Test natijalari:
+  ✅ Reorder API: Shashlik printer down → 2-o'ringa ko'chdi
+  ✅ Reorder API: Shashlik printer up → 1-o'ringa qaytdi
+  ✅ 3 ta printer to'g'ri tartibda ko'rinmoqda
+  ✅ Kategoriyalar: Grill → Shashlik printer, Ichimliklar → Bar printer
+  ✅ Issiq taomlar → printer yo'q (ogohlantirish ko'rinadi)
+  ✅ Lint: 0 xato
+
+Stage Summary:
+- Printerlarni ↑↓ tugmalari bilan tartiblash
+- Kategoriyalarni istalgan printerga qayta bog'lash (dropdown yoki modal)
+- Noto'g'ri bog'langan kategoriyani oson o'zgartirish
+- Har printer kartochkasida bog'langan kategoriyalar ko'rinadi
+- Bog'lanmagan kategoriyalar uchun ogohlantirish
+- Avtomatik print ni bir bosishda yoqib/o'chirish
