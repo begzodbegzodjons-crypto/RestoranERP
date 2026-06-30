@@ -24,6 +24,8 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
   const [staff, setStaff] = useState<Staff | null>(null)
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
   const [view, setView] = useState<'waiter' | 'cashier' | 'settings'>(null)
+  const [lockCountdown, setLockCountdown] = useState(60) // 1 daqiqalik lock
+  const [isLocked, setIsLocked] = useState(false)
 
   const check = async () => {
     try {
@@ -31,6 +33,8 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
       if (res.authenticated) {
         setStaff(res.staff)
         setRestaurant(res.restaurant)
+        setLockCountdown(60)
+        setIsLocked(false)
       } else {
         setStaff(null)
       }
@@ -41,17 +45,54 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
 
   useEffect(() => { check() }, []) // eslint-disable-line react-hooks/set-state-in-effect
 
+  // 1 daqiqalik avtomatik lock — xavfsizlik
+  useEffect(() => {
+    if (!staff || isLocked) return
+    const interval = setInterval(() => {
+      setLockCountdown(prev => {
+        if (prev <= 1) {
+          setIsLocked(true)
+          return 60
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [staff, isLocked])
+
+  // Activity ga qarab timer ni reset qilish
+  const resetTimer = () => {
+    if (isLocked) return
+    setLockCountdown(60)
+  }
+
+  // User activity ni tinglash (mouse, keyboard, touch)
+  useEffect(() => {
+    if (!staff || isLocked) return
+    const events = ['mousedown', 'keydown', 'touchstart', 'click']
+    const handler = () => resetTimer()
+    events.forEach(e => document.addEventListener(e, handler))
+    return () => events.forEach(e => document.removeEventListener(e, handler))
+  }, [staff, isLocked])
+
   const logout = async () => {
     try {
       await fetch('/api/staff/me', { method: 'POST' })
     } catch {}
     setStaff(null)
     setView(null)
+    setIsLocked(false)
   }
 
   // PIN login screen
   if (!staff) {
     return <StaffLogin restaurantId={restaurantId} restaurantName={restaurantName} onAuthed={check} onExit={onExit} />
+  }
+
+  // LOCK screen — 1 daqiqalik timeout'dan so'ng (xavfsizlik)
+  // Staff logout qilinmaydi, faqat PIN qayta teriladi
+  if (isLocked) {
+    return <StaffLogin restaurantId={restaurantId} restaurantName={restaurantName} onAuthed={check} onExit={onExit} isLocked={true} staffName={staff.name} />
   }
 
   // Determine default view based on position
@@ -70,8 +111,11 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
             </div>
             <div>
               <div className="font-bold text-slate-900 text-sm">{restaurantName}</div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-slate-500 flex items-center gap-2">
                 {staff.name} • {positionLabel(staff.position)}
+                <span className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-semibold ${lockCountdown <= 10 ? 'bg-red-100 text-red-600 animate-pulse' : lockCountdown <= 30 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`} title="Avtomatik lock gacha">
+                  🔒 {lockCountdown}s
+                </span>
               </div>
             </div>
           </div>
@@ -131,11 +175,13 @@ function positionLabel(p: string) {
 }
 
 // ============== PIN LOGIN ==============
-function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit }: {
+function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit, isLocked, staffName }: {
   restaurantId: string
   restaurantName: string
   onAuthed: () => void
   onExit: () => void
+  isLocked?: boolean
+  staffName?: string
 }) {
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
@@ -151,7 +197,11 @@ function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit }: {
         method: 'POST',
         body: JSON.stringify({ restaurantId, pin })
       })
-      toast.success('Xush kelibsiz!')
+      if (isLocked) {
+        toast.success('Qayta kirildi!')
+      } else {
+        toast.success('Xush kelibsiz!')
+      }
       setPin('')
       onAuthed()
     } catch (e: any) {
@@ -164,12 +214,7 @@ function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit }: {
 
   const pressDigit = (d: string) => {
     if (pin.length < 6) {
-      const newPin = pin + d
-      setPin(newPin)
-      if (newPin.length === 4) {
-        // Auto-submit after 4 digits - but allow 5-6 too. Wait a bit.
-        // For better UX, only auto-submit on explicit Enter
-      }
+      setPin(pin + d)
     }
   }
 
@@ -184,7 +229,17 @@ function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit }: {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{restaurantName}</h1>
-          <p className="text-sm text-slate-500 mt-1">Xodim kirishi (PIN)</p>
+          {isLocked ? (
+            <>
+              <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold">
+                🔒 Avtomatik lock (1 daqiqa)
+              </div>
+              {staffName && <p className="text-sm text-slate-500 mt-2">Xodim: <span className="font-semibold">{staffName}</span></p>}
+              <p className="text-xs text-slate-400 mt-1">Davom etish uchun PIN ni qayta tering</p>
+            </>
+          ) : (
+            <p className="text-sm text-slate-500 mt-1">Xodim kirishi (PIN)</p>
+          )}
         </div>
 
         {/* PIN display */}
