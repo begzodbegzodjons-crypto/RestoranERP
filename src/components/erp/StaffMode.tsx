@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api, toast, formatMoney, formatDateTime, Modal, useConfirm } from '../erp/utils'
 
 type Staff = {
@@ -25,6 +25,7 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
   const [view, setView] = useState<'waiter' | 'cashier' | 'settings'>(null)
   const [lockCountdown, setLockCountdown] = useState(60) // 1 daqiqalik avtomatik chiqish
+  const countdownRef = useRef(60)
 
   const check = async () => {
     try {
@@ -32,6 +33,7 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
       if (res.authenticated) {
         setStaff(res.staff)
         setRestaurant(res.restaurant)
+        countdownRef.current = 60
         setLockCountdown(60)
       } else {
         setStaff(null)
@@ -43,29 +45,36 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
 
   useEffect(() => { check() }, []) // eslint-disable-line react-hooks/set-state-in-effect
 
-  // 1 daqiqalik avtomatik lock — xavfsizlik
-  // 1 daqiqa o'tgach to'liq logout qiladi (session o'chiriladi)
-  // Keyin boshqa xodim o'z PIN'i bilan kirishi mumkin
+  // 1 daqiqalik avtomatik chiqish — xavfsizlik
+  // 1 daqiqa o'tgach to'liq logout (session o'chiriladi)
+  // Boshqa xodim o'z PIN'i bilan kirishi mumkin
   useEffect(() => {
     if (!staff) return
+
+    countdownRef.current = 60
+
     const interval = setInterval(() => {
-      setLockCountdown(prev => {
-        if (prev <= 1) {
-          // To'liq logout — session o'chiriladi
-          fetch('/api/staff/me', { method: 'POST' }).catch(() => {})
+      countdownRef.current -= 1
+      if (countdownRef.current <= 0) {
+        clearInterval(interval)
+        // To'liq logout — session o'chiriladi
+        fetch('/api/staff/me', { method: 'POST' }).catch(() => {}).finally(() => {
           setStaff(null)
           setView(null)
-          setIsLocked(false)
-          return 60
-        }
-        return prev - 1
-      })
+          countdownRef.current = 60
+          setLockCountdown(60)
+        })
+      } else {
+        setLockCountdown(countdownRef.current)
+      }
     }, 1000)
+
     return () => clearInterval(interval)
   }, [staff])
 
   // Activity ga qarab timer ni reset qilish
   const resetTimer = () => {
+    countdownRef.current = 60
     setLockCountdown(60)
   }
 
