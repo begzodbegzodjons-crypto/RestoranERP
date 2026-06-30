@@ -24,8 +24,7 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
   const [staff, setStaff] = useState<Staff | null>(null)
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
   const [view, setView] = useState<'waiter' | 'cashier' | 'settings'>(null)
-  const [lockCountdown, setLockCountdown] = useState(60) // 1 daqiqalik lock
-  const [isLocked, setIsLocked] = useState(false)
+  const [lockCountdown, setLockCountdown] = useState(60) // 1 daqiqalik avtomatik chiqish
 
   const check = async () => {
     try {
@@ -34,7 +33,6 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
         setStaff(res.staff)
         setRestaurant(res.restaurant)
         setLockCountdown(60)
-        setIsLocked(false)
       } else {
         setStaff(null)
       }
@@ -46,34 +44,39 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
   useEffect(() => { check() }, []) // eslint-disable-line react-hooks/set-state-in-effect
 
   // 1 daqiqalik avtomatik lock — xavfsizlik
+  // 1 daqiqa o'tgach to'liq logout qiladi (session o'chiriladi)
+  // Keyin boshqa xodim o'z PIN'i bilan kirishi mumkin
   useEffect(() => {
-    if (!staff || isLocked) return
+    if (!staff) return
     const interval = setInterval(() => {
       setLockCountdown(prev => {
         if (prev <= 1) {
-          setIsLocked(true)
+          // To'liq logout — session o'chiriladi
+          fetch('/api/staff/me', { method: 'POST' }).catch(() => {})
+          setStaff(null)
+          setView(null)
+          setIsLocked(false)
           return 60
         }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [staff, isLocked])
+  }, [staff])
 
   // Activity ga qarab timer ni reset qilish
   const resetTimer = () => {
-    if (isLocked) return
     setLockCountdown(60)
   }
 
   // User activity ni tinglash (mouse, keyboard, touch)
   useEffect(() => {
-    if (!staff || isLocked) return
+    if (!staff) return
     const events = ['mousedown', 'keydown', 'touchstart', 'click']
     const handler = () => resetTimer()
     events.forEach(e => document.addEventListener(e, handler))
     return () => events.forEach(e => document.removeEventListener(e, handler))
-  }, [staff, isLocked])
+  }, [staff])
 
   const logout = async () => {
     try {
@@ -81,18 +84,11 @@ export default function StaffMode({ restaurantId, restaurantName, onExit }: {
     } catch {}
     setStaff(null)
     setView(null)
-    setIsLocked(false)
   }
 
-  // PIN login screen
+  // PIN login screen (1 daqiqa o'tganda ham shu yerga qaytadi — to'liq logout)
   if (!staff) {
     return <StaffLogin restaurantId={restaurantId} restaurantName={restaurantName} onAuthed={check} onExit={onExit} />
-  }
-
-  // LOCK screen — 1 daqiqalik timeout'dan so'ng (xavfsizlik)
-  // Staff logout qilinmaydi, faqat PIN qayta teriladi
-  if (isLocked) {
-    return <StaffLogin restaurantId={restaurantId} restaurantName={restaurantName} onAuthed={check} onExit={onExit} isLocked={true} staffName={staff.name} />
   }
 
   // Determine default view based on position
@@ -175,13 +171,11 @@ function positionLabel(p: string) {
 }
 
 // ============== PIN LOGIN ==============
-function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit, isLocked, staffName }: {
+function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit }: {
   restaurantId: string
   restaurantName: string
   onAuthed: () => void
   onExit: () => void
-  isLocked?: boolean
-  staffName?: string
 }) {
   const [pin, setPin] = useState('')
   const [loading, setLoading] = useState(false)
@@ -197,11 +191,7 @@ function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit, isLocked, 
         method: 'POST',
         body: JSON.stringify({ restaurantId, pin })
       })
-      if (isLocked) {
-        toast.success('Qayta kirildi!')
-      } else {
-        toast.success('Xush kelibsiz!')
-      }
+      toast.success('Xush kelibsiz!')
       setPin('')
       onAuthed()
     } catch (e: any) {
@@ -229,17 +219,7 @@ function StaffLogin({ restaurantId, restaurantName, onAuthed, onExit, isLocked, 
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{restaurantName}</h1>
-          {isLocked ? (
-            <>
-              <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold">
-                🔒 Avtomatik lock (1 daqiqa)
-              </div>
-              {staffName && <p className="text-sm text-slate-500 mt-2">Xodim: <span className="font-semibold">{staffName}</span></p>}
-              <p className="text-xs text-slate-400 mt-1">Davom etish uchun PIN ni qayta tering</p>
-            </>
-          ) : (
-            <p className="text-sm text-slate-500 mt-1">Xodim kirishi (PIN)</p>
-          )}
+          <p className="text-sm text-slate-500 mt-1">Xodim kirishi (PIN)</p>
         </div>
 
         {/* PIN display */}
