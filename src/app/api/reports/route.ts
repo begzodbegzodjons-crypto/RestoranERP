@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentRestaurant } from '@/lib/auth'
 
-// GET /api/reports - batafsil hisobot (date range bo'yicha)
+// GET /api/reports - TO'LIQ hisob-kitob (barcha ma'lumotlar)
 export async function GET(req: NextRequest) {
   try {
     const restaurant = await getCurrentRestaurant()
     if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
-    const from = searchParams.get('from') ? new Date(searchParams.get('from')!) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    const from = searchParams.get('from') ? new Date(searchParams.get('from')!) : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     const to = searchParams.get('to') ? new Date(searchParams.get('to')!) : new Date()
+    // Extend 'to' to end of day
+    to.setHours(23, 59, 59, 999)
 
-    // Sales in range
+    // ============ SALES ============
     const sales = await db.sale.findMany({
       where: {
         restaurantId: restaurant.id,
@@ -22,12 +24,13 @@ export async function GET(req: NextRequest) {
       include: {
         items: { include: { product: { include: { category: true } } } },
         staff: true,
-        table: true
+        table: true,
+        customer: true
       },
       orderBy: { createdAt: 'desc' }
     })
 
-    // Expenses in range
+    // ============ EXPENSES ============
     const expenses = await db.expense.findMany({
       where: {
         restaurantId: restaurant.id,
@@ -36,7 +39,7 @@ export async function GET(req: NextRequest) {
       orderBy: { date: 'desc' }
     })
 
-    // Purchases in range
+    // ============ PURCHASES (KIRIM) ============
     const purchases = await db.purchase.findMany({
       where: {
         restaurantId: restaurant.id,
@@ -46,7 +49,22 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' }
     })
 
-    // Aggregations
+    // ============ INVENTORY (OMBOR) - joriy holat ============
+    const ingredients = await db.ingredient.findMany({
+      where: { restaurantId: restaurant.id },
+      include: { supplier: true }
+    })
+
+    const inventoryValue = ingredients.reduce((s, i) => s + i.stock * i.unitPrice, 0)
+    const lowStockItems = ingredients.filter(i => i.stock <= i.minStock)
+
+    // ============ PRODUCTS (TAOMLAR) ============
+    const products = await db.product.findMany({
+      where: { restaurantId: restaurant.id },
+      include: { category: true }
+    })
+
+    // ============ AGGREGATIONS ============
     const totalSales = sales.reduce((s, x) => s + x.total, 0)
     const totalProfit = sales.reduce((s, x) => s + x.profit, 0)
     const totalCost = sales.reduce((s, x) => s + x.costOfGoods, 0)
@@ -54,7 +72,7 @@ export async function GET(req: NextRequest) {
     const totalPurchases = purchases.reduce((s, x) => s + x.totalAmount, 0)
     const netProfit = totalProfit - totalExpenses
 
-    // Sales by category
+    // By category
     const categoryMap = new Map<string, { name: string; qty: number; revenue: number; profit: number }>()
     for (const sale of sales) {
       for (const item of sale.items) {
@@ -68,7 +86,7 @@ export async function GET(req: NextRequest) {
     }
     const byCategory = Array.from(categoryMap.values()).sort((a, b) => b.revenue - a.revenue)
 
-    // Sales by product
+    // By product
     const productMap = new Map<string, { name: string; qty: number; revenue: number; profit: number }>()
     for (const sale of sales) {
       for (const item of sale.items) {
@@ -81,7 +99,7 @@ export async function GET(req: NextRequest) {
     }
     const byProduct = Array.from(productMap.values()).sort((a, b) => b.revenue - a.revenue)
 
-    // Sales by payment method
+    // By payment method
     const paymentMap = new Map<string, number>()
     for (const sale of sales) {
       paymentMap.set(sale.paymentMethod, (paymentMap.get(sale.paymentMethod) || 0) + sale.total)
@@ -123,6 +141,24 @@ export async function GET(req: NextRequest) {
     }
     const byTable = Array.from(tableMap.values()).sort((a, b) => b.revenue - a.revenue)
 
+    // Expenses by category
+    const expenseCatMap = new Map<string, number>()
+    for (const e of expenses) {
+      expenseCatMap.set(e.category, (expenseCatMap.get(e.category) || 0) + e.amount)
+    }
+    const expensesByCategory = Array.from(expenseCatMap.entries()).map(([category, amount]) => ({ category, amount }))
+
+    // Purchases by supplier
+    const supplierMap = new Map<string, { name: string; amount: number; count: number }>()
+    for (const p of purchases) {
+      const name = p.supplier?.name || 'Yetkazib beruvchisiz'
+      const existing = supplierMap.get(name) || { name, amount: 0, count: 0 }
+      existing.amount += p.totalAmount
+      existing.count += 1
+      supplierMap.set(name, existing)
+    }
+    const purchasesBySupplier = Array.from(supplierMap.values()).sort((a, b) => b.amount - a.amount)
+
     return NextResponse.json({
       range: { from, to },
       summary: {
@@ -134,7 +170,11 @@ export async function GET(req: NextRequest) {
         netProfit,
         orderCount: sales.length,
         avgOrder: sales.length > 0 ? totalSales / sales.length : 0,
-        profitMargin: totalSales > 0 ? (totalProfit / totalSales) * 100 : 0
+        profitMargin: totalSales > 0 ? (totalProfit / totalSales) * 100 : 0,
+        inventoryValue,
+        inventoryItems: ingredients.length,
+        lowStockCount: lowStockItems.length,
+        productCount: products.length
       },
       byCategory,
       byProduct,
@@ -142,22 +182,59 @@ export async function GET(req: NextRequest) {
       byDay,
       byWaiter,
       byTable,
-      recentSales: sales.slice(0, 20).map(s => ({
+      expensesByCategory,
+      purchasesBySupplier,
+      recentSales: sales.slice(0, 50).map(s => ({
         id: s.id,
         invoiceNo: s.invoiceNo,
         createdAt: s.createdAt,
         total: s.total,
         profit: s.profit,
+        costOfGoods: s.costOfGoods,
         paymentMethod: s.paymentMethod,
         itemCount: s.items.length,
         waiterName: s.staff?.name || null,
         tableName: s.table?.name || null,
-        kassir: s.notes?.includes('Kassir:') ? s.notes.split('Kassir:')[1].trim() : null
+        kassir: s.notes?.includes('Kassir:') ? s.notes.split('Kassir:')[1].trim() : null,
+        items: s.items.map(it => ({ name: it.product.name, qty: it.quantity, price: it.unitPrice, total: it.total }))
       })),
-      expenses: expenses.slice(0, 50),
-      purchases: purchases.slice(0, 50)
+      allExpenses: expenses.map(e => ({
+        id: e.id,
+        category: e.category,
+        amount: e.amount,
+        description: e.description,
+        date: e.date
+      })),
+      allPurchases: purchases.map(p => ({
+        id: p.id,
+        invoiceNo: p.invoiceNo,
+        supplier: p.supplier?.name || '—',
+        totalAmount: p.totalAmount,
+        createdAt: p.createdAt,
+        itemCount: p.items.length,
+        items: p.items.map(it => ({ name: it.ingredient.name, qty: it.quantity, unit: it.unit, price: it.unitPrice, total: it.total }))
+      })),
+      inventory: ingredients.map(i => ({
+        id: i.id,
+        name: i.name,
+        unit: i.unit,
+        stock: i.stock,
+        unitPrice: i.unitPrice,
+        totalValue: i.stock * i.unitPrice,
+        minStock: i.minStock,
+        isLowStock: i.stock <= i.minStock,
+        supplier: i.supplier?.name || null
+      })),
+      lowStockItems: lowStockItems.map(i => ({
+        id: i.id,
+        name: i.name,
+        unit: i.unit,
+        stock: i.stock,
+        minStock: i.minStock
+      }))
     })
   } catch (e: any) {
+    console.error('Reports error:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
