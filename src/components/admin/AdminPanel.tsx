@@ -585,40 +585,36 @@ export default function AdminPanel({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
 
-                  {/* Delete section */}
-                  {deleteActivity.activity.status !== 'active' && (
-                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                      <div className="font-bold text-red-900 mb-2">⚠️ Akkauntni o'chirish</div>
-                      <p className="text-sm text-red-800 mb-3">
-                        Bu restoran {deleteActivity.activity.daysSinceActive} kundan beri faol emas.
-                        O'chirilsa, barcha ma'lumotlar (taomlar, rasmlar, savdolar, mijozlar) <b>tagi bilan butunlay o'chiriladi</b> va server joyi tozalanadi.
-                      </p>
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-red-700 mb-1">
-                          Tasdiqlash uchun restoran nomini kiriting: <span className="font-mono font-bold">{deleteModal.name}</span>
-                        </label>
-                        <input
-                          value={deleteConfirm}
-                          onChange={e => setDeleteConfirm(e.target.value)}
-                          className="erp-input"
-                          placeholder={deleteModal.name}
-                        />
+                  {/* Delete section - har doim ko'rinadi */}
+                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                    <div className="font-bold text-red-900 mb-2">🗑️ Akkauntni tagi bilan o'chirish</div>
+                    <p className="text-sm text-red-800 mb-3">
+                      O'chirilsa, barcha ma'lumotlar (taomlar, rasmlar, savdolar, mijozlar, xodimlar) <b>tagi bilan butunlay o'chiriladi</b> va server joyi tozalanadi. Bu amalni qaytarib bo'lmaydi!
+                    </p>
+                    {deleteActivity.activity.status === 'active' && (
+                      <div className="bg-amber-100 rounded-lg p-2 mb-3 text-xs text-amber-800">
+                        ⚠️ Diqqat: Bu restoran hozir faol ({deleteActivity.activity.daysSinceActive} kun). O'chirish tavsiya etilmaydi, lekin majbur o'chirishingiz mumkin.
                       </div>
-                      <button
-                        onClick={deleteRestaurant}
-                        disabled={deleteLoading || deleteConfirm !== deleteModal.name}
-                        className="w-full py-3 rounded-xl bg-red-500 text-white font-bold disabled:opacity-50 hover:bg-red-600"
-                      >
-                        {deleteLoading ? 'O\'chirilmoqda...' : `🗑️ ${deleteModal.name} ni tagi bilan o'chirish`}
-                      </button>
+                    )}
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium text-red-700 mb-1">
+                        Tasdiqlash uchun restoran nomini kiriting: <span className="font-mono font-bold">{deleteModal.name}</span>
+                      </label>
+                      <input
+                        value={deleteConfirm}
+                        onChange={e => setDeleteConfirm(e.target.value)}
+                        className="erp-input"
+                        placeholder={deleteModal.name}
+                      />
                     </div>
-                  )}
-
-                  {deleteActivity.activity.status === 'active' && (
-                    <div className="bg-emerald-50 rounded-xl p-3 text-center text-sm text-emerald-700">
-                      ✓ Bu restoran faol — o'chirish tavsiya etilmaydi
-                    </div>
-                  )}
+                    <button
+                      onClick={deleteRestaurant}
+                      disabled={deleteLoading || deleteConfirm !== deleteModal.name}
+                      className="w-full py-3 rounded-xl bg-red-500 text-white font-bold disabled:opacity-50 hover:bg-red-600"
+                    >
+                      {deleteLoading ? 'O\'chirilmoqda...' : `🗑️ ${deleteModal.name} ni tagi bilan o'chirish`}
+                    </button>
+                  </div>
 
                   <button
                     onClick={() => { setDeleteModal(null); setDeleteActivity(null); setDeleteConfirm('') }}
