@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oshxona-erp",
+  "compatibility_date": "2025-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "DEPLOY_TARGET": "cloudflare"
+  },
+  "// note": "OpenNext adapter ishlatadi. Build: `npm run pages:build` -> `.open-next/` yaratiladi. Deploy: `npm run pages:deploy` yoki Cloudflare Pages dashboard'ida GitHub'ga ulang.",
+  "// env_vars": "DATABASE_URL va TIDB_DATABASE_URL Cloudflare Pages dashboard'ida Settings > Environment variables bo'limidan o'rnatiladi (Secret sifatida).",
+  "observability": {
+    "enabled": true
+  }
+}

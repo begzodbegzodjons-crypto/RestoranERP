@@ -13,7 +13,13 @@
     "db:reset": "prisma migrate reset",
     "db:push:prod": "prisma db push --schema=prisma/schema.production.prisma",
     "db:generate:prod": "prisma generate --schema=prisma/schema.production.prisma",
-    "vercel-build": "prisma generate --schema=prisma/schema.production.prisma && next build"
+    "vercel-build": "prisma generate --schema=prisma/schema.production.prisma && next build",
+    "db:push:tidb": "prisma db push --schema=prisma/schema.tidb.prisma",
+    "db:generate:tidb": "prisma generate --schema=prisma/schema.tidb.prisma",
+    "db:migrate:tidb": "prisma migrate dev --schema=prisma/schema.tidb.prisma",
+    "pages:build": "prisma generate --schema=prisma/schema.tidb.prisma && npx opennextjs-cloudflare build && npx wrangler types",
+    "pages:preview": "npx opennextjs-cloudflare preview",
+    "pages:deploy": "npx opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -22,6 +28,7 @@
     "@hookform/resolvers": "^5.1.1",
     "@mdxeditor/editor": "^3.39.1",
     "@prisma/client": "^6.11.1",
+    "@tidbcloud/prisma-adapter": "^6.17.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -51,6 +58,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@reactuses/core": "^6.0.5",
     "@supabase/supabase-js": "^2.108.2",
+    "@tidbcloud/serverless": "^0.3.0",
     "@tanstack/react-query": "^5.82.0",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
@@ -85,6 +93,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.1",
     "@tailwindcss/postcss": "^4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -93,6 +102,7 @@
     "eslint-config-next": "^16.1.1",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.86.0"
   }
 }

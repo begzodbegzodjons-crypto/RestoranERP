@@ -1,0 +1,736 @@
+// OshxonaERP - Professional Restaurant ERP/CRM/POS System
+// Multi-tenant: har bir restoran alohida ma'lumotlar bazasiga ega
+//
+// THIS FILE: TiDB Cloud (MySQL-compatible) - PRODUCTION
+// Cloudflare Pages + TiDB Cloud Serverless deployment uchun
+//
+// Foydalanish:
+//   DATABASE_URL=mysql://user:pass@host:4000/dbname npx prisma db push --schema=prisma/schema.tidb.prisma
+//
+// Eslatma: TiDB MySQL-compatible, shuning uchun ushbu schema
+// schema.production.prisma bilan deyarli bir xil (faqat provider=mysql)
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// TENANT (RESTAURANT) - har bir restoran alohida
+// ============================================================
+model Restaurant {
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  passwordHash    String
+  phone           String?
+  address         String?  @db.Text
+  logoUrl         String?
+  currency        String   @default("UZS")
+  taxRate         Float    @default(0.0)
+  // Ofitsiant xizmati foizi (avtomatik to'lovga qo'shiladi)
+  serviceChargePercent Float @default(0.0)
+  // QQS solig'i foizi (O'zbekistonda 12%)
+  vatRate         Float    @default(0.0)
+  // Telegram bot uchun (notif yuborish)
+  telegramBotToken String?
+  telegramChatId  String?
+
+  // Trial / Activation logic
+  status          String   @default("trial") // trial | active | blocked
+  trialStart      DateTime @default(now())
+  trialEnd        DateTime
+  activatedAt     DateTime?
+  activationEnd   DateTime? // 30 days from activation
+  activationCode  String?  // currently active code
+
+  // Admin tomonidan boshqarish
+  blockedByAdmin  Boolean  @default(false)
+  blockedReason   String?  @db.Text
+  blockedAt       DateTime?
+  adminNotes      String?  @db.Text
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  branches        Branch[]
+  categories      Category[]
+  products        Product[]
+  ingredients     Ingredient[]
+  recipes         Recipe[]
+  inventoryItems  InventoryItem[]
+  suppliers       Supplier[]
+  purchases       Purchase[]
+  sales           Sale[]
+  expenses        Expense[]
+  customers       Customer[]
+  staff           Staff[]
+  tables          RestaurantTable[]
+  rooms           Room[]
+  sessions        Session[]
+  orders          Order[]
+  shifts          Shift[]
+  reservations    Reservation[]
+  coupons         Coupon[]
+  customerDebts   CustomerDebt[]
+  notifications   Notification[]
+  printerStations PrinterStation[]
+  printJobs       PrintJob[]
+}
+
+// Session for restaurant login
+model Session {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  token         String   @unique
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// ACTIVATION CODES - admin tomonidan generatsiya qilinadi
+// ============================================================
+model ActivationCode {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  status        String    @default("unused") // unused | used
+  validDays     Int       @default(30)
+  createdAt     DateTime  @default(now())
+  usedBy        String?   // restaurantId
+  usedAt        DateTime?
+  expiresAt     DateTime? // activation expiration date after use
+
+  @@index([status])
+}
+
+// ============================================================
+// BRANCHES - filiallar
+// ============================================================
+model Branch {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String
+  address       String?
+  phone         String?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// MENU / PRODUCTS
+// ============================================================
+model Category {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String
+  description   String? @db.Text
+  // Printer routing - bu kategoriyadagi taomlar qaysi printerga yuboriladi
+  printerStationId String?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  printerStation PrinterStation? @relation(fields: [printerStationId], references: [id], onDelete: SetNull)
+  products      Product[]
+
+  @@index([restaurantId])
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  categoryId    String?
+  name          String
+  description   String? @db.Text
+  // Selling price (sotilish narxi)
+  price         Float
+  // Auto-calculated cost (tayyorlash narxi - retsept asosida)
+  cost          Float    @default(0)
+  // Profit margin (foyda)
+  unit          String   @default("dona")
+  imageUrl      String?
+  isAvailable   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category      Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  recipes       Recipe[]
+  saleItems     SaleItem[]
+  orderItems    OrderItem[]
+
+  @@index([restaurantId])
+  @@index([categoryId])
+}
+
+// ============================================================
+// INGREDIENTS (OMBOR MAHSULOTLARI)
+// ============================================================
+model Ingredient {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String
+  unit          String   // kg, litr, dona, gr, ml
+  // Current stock quantity
+  stock         Float    @default(0)
+  // Minimum stock for low-stock alert
+  minStock      Float    @default(0)
+  // Purchase price per unit (1 kg narxi)
+  unitPrice     Float    @default(0)
+  supplierId    String?
+  notes         String? @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  supplier      Supplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  recipes       Recipe[]
+  inventoryItems InventoryItem[]
+  purchaseItems PurchaseItem[]
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// RECIPE - retsept (1 taom = N ingredient)
+// ============================================================
+model Recipe {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  productId     String
+  ingredientId  String
+  // Quantity of ingredient needed per 1 portion
+  quantity      Float
+  unit          String
+  // Cost = quantity * ingredient.unitPrice (auto-calculated)
+  cost          Float    @default(0)
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  product       Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredient    Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, ingredientId])
+  @@index([restaurantId, productId])
+}
+
+// ============================================================
+// INVENTORY ITEMS - qo'shimcha ombor yozuvlari (harakatlar)
+// ============================================================
+model InventoryItem {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  ingredientId  String
+  type          String   // in (kirim) | out (chiqim) | adjustment
+  quantity      Float
+  unitPrice     Float
+  reason        String?  // purchase, sale, waste, correction
+  refType       String?  // Purchase | Sale | Manual
+  refId         String?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  ingredient    Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, ingredientId])
+}
+
+// ============================================================
+// SUPPLIERS - yetkazib beruvchilar
+// ============================================================
+model Supplier {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String
+  phone         String?
+  address       String? @db.Text
+  notes         String? @db.Text
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  ingredients   Ingredient[]
+  purchases     Purchase[]
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// PURCHASES - kirim (xomashyo sotib olish)
+// ============================================================
+model Purchase {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  supplierId    String?
+  invoiceNo     String?
+  totalAmount   Float    @default(0)
+  paidAmount    Float    @default(0)
+  status        String   @default("paid") // paid | debt
+  notes         String? @db.Text
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  supplier      Supplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  items         PurchaseItem[]
+
+  @@index([restaurantId])
+  @@index([supplierId])
+}
+
+model PurchaseItem {
+  id            String   @id @default(cuid())
+  purchaseId    String
+  ingredientId  String
+  quantity      Float
+  unit          String
+  unitPrice     Float
+  total         Float
+
+  purchase      Purchase   @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  ingredient    Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseId])
+  @@index([ingredientId])
+}
+
+// ============================================================
+// SALES (POS) - savdo
+// ============================================================
+model Sale {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  invoiceNo     String
+  tableId       String?
+  customerId    String?
+  staffId       String?
+  // Subtotal before discount/tax
+  subtotal      Float
+  discount      Float    @default(0)
+  taxAmount     Float    @default(0)
+  total         Float
+  paidAmount    Float    @default(0)
+  paymentMethod String   @default("cash") // cash | card | transfer
+  status        String   @default("completed") // completed | refunded | pending
+  // Total cost of goods sold (COGS)
+  costOfGoods   Float    @default(0)
+  profit        Float    @default(0)
+  notes         String? @db.Text
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table         RestaurantTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  customer      Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  staff         Staff?     @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  items         SaleItem[]
+
+  @@index([restaurantId])
+  @@index([customerId])
+  @@index([tableId])
+}
+
+model SaleItem {
+  id            String   @id @default(cuid())
+  saleId        String
+  productId     String
+  quantity      Float
+  unitPrice     Float
+  // Cost at time of sale
+  unitCost      Float
+  total         Float
+  totalCost     Float
+
+  sale          Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+// ============================================================
+// CRM - CUSTOMERS
+// ============================================================
+model Customer {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String
+  phone         String?
+  email         String?
+  address       String? @db.Text
+  notes         String? @db.Text
+  totalOrders   Int      @default(0)
+  totalSpent    Float    @default(0)
+  // Loyalty dasturi
+  loyaltyPoints Int      @default(0)
+  birthday      DateTime?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  sales         Sale[]
+  debts         CustomerDebt[]
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// STAFF - xodimlar
+// ============================================================
+model Staff {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String
+  phone         String?
+  position      String?  // waiter, chef, manager, cashier
+  salary        Float    @default(0)
+  status        String   @default("active") // active | inactive
+
+  // Login uchun: PIN (4-6 raqamli) yoki parol
+  pin           String?  // 4-6 digit PIN for fast login
+  passwordHash  String?  // optional password (PIN bo'lmasa)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  sales         Sale[]
+  staffSessions StaffSession[]
+  ordersAsWaiter  Order[] @relation("OrderWaiter")  // ofitsiant yaratgan buyurtmalar
+  ordersAsCashier Order[] @relation("OrderCashier") // kassir yopgan buyurtmalar
+  shifts        Shift[]   @relation("ShiftStaff")   // kassir smenalari
+
+  @@index([restaurantId])
+}
+
+// Staff session (kassir/ofitsiant uchun alohida)
+model StaffSession {
+  id            String   @id @default(cuid())
+  staffId       String
+  token         String   @unique
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  staff         Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+}
+
+// ============================================================
+// TABLES - stol
+// ============================================================
+model RestaurantTable {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  roomId        String?  // xona (Zal, VIP, Tashqi) - ixtiyoriy
+  name          String   // "Stol 1"
+  seats         Int      @default(4)
+  status        String   @default("free") // free | occupied | reserved
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  room          Room?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  sales         Sale[]
+  orders        Order[]
+  reservations  Reservation[]
+
+  @@index([restaurantId])
+  @@index([roomId])
+}
+
+// ============================================================
+// ROOMS - xonalar (Zal, VIP, Tashqi, etc.)
+// ============================================================
+model Room {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String   // "Asosiy zal", "VIP xona", "Tashqi terassa"
+  description   String? @db.Text
+  // Rang (UI da farqlash uchun) - tailwind rang class
+  color         String   @default("emerald")
+  // Tartib raqami
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tables        RestaurantTable[]
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// ORDERS - ofitsiant yaratgan, kassir yopadigan buyurtmalar
+// ============================================================
+model Order {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  tableId       String
+  waiterId      String   // ofitsiant (Staff)
+  cashierId     String?  // kassir (Staff) - to'lovni qabul qilgan
+  status        String   @default("open") // open (ofitsiant yubordi) | paid (kassir yopdi) | cancelled
+  // KDS - oshpaz ekrani uchun
+  kitchenStatus String   @default("new") // new | cooking | ready | served
+  kitchenStartedAt DateTime?
+  kitchenReadyAt  DateTime?
+  invoiceNo     String?
+
+  // Shift bog'lash
+  shiftId       String?
+
+  subtotal      Float    @default(0)
+  serviceChargePercent Float @default(0)
+  serviceChargeAmount  Float  @default(0)
+  discount      Float    @default(0)
+  total         Float    @default(0)
+
+  // To'lov ma'lumotlari (kassir to'ldiradi)
+  paymentMethod String?  // cash | card | transfer
+  paidAt        DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table         RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  waiter        Staff @relation("OrderWaiter", fields: [waiterId], references: [id], onDelete: Cascade)
+  cashier       Staff? @relation("OrderCashier", fields: [cashierId], references: [id], onDelete: SetNull)
+  items         OrderItem[]
+  printJobs     PrintJob[]
+
+  @@index([restaurantId])
+  @@index([tableId])
+  @@index([waiterId])
+  @@index([status])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  productId     String
+  quantity      Float
+  unitPrice     Float
+  unitCost      Float
+  total         Float
+  totalCost     Float
+  notes         String? @db.Text  // ofitsiant izohi (masalan: "achchiqroq qiling")
+  createdAt     DateTime @default(now())
+
+  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
+}
+// ============================================================
+model Expense {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  category      String   // rent, salary, utility, marketing, other
+  amount        Float
+  description   String? @db.Text
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// ADMIN (site owner) - only 1 record, password "Balandtoglar1"
+// ============================================================
+model AdminLog {
+  id            String   @id @default(cuid())
+  action        String
+  detail        String? @db.Text
+  ip            String?
+  createdAt     DateTime @default(now())
+}
+
+// ============================================================
+// SHIFT - kassir smenasi (open/close + Z-otchet)
+// ============================================================
+model Shift {
+  id            String    @id @default(cuid())
+  restaurantId  String
+  staffId       String    // kassir
+  status        String    @default("open") // open | closed
+  // Boshlang'ich naqd kassada
+  openingCash   Float     @default(0)
+  // Yopilganda - hisoblangan va haqiqiy naqd
+  expectedCash  Float     @default(0)
+  closingCash   Float     @default(0)
+  cashDiff      Float     @default(0) // closing - expected (ortiqcha/yo'qotish)
+  // Smena davomida to'plangan
+  totalSales    Float     @default(0)
+  cashSales     Float     @default(0)
+  cardSales     Float     @default(0)
+  transferSales Float     @default(0)
+  orderCount    Int       @default(0)
+  // Vaqt
+  openedAt      DateTime  @default(now())
+  closedAt      DateTime?
+  notes         String? @db.Text
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  staff         Staff     @relation("ShiftStaff", fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
+  @@index([staffId])
+}
+
+// ============================================================
+// RESERVATION - stol rezervatsiyasi
+// ============================================================
+model Reservation {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  tableId       String?
+  customerName  String
+  phone         String
+  partySize     Int       @default(2)
+  reservationDate DateTime
+  reservationTime String  // "19:30"
+  status        String   @default("pending") // pending | confirmed | seated | cancelled | no_show
+  notes         String? @db.Text
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table         RestaurantTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId, reservationDate])
+  @@index([status])
+}
+
+// ============================================================
+// COUPON - chegirma kuponlari
+// ============================================================
+model Coupon {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  code          String   // "OSH10" - unique within restaurant
+  description   String? @db.Text
+  // Type: percent (foiz) | fixed (summa)
+  discountType  String   @default("percent") // percent | fixed
+  discountValue Float    // 10 means 10% or 10000 UZS
+  // Min buyurtma summasi (chegirma ishlashi uchun)
+  minOrder      Float    @default(0)
+  // Foydalanish chegarasi
+  maxUses       Int      @default(0) // 0 = cheksiz
+  usedCount     Int      @default(0)
+  // Muddat
+  validFrom     DateTime @default(now())
+  validUntil    DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, code])
+  @@index([restaurantId, isActive])
+}
+
+// ============================================================
+// CUSTOMER DEBT - mijoz qarzi
+// ============================================================
+model CustomerDebt {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  customerId    String?
+  customerName  String
+  phone         String
+  // Qarz
+  amount        Float
+  paidAmount    Float    @default(0)
+  remaining     Float    @default(0)
+  status        String   @default("unpaid") // unpaid | partial | paid
+  dueDate       DateTime?
+  notes         String? @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customer      Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId, status])
+  @@index([customerId])
+}
+
+// ============================================================
+// NOTIFICATION - bildirishnomalar (Telegram/email uchun)
+// ============================================================
+model Notification {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  type          String   // new_order | low_stock | shift_closed | reservation | payment | debt
+  title         String
+  message       String
+  // receiver: who should see this
+  audience      String   @default("all") // all | admin | kitchen | cashier | waiter
+  isRead        Boolean  @default(false)
+  metadata      String? @db.Text  // JSON string with extra data
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, isRead])
+  @@index([restaurantId, audience])
+}
+
+// ============================================================
+// PRINTER STATIONS - printer stansiyalari (shashlik, oshpaz, bar, kassa)
+// ============================================================
+model PrinterStation {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String   // "Shashlik printer", "Oshpaz printer", "Bar printer", "Kassa chek printer"
+  description   String? @db.Text
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  // Avtomatik print - ofitsiant buyurtma bosganda, print job avtomatik print queue'ga tushadi
+  // Kassir aralashmasdan, brauzer print dialog ochiladi
+  autoPrint     Boolean  @default(true)
+  // Printer IP manzili (local network printer uchun, kelajakda)
+  printerIp     String?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  categories    Category[]
+  printJobs     PrintJob[]
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// PRINT JOBS - print navbati (ofitsiant buyurtma bosganda avtomatik yaratiladi)
+// ============================================================
+model PrintJob {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  orderId       String
+  printerStationId String
+  status        String   @default("pending") // pending | printed | failed
+  // JSON content: { table, waiter, items, orderNo, createdAt }
+  content       String   @db.LongText
+  createdAt     DateTime @default(now())
+  printedAt     DateTime?
+  // Avtomatik print uchun - ofitsiant buyurtma bosganda true bo'ladi
+  // AutoPrintMonitor komponenti bu flag bor joblarni avtomatik print qiladi
+  autoPrintReady Boolean @default(false)
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  printerStation PrinterStation @relation(fields: [printerStationId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
+  @@index([printerStationId, status])
+  @@index([autoPrintReady, status])
+}
