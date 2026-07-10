@@ -1,17 +1,11 @@
 // Prisma client - TiDB Cloud + Cloudflare Pages muhitga moslashtirilgan
 // ============================================================================
-// Strategiya:
-// 1) Cloudflare Pages (production) -> @tidbcloud/serverless driver +
-//    @tidbcloud/prisma-adapter orqali Prisma Client ishlatiladi.
-//    Bu TCPsiz HTTP fetch orqali ishlaydi (CF Workers runtime da ishlaydi).
-// 2) Lokal dev (SQLite) -> oddiy PrismaClient ishlatiladi.
-// 3) Vercel/Node.js prod (PostgreSQL) -> oddiy PrismaClient ishlatiladi.
+// Cloudflare Workers runtime muhitida Prisma Client faqat TiDB adapter
+// orqali ishlaydi (TCP yo'q, HTTP fetch orqali).
 //
-// Environment orqali avtomatik tanlanadi:
-//   - process.env.TIDB_DATABASE_URL mavjud bo'lsa      -> TiDB serverless (CF)
-//   - process.env.DATABASE_URL "file:" bilan boshlansa -> SQLite (local)
-//   - process.env.DATABASE_URL "tidbcloud.com" ni o'z ichrasasa -> TiDB
-//   - aks holda                                            -> oddiy PrismaClient
+// Muhim: Cloudflare Workers da `fs` moduli to'liq qo'llab-quvvatlanmaydi,
+// shuning uchun Prisma Client'ni faqat TIDB_DATABASE_URL mavjud bo'lganda
+// initialize qilamiz. Lokal dev uchun SQLite fallback saqlanadi.
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter'
@@ -24,13 +18,18 @@ function createPrismaClient(): PrismaClient {
   const databaseUrl = process.env.DATABASE_URL || ''
   const tidbServerlessUrl = process.env.TIDB_DATABASE_URL
 
-  // === 1. Cloudflare Pages / TiDB Serverless (HTTP driver) ===
-  // CF Workers da TCP yo'qligi uchun @tidbcloud/serverless driver ishlatiladi
-  // Bu URL `mysql://user:pass@host:4000/db?sslaccept=strict` formatida bo'ladi
-  if (tidbServerlessUrl || databaseUrl.includes('tidbcloud.com')) {
+  // Production (Cloudflare Workers yoki Node.js prod) - TiDB serverless adapter
+  // Bu yerda databaseUrl "mysql://..." formatida bo'ladi (file: emas)
+  const isTiDB = tidbServerlessUrl ||
+    databaseUrl.includes('tidbcloud.com') ||
+    databaseUrl.startsWith('mysql://')
+
+  if (isTiDB) {
     const url = tidbServerlessUrl || databaseUrl
     try {
       const adapter = new PrismaTiDBCloud({ url })
+      // adapter berilganda Prisma hech qanday engine ishlatmaydi - to'g'ridan-to'g'ri
+      // adapter orqali so'rov yuboradi. fs.readdir chaqirilmaydi.
       return new PrismaClient({ adapter })
     } catch (err) {
       console.error('[db] TiDB serverless adapter ishga tushmadi:', err)
@@ -38,7 +37,8 @@ function createPrismaClient(): PrismaClient {
     }
   }
 
-  // === 2. Lokal dev (SQLite) yoki Node.js prod (PostgreSQL) ===
+  // Lokal dev (SQLite) - faqat Node.js muhitida ishlaydi
+  // Cloudflare Workers bu shoxga tushmaydi
   return new PrismaClient({
     log: process.env.NODE_ENV !== 'production' ? ['query', 'error', 'warn'] : ['error'],
   })
