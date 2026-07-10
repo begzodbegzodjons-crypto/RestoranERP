@@ -75,3 +75,4 @@ prisma/*.db-journal
 # Test files
 test-*.png
 ref-*.png
+worker-configuration.d.ts
