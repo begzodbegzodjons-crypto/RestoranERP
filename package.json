@@ -18,7 +18,8 @@
     "db:push:tidb": "prisma db push --schema=prisma/schema.tidb.prisma",
     "db:generate:tidb": "prisma generate --schema=prisma/schema.tidb.prisma",
     "db:migrate:tidb": "prisma migrate dev --schema=prisma/schema.tidb.prisma",
-    "pages:build": "prisma generate --schema=prisma/schema.tidb.prisma && npx opennextjs-cloudflare build && npx wrangler types",
+    "pages:build": "prisma generate --schema=prisma/schema.tidb.prisma && npx opennextjs-cloudflare build",
+    "pages:types": "wrangler types",
     "pages:preview": "npx opennextjs-cloudflare preview",
     "pages:deploy": "npx opennextjs-cloudflare deploy"
   },
