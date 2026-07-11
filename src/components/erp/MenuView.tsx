@@ -398,7 +398,7 @@ function ProductForm({ product, categories, onClose, onSaved }: {
           </button>
           <button
             onClick={save}
-            disabled={saving || uploading}
+            disabled={saving}
             className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-bold disabled:opacity-50"
           >
             {saving ? 'Saqlanmoqda...' : 'Saqlash'}
