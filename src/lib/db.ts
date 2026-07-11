@@ -1,30 +1,38 @@
 // Prisma client - TiDB Cloud + Cloudflare Workers muhitga moslashtirilgan
 // ============================================================================
-// MUHIM: Cloudflare Workers `fs` modulini to'liq qo'llab-quvvatlamaydi.
-// Standart `@prisma/client` Prisma engine init qilish paytida `fs.readdir`
-// chaqiradi (OpenSSL detection uchun). Driver adapter ishlatilganda engine
-// kerak emas, lekin init kod baraban `fs.readdir` ni chaqiradi.
-//
-// Yechim:
-// 1. Standart @prisma/client ishlatamiz (edge variant adapter'ni qo'llamaydi)
-// 2. wrangler.jsonc'da nodejs_compat_v2 flag (Cloudflare'ning yangi Node.js
-//    compat layeri - fs.readdir stub sifatida ishlaydi)
-// 3. Bu faylda global polyfill qo'shamiz - agar wrangler flag yetarli bo'lmasa
+// Cloudflare Workers `nodejs_compat_v2` flag bilan Node.js API'larining
+// ko'p qismini qo'llab-quvvatlaydi, lekin ba'zi fs funksiyalari hali ham
+// to'liq ishlamasligi mumkin. Prisma Client init paytida fs.readdir
+// chaqiradi (OpenSSL detection uchun), shuning uchun polyfill qo'shamiz.
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter'
 
-// Polyfill: Cloudflare Workers'da fs.readdir ishlashi uchun
-// (Prisma engine init kodini chaqiradi, lekin adapter ishlatadi)
-if (typeof globalThis.require === 'function') {
+// Polyfill: fs.readdir/readdirSync/existsSync - Prisma init uchun
+// (driver adapter ishlatilganda Prisma engine ishlamaydi, lekin init kod
+// baraban fs.readdir chaqiradi - bo'sh array qaytarish kifoya)
+declare global {
+  // eslint-disable-next-line no-var
+  var __fsPolyfilled: boolean | undefined
+}
+
+if (!globalThis.__fsPolyfilled) {
   try {
-    const fs = globalThis.require('fs')
-    if (!fs.readdir) {
-      fs.readdir = ((_path: string, cb: any) => cb(null, [])) as any
-      fs.readdirSync = ((_path: string) => []) as any
-      fs.existsSync = ((_path: string) => false) as any
+    // node:fs ni polyfill qilish
+    const Module = globalThis as any
+    if (typeof Module.require === 'function') {
+      try {
+        const fs = Module.require('fs')
+        if (fs && !fs.__polyfilled) {
+          if (!fs.readdir) fs.readdir = ((_: string, cb: any) => cb(null, [])) as any
+          if (!fs.readdirSync) fs.readdirSync = ((_: string) => []) as any
+          if (!fs.existsSync) fs.existsSync = ((_: string) => false) as any
+          fs.__polyfilled = true
+        }
+      } catch {}
     }
   } catch {}
+  globalThis.__fsPolyfilled = true
 }
 
 const globalForPrisma = globalThis as unknown as {

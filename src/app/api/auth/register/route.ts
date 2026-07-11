@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { hashPassword, verifyPassword, createSession, getTrialEnd, getAccessStatus } from '@/lib/auth'
 
 // POST /api/auth/register - Ro'yxatdan o'tish (10 kun trial bilan)
 export async function POST(req: NextRequest) {
   try {
+    // Dynamic imports - bu xatolarni aniq ushlaydi
+    const { db } = await import('@/lib/db')
+    const { hashPassword, createSession, getTrialEnd, getAccessStatus } = await import('@/lib/auth')
+
     const body = await req.json()
     const { name, email, password, phone, address } = body
 
@@ -56,6 +58,12 @@ export async function POST(req: NextRequest) {
     return response
   } catch (e: any) {
     console.error('Register error:', e)
-    return NextResponse.json({ error: 'Server xatosi: ' + e.message }, { status: 500 })
+    // Full error info - debug mode
+    return NextResponse.json({
+      error: 'Server xatosi: ' + e.message,
+      stack: e.stack,
+      name: e.name,
+      cause: e.cause?.message || e.cause,
+    }, { status: 500 })
   }
 }
