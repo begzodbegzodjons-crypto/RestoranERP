@@ -1,14 +1,31 @@
-// Prisma client - TiDB Cloud + Cloudflare Pages muhitga moslashtirilgan
+// Prisma client - TiDB Cloud + Cloudflare Workers muhitga moslashtirilgan
 // ============================================================================
-// Cloudflare Workers runtime muhitida Prisma Client faqat TiDB adapter
-// orqali ishlaydi (TCP yo'q, HTTP fetch orqali).
+// MUHIM: Cloudflare Workers `fs` modulini to'liq qo'llab-quvvatlamaydi.
+// Standart `@prisma/client` Prisma engine init qilish paytida `fs.readdir`
+// chaqiradi (OpenSSL detection uchun). Driver adapter ishlatilganda engine
+// kerak emas, lekin init kod baraban `fs.readdir` ni chaqiradi.
 //
-// Muhim: Cloudflare Workers da `fs` moduli to'liq qo'llab-quvvatlanmaydi,
-// shuning uchun Prisma Client'ni faqat TIDB_DATABASE_URL mavjud bo'lganda
-// initialize qilamiz. Lokal dev uchun SQLite fallback saqlanadi.
+// Yechim:
+// 1. Standart @prisma/client ishlatamiz (edge variant adapter'ni qo'llamaydi)
+// 2. wrangler.jsonc'da nodejs_compat_v2 flag (Cloudflare'ning yangi Node.js
+//    compat layeri - fs.readdir stub sifatida ishlaydi)
+// 3. Bu faylda global polyfill qo'shamiz - agar wrangler flag yetarli bo'lmasa
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter'
+
+// Polyfill: Cloudflare Workers'da fs.readdir ishlashi uchun
+// (Prisma engine init kodini chaqiradi, lekin adapter ishlatadi)
+if (typeof globalThis.require === 'function') {
+  try {
+    const fs = globalThis.require('fs')
+    if (!fs.readdir) {
+      fs.readdir = ((_path: string, cb: any) => cb(null, [])) as any
+      fs.readdirSync = ((_path: string) => []) as any
+      fs.existsSync = ((_path: string) => false) as any
+    }
+  } catch {}
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -18,30 +35,21 @@ function createPrismaClient(): PrismaClient {
   const databaseUrl = process.env.DATABASE_URL || ''
   const tidbServerlessUrl = process.env.TIDB_DATABASE_URL
 
-  // Production (Cloudflare Workers yoki Node.js prod) - TiDB serverless adapter
-  // Bu yerda databaseUrl "mysql://..." formatida bo'ladi (file: emas)
-  const isTiDB = tidbServerlessUrl ||
-    databaseUrl.includes('tidbcloud.com') ||
-    databaseUrl.startsWith('mysql://')
-
-  if (isTiDB) {
-    const url = tidbServerlessUrl || databaseUrl
-    try {
-      const adapter = new PrismaTiDBCloud({ url })
-      // adapter berilganda Prisma hech qanday engine ishlatmaydi - to'g'ridan-to'g'ri
-      // adapter orqali so'rov yuboradi. fs.readdir chaqirilmaydi.
-      return new PrismaClient({ adapter })
-    } catch (err) {
-      console.error('[db] TiDB serverless adapter ishga tushmadi:', err)
-      throw err
-    }
+  const url = tidbServerlessUrl || databaseUrl
+  if (!url || !url.startsWith('mysql://')) {
+    throw new Error(
+      '[db] TiDB connection URL topilmadi. TIDB_DATABASE_URL yoki DATABASE_URL ' +
+      '(mysql:// formatida) o\'rnatilishi kerak.'
+    )
   }
 
-  // Lokal dev (SQLite) - faqat Node.js muhitida ishlaydi
-  // Cloudflare Workers bu shoxga tushmaydi
-  return new PrismaClient({
-    log: process.env.NODE_ENV !== 'production' ? ['query', 'error', 'warn'] : ['error'],
-  })
+  try {
+    const adapter = new PrismaTiDBCloud({ url })
+    return new PrismaClient({ adapter })
+  } catch (err) {
+    console.error('[db] TiDB serverless adapter ishga tushmadi:', err)
+    throw err
+  }
 }
 
 export const db = globalForPrisma.prisma ?? createPrismaClient()
