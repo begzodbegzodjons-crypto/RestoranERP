@@ -856,7 +856,12 @@ class ModelDelegate {
     if (args._count === true) {
       selects.push('COUNT(*) as _count')
     } else if (args._count) {
+      // _all special key = COUNT(*)
+      if (args._count._all) {
+        selects.push('COUNT(*) as _count_all')
+      }
       for (const field of Object.keys(args._count)) {
+        if (field === '_all') continue
         selects.push(`COUNT(${escapeIdentifier(field)}) as _count_${field}`)
       }
     }
@@ -895,7 +900,11 @@ class ModelDelegate {
       result._count = parseInt(row._count || 0, 10)
     } else if (args._count) {
       result._count = {}
+      if (args._count._all) {
+        result._count._all = parseInt(row._count_all || 0, 10)
+      }
       for (const field of Object.keys(args._count)) {
+        if (field === '_all') continue
         result._count[field] = parseInt(row[`_count_${field}`] || 0, 10)
       }
     }
@@ -939,7 +948,12 @@ class ModelDelegate {
     if (args._count === true) {
       selects.push('COUNT(*) as _count')
     } else if (args._count) {
+      // _all special key = COUNT(*)
+      if ((args._count as any)._all) {
+        selects.push('COUNT(*) as _count_all')
+      }
       for (const field of Object.keys(args._count)) {
+        if (field === '_all') continue
         selects.push(`COUNT(${escapeIdentifier(field)}) as _count_${field}`)
       }
     }
@@ -976,7 +990,11 @@ class ModelDelegate {
         result._count = parseInt(row._count || 0, 10)
       } else if (args._count) {
         result._count = {}
+        if ((args._count as any)._all) {
+          result._count._all = parseInt(row._count_all || 0, 10)
+        }
         for (const field of Object.keys(args._count)) {
+          if (field === '_all') continue
           result._count[field] = parseInt(row[`_count_${field}`] || 0, 10)
         }
       }
