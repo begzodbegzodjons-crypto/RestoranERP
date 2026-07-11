@@ -50,6 +50,8 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onInteractOutside,
+  onEscapeKeyDown,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -63,6 +65,20 @@ function DialogContent({
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
           className
         )}
+        // Dialog tashqarisiga bosilganda yopilishini o'chiramiz
+        // Foydalanuvchi formani to'ldirayotganda tasodifan bosib yopib qolmasligi uchun
+        // Yopish uchun: X tugmasi, Escape yoki "Bekor qilish" tugmasi ishlatiladi
+        onInteractOutside={(e) => {
+          // Tashqariga bosilganda yopilishini to'xtatish
+          e.preventDefault()
+          onInteractOutside?.(e)
+        }}
+        onEscapeKeyDown={(e) => {
+          // Escape'ni ham o'chiramiz - tasodifan bosib yopib qolmaslik uchun
+          // Foydalanuvchi X tugmasi yoki "Bekor qilish" ni bosishi kerak
+          e.preventDefault()
+          onEscapeKeyDown?.(e)
+        }}
         {...props}
       >
         {children}

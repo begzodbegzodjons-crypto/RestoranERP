@@ -58,7 +58,13 @@ export function Modal({ open, onClose, title, children, size = 'md' }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      // Tashqariga bosilganda yopilmasin - foydalanuvchi formani to'ldirayotganda
+      // tasodifan bosib yopib qolmasligi uchun. Yopish uchun X tugmasi yoki
+      // "Bekor qilish" tugmasi ishlatiladi.
+      onClick={() => {}}
+    >
       <div
         className={`bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-hidden flex flex-col`}
         onClick={e => e.stopPropagation()}
