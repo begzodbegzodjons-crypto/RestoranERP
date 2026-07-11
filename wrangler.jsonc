@@ -9,7 +9,9 @@
     "binding": "ASSETS"
   },
   "vars": {
-    "DEPLOY_TARGET": "cloudflare"
+    "DEPLOY_TARGET": "cloudflare",
+    "DATABASE_URL": "mysql://3YTK6Em4WhtFiqF.root:ovAH3n3bu2YabeK0@gateway01.eu-central-1.prod.aws.tidbcloud.com:4000/oshxona_erp?sslaccept=strict",
+    "TIDB_DATABASE_URL": "mysql://3YTK6Em4WhtFiqF.root:ovAH3n3bu2YabeK0@gateway01.eu-central-1.prod.aws.tidbcloud.com:4000/oshxona_erp?sslaccept=strict"
   },
   "observability": {
     "enabled": true
