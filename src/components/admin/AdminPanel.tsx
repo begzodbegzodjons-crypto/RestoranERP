@@ -763,6 +763,63 @@ function RestaurantDetailModal({
   const [activateDays, setActivateDays] = useState(30)
   const [activateNote, setActivateNote] = useState('')
   const [showActivateForm, setShowActivateForm] = useState(false)
+  // Parol qayta o'rnatish state'lari
+  const [passwordInfo, setPasswordInfo] = useState<any>(null)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetPasswordResult, setResetPasswordResult] = useState<string | null>(null)
+  const [resettingPassword, setResettingPassword] = useState(false)
+
+  // Parol ma'lumotini olish
+  const fetchPasswordInfo = async () => {
+    try {
+      const res = await fetch(`/api/admin/restaurants/${restaurant.id}/password`)
+      const data = await res.json()
+      if (res.ok) {
+        setPasswordInfo(data.restaurant)
+      }
+    } catch (e) {
+      console.error('Password fetch error:', e)
+    }
+  }
+
+  // Parol ma'lumotini ko'rsatish (faqat hash, qaytarib olinmaydi)
+  const showPassword = async () => {
+    if (!passwordInfo) {
+      await fetchPasswordInfo()
+    }
+    setShowPasswordForm(true)
+  }
+
+  // Parolni qayta o'rnatish
+  const resetPassword = async () => {
+    setResettingPassword(true)
+    setResetPasswordResult(null)
+    try {
+      const res = await fetch(`/api/admin/restaurants/${restaurant.id}/password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPassword ? { newPassword } : {})
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Xato')
+
+      setResetPasswordResult(data.newPassword)
+      setNewPassword('')
+      // Toast xabar
+      alert(`✅ Parol yangilandi!\n\nYangi parol: ${data.newPassword}\n\nBu parolni foydalanuvchiga Telegram orqali yuboring.`)
+    } catch (e: any) {
+      alert('❌ Xato: ' + e.message)
+    } finally {
+      setResettingPassword(false)
+    }
+  }
+
+  // Avtomatik parol generatsiya qilish
+  const generateRandomPassword = () => {
+    const pwd = Math.floor(10000000 + Math.random() * 90000000).toString()
+    setNewPassword(pwd)
+  }
 
   useEffect(() => {
     api(`/api/admin/restaurants/${restaurant.id}/stats`)
@@ -961,6 +1018,99 @@ function RestaurantDetailModal({
                     <button onClick={() => setShowActivateForm(false)} className="px-4 py-2 rounded-lg bg-white text-slate-700 font-medium text-sm border border-slate-200">Bekor</button>
                   </div>
                   <p className="text-xs text-emerald-700">Agar restoran hozir aktiv bo'lsa, kunlar qo'shiladi (uzaytiriladi).</p>
+                </div>
+              )}
+            </div>
+
+            {/* Parol boshqaruvi - login va parol ko'rish/qayta o'rnatish */}
+            <div className="bg-blue-50 rounded-xl p-4">
+              <div className="font-semibold text-blue-900 mb-2">🔐 Kirish ma'lumotlari (login & parol)</div>
+              <div className="bg-white rounded-lg p-3 mb-3 border border-blue-200">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-xs text-slate-500">Login (email)</div>
+                    <div className="font-mono font-semibold text-slate-900 break-all">{restaurant.email}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Telefon</div>
+                    <div className="font-semibold text-slate-900">{restaurant.phone || '—'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {!showPasswordForm ? (
+                <button onClick={showPassword} className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold text-sm">
+                  🔑 Parolni boshqarish
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  {/* Parol haqida info */}
+                  {passwordInfo && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                      <div className="text-xs font-semibold text-amber-900 mb-1">ℹ️ Parol haqida</div>
+                      <div className="text-xs text-amber-800">{passwordInfo.passwordNote}</div>
+                      {passwordInfo.passwordHash && (
+                        <div className="mt-2 text-xs text-slate-500 break-all">
+                          <span className="font-semibold">Shifrlangan (hash):</span><br/>
+                          <code className="text-[10px]">{passwordInfo.passwordHash.substring(0, 50)}...</code>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Yangi parol kiritish */}
+                  <div>
+                    <label className="block text-xs text-blue-800 mb-1">Yangi parol (bo'sh qoldirsangiz, avtomatik generatsiya qilinadi)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        className="erp-input flex-1 font-mono"
+                        placeholder="Yangi parol yoki bo'sh qoldiring"
+                      />
+                      <button
+                        onClick={generateRandomPassword}
+                        className="px-3 py-2 rounded-lg bg-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-300"
+                        title="Avtomatik parol generatsiya qilish"
+                      >
+                        🎲
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={resetPassword}
+                      disabled={resettingPassword}
+                      className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold text-sm disabled:opacity-50"
+                    >
+                      {resettingPassword ? '⏳ Yangilanmoqda...' : '✓ Parolni yangilash'}
+                    </button>
+                    <button
+                      onClick={() => { setShowPasswordForm(false); setNewPassword(''); setResetPasswordResult(null) }}
+                      className="px-4 py-2 rounded-lg bg-white text-slate-700 font-medium text-sm border border-slate-200"
+                    >
+                      Bekor
+                    </button>
+                  </div>
+
+                  {resetPasswordResult && (
+                    <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-3">
+                      <div className="text-sm font-semibold text-emerald-900 mb-1">✅ Parol muvaffaqiyatli yangilandi!</div>
+                      <div className="text-sm text-emerald-800">
+                        Yangi parol: <code className="bg-white px-2 py-0.5 rounded font-mono font-bold">{resetPasswordResult}</code>
+                      </div>
+                      <div className="text-xs text-emerald-700 mt-1">
+                        💡 Bu parolni foydalanuvchiga Telegram (@norinkomp) orqali yuboring.
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-blue-700">
+                    💡 Parol xavfsizlik sababli shifrlangan (PBKDF2) va qaytarib olish mumkin emas.
+                    Foydalanuvchi parolini unutgan bo'lsa, yangi parol o'rnating va unga yuboring.
+                  </p>
                 </div>
               )}
             </div>
