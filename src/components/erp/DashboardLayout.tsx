@@ -93,59 +93,24 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     items: [
       { key: 'sales', label: 'Savdo tarixi', icon: '🧾' },
       { key: 'refunds', label: 'Qaytarishlar', icon: '↩️' },
-      { key: 'customers', label: 'Mijozlar (CRM)', icon: '👥' },
+      { key: 'customers', label: 'Mijozlar', icon: '👥' },
       { key: 'debts', label: 'Mijoz qarzlari', icon: '💳' }
-    ]
-  },
-  {
-    section: 'Marketing',
-    items: [
-      { key: 'loyalty', label: 'Sodiqlik darajalari', icon: '🏆' },
-      { key: 'marketing', label: 'SMS/Email marketing', icon: '📢' },
-      { key: 'coupons', label: 'Kuponlar', icon: '🏷️' },
-      { key: 'reservations', label: 'Rezervatsiyalar', icon: '📅' },
-      { key: 'birthdays', label: 'Tug\'ilgan kunlar', icon: '🎂' },
-      { key: 'ab-tests', label: 'A/B testlash', icon: '🧪' }
-    ]
-  },
-  {
-    section: 'Analitika',
-    items: [
-      { key: 'clv', label: 'Mijoz Lifetime Value', icon: '💎' },
-      { key: 'menu-engineering', label: 'Menu Engineering', icon: '📊' },
-      { key: 'forecast', label: 'AI savdo prognozi', icon: '🔮' },
-      { key: 'financial-reports', label: 'Moliyaviy hisobotlar', icon: '💼' },
-      { key: 'tax', label: 'Soliqlar (QQS)', icon: '🏛️' }
-    ]
-  },
-  {
-    section: 'SaaS',
-    items: [
-      { key: 'subscription-plans', label: 'Obuna tariflari', icon: '💎' },
-      { key: 'branches', label: 'Filiallar', icon: '🏪' },
-      { key: 'onboarding', label: 'Onboarding', icon: '🎓' }
     ]
   },
   {
     section: 'Boshqaruv',
     items: [
-      { key: 'staff', label: 'Xodimlar', icon: '👷' },
+      { key: 'staff', label: 'Ofitsiantlar', icon: '👷' },
       { key: 'commissions', label: 'Komissiya & Choy puli', icon: '💵' },
-      { key: 'floor-plan', label: 'Stol rejasi (Floor plan)', icon: '🗺️' },
+      { key: 'floor-plan', label: 'Stol rejasi', icon: '🗺️' },
       { key: 'rooms', label: 'Xonalar (Zal/VIP)', icon: '🏠' },
       { key: 'tables', label: 'Stollar', icon: '🪑' },
       { key: 'expenses', label: 'Chiqimlar', icon: '💸' },
       { key: 'wastes', label: 'Brak & Isrof', icon: '🗑️' },
       { key: 'inventory-counts', label: 'Inventarizatsiya', icon: '🔍' },
-      { key: 'budgets', label: 'Byudjet', icon: '📋' },
       { key: 'shifts', label: 'Smenalar (Kassa)', icon: '💰' },
       { key: 'kitchen', label: 'Oshpaz ekrani (KDS)', icon: '🍳' },
       { key: 'printers', label: 'Printer sozlamalari', icon: '🖨️' },
-      { key: 'payments', label: 'To\'lov tizimlari', icon: '💳' },
-      { key: 'export', label: 'Eksport (Excel)', icon: '📤' },
-      { key: 'integrations', label: 'Integratsiyalar', icon: '🔌' },
-      { key: 'api-tokens', label: 'API tokenlar', icon: '🔑' },
-      { key: 'feature-flags', label: 'Feature flags', icon: '🚩' },
       { key: 'settings', label: 'Sozlamalar', icon: '⚙️' }
     ]
   }
