@@ -2,131 +2,146 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentRestaurant } from '@/lib/auth'
 
-// GET /api/analytics/forecast - oylik trend va prognoz (OTS - Oddiy Trend Satri)
+// GET /api/analytics/forecast - AI savdo prognozi
+// Oddiy forecasting algoritmi: o'tgan 30 kunlik savdo asosida
+// kelgusi 7-14 kunlik prognoz (moving average + trend)
 export async function GET(req: NextRequest) {
   try {
     const restaurant = await getCurrentRestaurant()
     if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
 
-    // Last 6 months data for trend analysis
-    const months = 6
-    const monthlyData = []
+    const { searchParams } = new URL(req.url)
+    const days = parseInt(searchParams.get('days') || '7') // kelgusi kunlar soni
 
-    for (let i = months - 1; i >= 0; i--) {
-      const start = new Date()
-      start.setMonth(start.getMonth() - i)
-      start.setDate(1)
-      start.setHours(0, 0, 0, 0)
-
-      const end = new Date(start)
-      end.setMonth(end.getMonth() + 1)
-
-      const sales = await db.sale.findMany({
-        where: {
-          restaurantId: restaurant.id,
-          createdAt: { gte: start, lt: end },
-          status: 'completed'
-        },
-        select: { total: true, profit: true, costOfGoods: true }
-      })
-
-      const totalSales = sales.reduce((s, x) => s + x.total, 0)
-      const totalProfit = sales.reduce((s, x) => s + x.profit, 0)
-      const totalCost = sales.reduce((s, x) => s + x.costOfGoods, 0)
-
-      monthlyData.push({
-        month: start.toLocaleDateString('uz-UZ', { month: 'short', year: 'numeric' }),
-        monthKey: `${start.getFullYear()}-${(start.getMonth() + 1).toString().padStart(2, '0')}`,
-        sales: totalSales,
-        profit: totalProfit,
-        cost: totalCost,
-        orders: sales.length,
-        avgOrder: sales.length > 0 ? totalSales / sales.length : 0
-      })
-    }
-
-    // Linear regression for forecast (OTS - Oddiy Trend Satri)
-    // y = a + b*x  where x is month index (0, 1, 2, ...)
-    const n = monthlyData.length
-    const sumX = monthlyData.reduce((s, _, i) => s + i, 0)
-    const sumY = monthlyData.reduce((s, m) => s + m.sales, 0)
-    const sumXY = monthlyData.reduce((s, m, i) => s + i * m.sales, 0)
-    const sumX2 = monthlyData.reduce((s, _, i) => s + i * i, 0)
-
-    const slope = n > 0 && (n * sumX2 - sumX * sumX) !== 0 ? (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) : 0
-    const intercept = n > 0 ? (sumY - slope * sumX) / n : 0
-
-    // Forecast next 3 months
-    const forecast = []
-    for (let i = 0; i < 3; i++) {
-      const x = n + i
-      const forecasted = Math.max(0, intercept + slope * x)
-      const date = new Date()
-      date.setMonth(date.getMonth() + i + 1)
-      forecast.push({
-        month: date.toLocaleDateString('uz-UZ', { month: 'short', year: 'numeric' }),
-        monthKey: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`,
-        forecastedSales: Math.round(forecasted),
-        isForecast: true
-      })
-    }
-
-    // Trend direction
-    const trendDirection = slope > 0 ? 'growing' : slope < 0 ? 'declining' : 'stable'
-    const trendPercent = monthlyData[0].sales > 0 ? ((monthlyData[n - 1].sales - monthlyData[0].sales) / monthlyData[0].sales) * 100 : 0
-
-    // Growth rate (month over month)
-    const growthRates = []
-    for (let i = 1; i < monthlyData.length; i++) {
-      const prev = monthlyData[i - 1].sales
-      const curr = monthlyData[i].sales
-      const growth = prev > 0 ? ((curr - prev) / prev) * 100 : 0
-      growthRates.push({
-        month: monthlyData[i].month,
-        growth
-      })
-    }
-
-    // Seasonality analysis - which months/seasons sell more
-    const allSales = await db.sale.findMany({
+    // Oxirgi 60 kunlik savdo ma'lumotlari
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
+    const sales = await db.sale.findMany({
       where: {
         restaurantId: restaurant.id,
-        status: 'completed'
+        createdAt: { gte: sixtyDaysAgo },
+        status: { in: ['completed', 'partial_refund'] }
       },
-      select: { total: true, createdAt: true }
+      select: { total: true, profit: true, createdAt: true }
     })
 
-    const seasonMap = new Map<string, number>()
-    for (const s of allSales) {
-      const month = new Date(s.createdAt).getMonth()
-      const season = month < 3 || month === 11 ? 'Qish' : month < 6 ? 'Bahor' : month < 9 ? 'Yoz' : 'Kuz'
-      seasonMap.set(season, (seasonMap.get(season) || 0) + s.total)
+    // Kunlik guruhlash
+    const dailyData: Record<string, { revenue: number; profit: number; count: number }> = {}
+    for (const s of sales) {
+      const dateKey = new Date(s.createdAt).toISOString().slice(0, 10)
+      if (!dailyData[dateKey]) dailyData[dateKey] = { revenue: 0, profit: 0, count: 0 }
+      dailyData[dateKey].revenue += s.total
+      dailyData[dateKey].profit += s.profit
+      dailyData[dateKey].count++
     }
 
-    const seasons = ['Qish', 'Bahor', 'Yoz', 'Kuz'].map(s => ({
-      season: s,
-      total: seasonMap.get(s) || 0
-    }))
+    // So'nggi 30 kunni olish (yetishmayotgan kunlarni 0 bilan to'ldirish)
+    const last30Days: Array<{ date: string; revenue: number; profit: number; count: number }> = []
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+      const dateKey = d.toISOString().slice(0, 10)
+      const data = dailyData[dateKey] || { revenue: 0, profit: 0, count: 0 }
+      last30Days.push({ date: dateKey, ...data })
+    }
+
+    // Moving average (7 kunlik)
+    const ma7 = last30Days.slice(-7).reduce((s, d) => s + d.revenue, 0) / 7
+    const ma14 = last30Days.slice(-14).reduce((s, d) => s + d.revenue, 0) / 14
+    const ma30 = last30Days.reduce((s, d) => s + d.revenue, 0) / 30
+
+    // Trend (oxirgi 7 kun vs oldingi 7 kun)
+    const last7 = last30Days.slice(-7).reduce((s, d) => s + d.revenue, 0)
+    const prev7 = last30Days.slice(-14, -7).reduce((s, d) => s + d.revenue, 0)
+    const trend = prev7 > 0 ? ((last7 - prev7) / prev7) * 100 : 0
+
+    // Haftaning kunlari bo'yicha o'rtacha (dushanba, seshanba, ...)
+    const dayOfWeekAvg: number[] = [0, 0, 0, 0, 0, 0, 0] // 0=Sunday
+    const dayOfWeekCount: number[] = [0, 0, 0, 0, 0, 0, 0]
+    for (const d of last30Days) {
+      const day = new Date(d.date).getDay()
+      dayOfWeekAvg[day] += d.revenue
+      dayOfWeekCount[day]++
+    }
+    for (let i = 0; i < 7; i++) {
+      if (dayOfWeekCount[i] > 0) {
+        dayOfWeekAvg[i] = dayOfWeekAvg[i] / dayOfWeekCount[i]
+      }
+    }
+
+    // Prognoz - kelgusi N kun uchun
+    const forecast: Array<{ date: string; predictedRevenue: number; predictedProfit: number; confidence: number }> = []
+    for (let i = 1; i <= days; i++) {
+      const futureDate = new Date(Date.now() + i * 24 * 60 * 60 * 1000)
+      const dateKey = futureDate.toISOString().slice(0, 10)
+      const dayOfWeek = futureDate.getDay()
+
+      // Prognoz = max(ma7, haftaning o'sha kuni o'rtachasi) + trend adjustment
+      const baseForecast = Math.max(ma7, dayOfWeekAvg[dayOfWeek])
+      const trendAdjustment = baseForecast * (trend / 100) * (i / 7) // trend vaqt bilan o'sadi
+      const predictedRevenue = Math.max(0, Math.round(baseForecast + trendAdjustment))
+
+      // Foyda prognozi (odatda 30-40% marja)
+      const avgProfitMargin = last30Days.slice(-7).reduce((s, d) => s + (d.revenue > 0 ? d.profit / d.revenue : 0), 0) / 7
+      const predictedProfit = Math.round(predictedRevenue * avgProfitMargin)
+
+      // Ishonch (ma'lumotlar kam bo'lsa past, ko'p bo'lsa yuqori)
+      const confidence = Math.min(95, Math.round(50 + (dayOfWeekCount[dayOfWeek] * 5) + (i <= 7 ? 20 : 0)))
+
+      forecast.push({
+        date: dateKey,
+        predictedRevenue,
+        predictedProfit,
+        confidence,
+      })
+    }
+
+    // Jami prognoz
+    const totalForecastRevenue = forecast.reduce((s, f) => s + f.predictedRevenue, 0)
+    const totalForecastProfit = forecast.reduce((s, f) => s + f.predictedProfit, 0)
 
     return NextResponse.json({
-      historical: monthlyData,
-      forecast,
-      trend: {
-        direction: trendDirection,
-        percent: trendPercent,
-        slope: Math.round(slope),
-        avgGrowthRate: growthRates.length > 0 ? growthRates.reduce((s, g) => s + g.growth, 0) / growthRates.length : 0
-      },
-      growthRates,
-      seasons,
       summary: {
-        totalSales6Months: monthlyData.reduce((s, m) => s + m.sales, 0),
-        avgMonthlySales: monthlyData.reduce((s, m) => s + m.sales, 0) / n,
-        nextMonthForecast: forecast[0]?.forecastedSales || 0,
-        bestSeason: seasons.sort((a, b) => b.total - a.total)[0]?.season || '—'
-      }
+        ma7: Math.round(ma7),
+        ma14: Math.round(ma14),
+        ma30: Math.round(ma30),
+        trend: Math.round(trend * 10) / 10, // % o'sish yoki kamayish
+        last7Revenue: Math.round(last7),
+        prev7Revenue: Math.round(prev7),
+        totalForecastRevenue: Math.round(totalForecastRevenue),
+        totalForecastProfit: Math.round(totalForecastProfit),
+        avgProfitMargin: Math.round((last30Days.slice(-7).reduce((s, d) => s + (d.revenue > 0 ? d.profit / d.revenue : 0), 0) / 7) * 100),
+      },
+      forecast,
+      dayOfWeekAvg: dayOfWeekAvg.map(v => Math.round(v)),
+      last30Days,
+      insight: generateInsight(trend, ma7, ma30, dayOfWeekAvg),
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
+}
+
+function generateInsight(trend: number, ma7: number, ma30: number, dayOfWeekAvg: number[]): string {
+  let insight = ''
+
+  if (trend > 10) {
+    insight += '📈 Savdo o\'sib borayapti! Bu hafta oldingi haftaga nisbatan ' + Math.round(trend) + '% ko\'proq. '
+  } else if (trend < -10) {
+    insight += '📉 Savdo kamayib borayapti (' + Math.round(trend) + '%). Strategiyani qayta ko\'rib chiqish kerak. '
+  } else {
+    insight += '➡️ Savdo barqaror. O\'zgarish: ' + Math.round(trend) + '%. '
+  }
+
+  // Eng yaxshi kun
+  const maxDay = dayOfWeekAvg.indexOf(Math.max(...dayOfWeekAvg))
+  const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+  if (dayOfWeekAvg[maxDay] > 0) {
+    insight += `Eng yuqori savdo kuni: ${dayNames[maxDay]}. `
+  }
+
+  // O'rtacha kunlik prognoz
+  if (ma7 > 0) {
+    insight += `Kunlik o'rtacha: ${Math.round(ma7).toLocaleString('uz-UZ')} so'm. `
+  }
+
+  return insight
 }

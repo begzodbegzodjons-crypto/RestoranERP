@@ -37,8 +37,12 @@ import FloorPlanView from './FloorPlanView'
 import FinancialReportsView from './FinancialReportsView'
 import OnboardingView from './OnboardingView'
 import PaymentsView from './PaymentsView'
+import BranchesView from './BranchesView'
+import SubscriptionPlansView from './SubscriptionPlansView'
+import ForecastView from './ForecastView'
+import BirthdaysView from './BirthdaysView'
 
-type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'refunds' | 'wastes' | 'commissions' | 'inventory-counts' | 'loyalty' | 'marketing' | 'menu-engineering' | 'clv' | 'ab-tests' | 'budgets' | 'api-tokens' | 'feature-flags' | 'tax' | 'floor-plan' | 'financial-reports' | 'onboarding' | 'payments'
+type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'refunds' | 'wastes' | 'commissions' | 'inventory-counts' | 'loyalty' | 'marketing' | 'menu-engineering' | 'clv' | 'ab-tests' | 'budgets' | 'api-tokens' | 'feature-flags' | 'tax' | 'floor-plan' | 'financial-reports' | 'onboarding' | 'payments' | 'branches' | 'subscription-plans' | 'forecast' | 'birthdays'
 
 type Restaurant = {
   id: string
@@ -100,6 +104,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'marketing', label: 'SMS/Email marketing', icon: '📢' },
       { key: 'coupons', label: 'Kuponlar', icon: '🏷️' },
       { key: 'reservations', label: 'Rezervatsiyalar', icon: '📅' },
+      { key: 'birthdays', label: 'Tug\'ilgan kunlar', icon: '🎂' },
       { key: 'ab-tests', label: 'A/B testlash', icon: '🧪' }
     ]
   },
@@ -108,8 +113,17 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     items: [
       { key: 'clv', label: 'Mijoz Lifetime Value', icon: '💎' },
       { key: 'menu-engineering', label: 'Menu Engineering', icon: '📊' },
+      { key: 'forecast', label: 'AI savdo prognozi', icon: '🔮' },
       { key: 'financial-reports', label: 'Moliyaviy hisobotlar', icon: '💼' },
       { key: 'tax', label: 'Soliqlar (QQS)', icon: '🏛️' }
+    ]
+  },
+  {
+    section: 'SaaS',
+    items: [
+      { key: 'subscription-plans', label: 'Obuna tariflari', icon: '💎' },
+      { key: 'branches', label: 'Filiallar', icon: '🏪' },
+      { key: 'onboarding', label: 'Onboarding', icon: '🎓' }
     ]
   },
   {
@@ -193,6 +207,10 @@ export default function DashboardLayout({
       case 'financial-reports': return <FinancialReportsView />
       case 'onboarding': return <OnboardingView />
       case 'payments': return <PaymentsView />
+      case 'branches': return <BranchesView />
+      case 'subscription-plans': return <SubscriptionPlansView />
+      case 'forecast': return <ForecastView />
+      case 'birthdays': return <BirthdaysView />
       case 'settings': return <SettingsView restaurant={restaurant} access={access} onLogout={onLogout} />
       case 'shifts': return <ShiftsView />
       case 'kitchen': return <KitchenDisplayView />
