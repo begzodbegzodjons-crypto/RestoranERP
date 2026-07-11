@@ -1,78 +1,80 @@
 // Prisma client - TiDB Cloud + Cloudflare Workers muhitga moslashtirilgan
 // ============================================================================
-// Cloudflare Workers `fs` modulini to'liq qo'llab-quvvatlamaydi.
-// Prisma Client init paytida:
-//   1. fs.existsSync - schema.prisma faylini qidirish uchun
-//   2. fs.readdir - OpenSSL/libssl version detection uchun (binaryTarget)
+// Cloudflare Workers `node:fs` modulini unenv stub sifatida beradi - readdir
+// funksiyasi "not implemented" xatosi beradi. Prisma'ning binaryTarget
+// detection logic'i fs.readdir chaqiradi (Linux tizimida OpenSSL versiyasini
+// aniqlash uchun). Bu funksiya driver adapter ishlatilganda kerak emas, lekin
+// Prisma init kod baraban chaqiradi.
 //
-// Ikkala holatda ham Prisma engine kerak emas (driver adapter ishlatamiz),
-// lekin init kod baraban fs.readdir chaqiradi.
-//
-// Yechim: Node.js built-in `fs` modulini polyfill qilamiz - readdir/readdirSync
-// bo'sh array qaytaradi, existsSync false qaytaradi. Bu Prisma'ning init
-// logicasini "hammasi joyida" deb ishontiradi.
+// Yechim: Node.js Module._cache'dagi fs modulini to'g'ridan-to'g'ri modify qilamiz
+// (unenv stub'ini almashtiramiz). Bu polyfill global darajada amalga oshiriladi.
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter'
 
-// ===== FS POLYFILL =====
-// Cloudflare Workers'da `fs` moduli partial implemented - readdir yo'q.
-// Prisma init kodini ishga tushirish uchun polyfill qo'shamiz.
-// Bu global darajada amalga oshiriladi - boshqa modullar ham foydalanadi.
-if (typeof globalThis !== 'undefined') {
-  const g = globalThis as any
+// ===== FS POLYFILL (Cloudflare Workers uchun) =====
+// Prisma'ning getCurrentBinaryTarget() funksiyasi fs.readdir/readdirSync chaqiradi.
+// CF Workers'da bu funksiyalar "not implemented" xatosi beradi.
+// Polyfill: bo'sh array qaytaradi - Prisma engine ishlatmaydi (adapter bor).
+declare global {
+  // eslint-disable-next-line no-var
+  var __prismaFsPolyfillInstalled: boolean | undefined
+}
 
-  // node:fs polyfill - faqat birinchi marta
-  if (!g.__fsPolyfillInstalled) {
-    try {
-      // node:fs modulini olishga urinamiz
-      let fsModule: any
-      try {
-        fsModule = await import('node:fs')
-      } catch {
-        try {
-          fsModule = await import('fs')
-        } catch {
-          fsModule = null
-        }
-      }
+if (!globalThis.__prismaFsPolyfillInstalled) {
+  // Module system orqali fs modulini olish va patch qilish
+  try {
+    // @ts-ignore - createRequire Node.js'da mavjud
+    const { createRequire } = await import('node:module')
+    const require = createRequire(import.meta.url)
+    const fs = require('fs')
 
-      if (fsModule) {
-        // readdir - Prisma binaryTarget detection uchun
-        if (!fsModule.readdir) {
-          fsModule.readdir = function(_path: string, optionsOrCb: any, cb?: any) {
-            // support both (path, cb) and (path, options, cb)
-            const callback = typeof optionsOrCb === 'function' ? optionsOrCb : cb
-            if (callback) callback(null, [])
-            return Promise.resolve([])
-          }
-        }
-        if (!fsModule.readdirSync) {
-          fsModule.readdirSync = function(_path: string) { return [] }
-        }
-        // existsSync - schema.prisma qidirish uchun
-        if (!fsModule.existsSync) {
-          fsModule.existsSync = function(_path: string) { return false }
-        }
-        // readFile - ba'zi Prisma versiyalari uchun
-        if (!fsModule.readFile) {
-          fsModule.readFile = function(_path: string, optionsOrCb: any, cb?: any) {
-            const callback = typeof optionsOrCb === 'function' ? optionsOrCb : cb
-            if (callback) callback(new Error('File not found in polyfill'))
-            return Promise.reject(new Error('File not found in polyfill'))
-          }
-        }
-        if (!fsModule.readFileSync) {
-          fsModule.readFileSync = function(_path: string) {
-            throw new Error('File not found in polyfill')
-          }
-        }
+    // readdir - async (path, options, cb) yoki (path, cb)
+    const fakeReaddir = (...args: any[]) => {
+      const cb = args[args.length - 1]
+      if (typeof cb === 'function') {
+        cb(null, [])
+        return undefined
       }
-    } catch (e) {
-      console.warn('[db] fs polyfill failed:', e)
+      return Promise.resolve([])
     }
-    g.__fsPolyfillInstalled = true
+    const fakeReaddirSync = (..._args: any[]) => []
+
+    // Patch - faqat agar funksiya stub bo'lsa (xato qaytarsa)
+    try {
+      fs.readdir = fakeReaddir as any
+    } catch {}
+    try {
+      fs.readdirSync = fakeReaddirSync as any
+    } catch {}
+
+    // existsSync - schema.prisma qidirish uchun
+    if (!fs.existsSync || typeof fs.existsSync !== 'function') {
+      try { fs.existsSync = ((_: string) => false) as any } catch {}
+    }
+  } catch (e) {
+    // createRequire ishlamasa - to'g'ridan-to'g'ri import orqali
+    try {
+      const fs = await import('node:fs')
+      const fakeReaddir = (...args: any[]) => {
+        const cb = args[args.length - 1]
+        if (typeof cb === 'function') {
+          cb(null, [])
+          return undefined
+        }
+        return Promise.resolve([])
+      }
+      const fakeReaddirSync = (..._args: any[]) => []
+
+      try { fs.readdir = fakeReaddir as any } catch {}
+      try { fs.readdirSync = fakeReaddirSync as any } catch {}
+      try { fs.default.readdir = fakeReaddir as any } catch {}
+      try { fs.default.readdirSync = fakeReaddirSync as any } catch {}
+    } catch (e2) {
+      console.warn('[db] fs polyfill failed:', e2)
+    }
   }
+  globalThis.__prismaFsPolyfillInstalled = true
 }
 
 const globalForPrisma = globalThis as unknown as {
