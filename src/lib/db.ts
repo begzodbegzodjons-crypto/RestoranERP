@@ -1,82 +1,14 @@
 // Prisma client - TiDB Cloud + Cloudflare Workers muhitga moslashtirilgan
 // ============================================================================
-// Cloudflare Workers `node:fs` modulini unenv stub sifatida beradi - readdir
-// funksiyasi "not implemented" xatosi beradi. Prisma'ning getCurrentBinaryTarget
-// logic'i fs.readdir chaqiradi (Linux tizimida OpenSSL versiyasini aniqlash).
+// Cloudflare Workers'da node:fs moduli to'liq ishlamaydi (fs.readdir yo'q).
+// Prisma'ning binaryTarget detection logic'i fs.readdir chaqiradi.
 //
-// Yechim: Prisma'ning binary target detection logicasini chetlab o'tish uchun
-// 3 narsani polyfill qilamiz:
-// 1. process.versions - Prisma platform detection uchun
-// 2. fs.readdir/readdirSync - OpenSSL detection uchun (bo'sh array qaytaradi)
-// 3. fs.existsSync - schema.prisma qidirish uchun (false qaytaradi)
-//
-// Bu polyfills global darajada o'rnatiladi - Prisma import qilinishidan oldin.
+// Yechim: next.config.ts'da fs va node:fs importlari src/lib/fs-polyfill-module.ts
+// ga alias qilingan. Bu fake fs module bo'sh javoblar qaytaradi.
+// Prisma driver adapter ishlatganda engine kerak emas - bu safe.
 
 import { PrismaClient } from '@prisma/client'
 import { PrismaTiDBCloud } from '@tidbcloud/prisma-adapter'
-
-// ===== GLOBAL POLYFILLS =====
-declare global {
-  // eslint-disable-next-line no-var
-  var __polyfillsInstalled: boolean | undefined
-}
-
-if (!globalThis.__polyfillsInstalled) {
-  const g = globalThis as any
-
-  // 1. process.versions ni soxtalashtirish (Prisa platform detection uchun)
-  if (typeof process !== 'undefined') {
-    const p = process as any
-    if (!p.versions) p.versions = {}
-    if (!p.versions.openssl) p.versions.openssl = '3.0.0'
-    if (!p.platform) p.platform = 'linux'
-    if (!p.arch) p.arch = 'x64'
-  }
-
-  // 2. fs modulini patch qilish - Modul cache'iga kirib
-  try {
-    // @ts-ignore
-    const { createRequire } = await import('node:module')
-    const require = createRequire(import.meta.url)
-    const fs = require('fs')
-
-    // Asl funksiyalarni saqlash va patch qilish
-    const noopReaddir = (...args: any[]) => {
-      const cb = args[args.length - 1]
-      if (typeof cb === 'function') {
-        cb(null, [])
-        return undefined
-      }
-      return Promise.resolve([])
-    }
-    const noopReaddirSync = (..._args: any[]) => []
-    const noopExistsSync = (_path: string) => false
-
-    // Patch - try/catch bilan (read-only propertylar uchun)
-    const props = [
-      ['readdir', noopReaddir],
-      ['readdirSync', noopReaddirSync],
-      ['existsSync', noopExistsSync],
-    ] as const
-
-    for (const [name, fn] of props) {
-      try {
-        Object.defineProperty(fs, name, {
-          value: fn,
-          writable: true,
-          configurable: true,
-          enumerable: true,
-        })
-      } catch {
-        try { (fs as any)[name] = fn } catch {}
-      }
-    }
-  } catch (e) {
-    console.warn('[db] fs patch failed (createRequire):', e)
-  }
-
-  globalThis.__polyfillsInstalled = true
-}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined

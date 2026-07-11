@@ -1,33 +1,26 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 // Deployment target: 'vercel' (standalone) yoki 'cloudflare' (next-on-pages)
-// Cf Pages buildida `output: standalone` KERAK EMAS - next-on-pages uni ignore qiladi,
-// lekin ogohlantirishlarni kamaytirish uchun shartli qilamiz.
 const isCloudflare = process.env.DEPLOY_TARGET === "cloudflare" ||
   !!process.env.CF_PAGES
 
+const fakeFsPath = path.join(process.cwd(), "src/lib/fs-polyfill-module.ts")
+
 const nextConfig: NextConfig = {
-  // Standalone output - faqat Vercel/Node.js serverless uchun
-  // Cloudflare Pages da next-on-pages buni e'tiborsiz qoldiradi
   ...(isCloudflare ? {} : { output: "standalone" }),
   typescript: {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  // Required for Prisma on Vercel serverless
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",
     },
   },
-  // Make sure native/node packages are bundled correctly
-  // sharp - CF Workers da ishlamaydi, faqat Vercel uchun kerak
-  // @prisma/client - @cloudflare/next-on-pages externalize qiladi
   serverExternalPackages: isCloudflare
     ? ["@prisma/client"]
     : ["@prisma/client", "@node-rs/argon2", "sharp"],
-  // Image optimization - Cloudflare Pages da sharp yo'qligi uchun o'chiriladi
-  // CF da rasm optimizatsiyasi uchun Cloudflare Images yoki Image Resizing ishlatiladi
   images: {
     unoptimized: isCloudflare,
     remotePatterns: [
@@ -41,6 +34,31 @@ const nextConfig: NextConfig = {
         hostname: "*.tidbcloud.com",
       },
     ],
+  },
+  // Cloudflare Workers uchun - fs moduli polyfill qilinadi
+  // Prisma'ning binaryTarget detection logic'i fs.readdir chaqiradi,
+  // CF Workers'da bu funksiya "not implemented" xatosi beradi.
+  // Yechim: node:fs va fs modulini o'z fake modulimizga yo'naltiramiz
+  turbopack: {
+    resolveAlias: {
+      "node:fs": fakeFsPath,
+      "fs": fakeFsPath,
+      "node:fs/promises": fakeFsPath,
+      "fs/promises": fakeFsPath,
+    },
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer && isCloudflare) {
+      config.resolve = config.resolve || {}
+      config.resolve.alias = config.resolve.alias || {}
+      config.resolve.alias["node:fs"] = fakeFsPath
+      config.resolve.alias["fs"] = fakeFsPath
+      config.resolve.alias["node:fs/promises"] = fakeFsPath
+      config.resolve.alias["fs/promises"] = fakeFsPath
+      config.resolve.fallback = config.resolve.fallback || {}
+      config.resolve.fallback["fs"] = fakeFsPath
+    }
+    return config
   },
 };
 
