@@ -1100,9 +1100,30 @@ for (const modelName of Object.keys(modelsData)) {
   _modelMap.set(toPropertyName(modelName), modelName)
 }
 
+// db.$transaction([...]) - serial execution of operations
+// Cloudflare Workers'da real transaction qiyin (HTTP driver limit),
+// lekin biz operatsiyalarni ketma-ket bajaramiz - bu Prisma'ning
+// $transaction'ning oddiy (interactive bo'lmagan) shakli.
+async function transaction(operations: any[]): Promise<any[]> {
+  const results: any[] = []
+  for (const op of operations) {
+    if (op && typeof op.then === 'function') {
+      results.push(await op)
+    } else {
+      results.push(op)
+    }
+  }
+  return results
+}
+
 export const db = new Proxy({} as any, {
   get(_target, prop: string) {
     if (typeof prop !== 'string') return undefined
+
+    // $transaction - maxsus
+    if (prop === '$transaction') {
+      return transaction
+    }
 
     // camelCase -> PascalCase model name
     const modelName = _modelMap.get(prop)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getActivationEnd, getAccessStatus } from '@/lib/auth'
+import { notifyActivated } from '@/lib/telegram'
 import { cookies } from 'next/headers'
 
 // POST /api/activation/activate - Aktivatsiya kodini faollashtirish
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const restaurant = session.restaurant
 
-    // Mark code as used
+    // Mark code as used + activate restaurant (serial "transaction")
     const now = new Date()
     const activationEnd = getActivationEnd()
 
@@ -76,7 +77,12 @@ export async function POST(req: NextRequest) {
       })
     ])
 
+    // Telegram notification (best-effort, not blocking)
     const updated = await db.restaurant.findUnique({ where: { id: restaurant.id } })
+    if (updated) {
+      const daysLeft = 30
+      notifyActivated(updated, daysLeft, activationEnd).catch(() => {})
+    }
 
     return NextResponse.json({
       success: true,

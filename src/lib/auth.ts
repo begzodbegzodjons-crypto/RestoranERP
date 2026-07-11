@@ -90,7 +90,19 @@ export function getAccessStatus(restaurant: {
     }
   }
 
-  // Blocked (trial expired)
+  // Blocked (trial or activation expired)
+  // Aktivlangan bo'lsa va aktivatsiya muddati tugagan bo'lsa - boshqa xabar
+  const wasActivated = restaurant.activatedAt && restaurant.activationEnd
+  if (wasActivated && restaurant.activationEnd! <= now) {
+    return {
+      state: 'blocked',
+      daysLeft: 0,
+      endDate: restaurant.activationEnd!,
+      message: 'Aktivatsiya muddati tugadi. Dasturni qayta faollashtirish uchun yangi aktivatsiya kodini kiriting.'
+    }
+  }
+
+  // Trial muddati tugagan
   return {
     state: 'blocked',
     daysLeft: 0,
