@@ -20,8 +20,20 @@ import MenuView from './MenuView'
 import PrintersView from './PrintersView'
 import AutoPrintMonitor from './AutoPrintMonitor'
 import { CustomersView, StaffView, TablesViewWithRooms, SuppliersView, CategoriesView, ExpensesView, ReservationsView, CouponsView, DebtsView, RoomsView } from './CrudViews'
+import RefundsView from './RefundsView'
+import WastesView from './WastesView'
+import CommissionsView from './CommissionsView'
+import InventoryCountsView from './InventoryCountsView'
+import LoyaltyTiersView from './LoyaltyTiersView'
+import MarketingCampaignsView from './MarketingCampaignsView'
+import MenuEngineeringView from './MenuEngineeringView'
+import CLVView from './CLVView'
+import AbTestsView from './AbTestsView'
+import BudgetsView from './BudgetsView'
+import ApiTokensView from './ApiTokensView'
+import FeatureFlagsView from './FeatureFlagsView'
 
-type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers'
+type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'refunds' | 'wastes' | 'commissions' | 'inventory-counts' | 'loyalty' | 'marketing' | 'menu-engineering' | 'clv' | 'ab-tests' | 'budgets' | 'api-tokens' | 'feature-flags'
 
 type Restaurant = {
   id: string
@@ -71,6 +83,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     section: 'Savdo',
     items: [
       { key: 'sales', label: 'Savdo tarixi', icon: '🧾' },
+      { key: 'refunds', label: 'Qaytarishlar', icon: '↩️' },
       { key: 'customers', label: 'Mijozlar (CRM)', icon: '👥' },
       { key: 'debts', label: 'Mijoz qarzlari', icon: '💳' }
     ]
@@ -78,22 +91,38 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
   {
     section: 'Marketing',
     items: [
+      { key: 'loyalty', label: 'Sodiqlik darajalari', icon: '🏆' },
+      { key: 'marketing', label: 'SMS/Email marketing', icon: '📢' },
       { key: 'coupons', label: 'Kuponlar', icon: '🏷️' },
-      { key: 'reservations', label: 'Rezervatsiyalar', icon: '📅' }
+      { key: 'reservations', label: 'Rezervatsiyalar', icon: '📅' },
+      { key: 'ab-tests', label: 'A/B testlash', icon: '🧪' }
+    ]
+  },
+  {
+    section: 'Analitika',
+    items: [
+      { key: 'clv', label: 'Mijoz Lifetime Value', icon: '💎' },
+      { key: 'menu-engineering', label: 'Menu Engineering', icon: '📊' }
     ]
   },
   {
     section: 'Boshqaruv',
     items: [
       { key: 'staff', label: 'Xodimlar', icon: '👷' },
+      { key: 'commissions', label: 'Komissiya & Choy puli', icon: '💵' },
       { key: 'rooms', label: 'Xonalar (Zal/VIP)', icon: '🏠' },
       { key: 'tables', label: 'Stollar', icon: '🪑' },
       { key: 'expenses', label: 'Chiqimlar', icon: '💸' },
+      { key: 'wastes', label: 'Brak & Isrof', icon: '🗑️' },
+      { key: 'inventory-counts', label: 'Inventarizatsiya', icon: '🔍' },
+      { key: 'budgets', label: 'Byudjet', icon: '📋' },
       { key: 'shifts', label: 'Smenalar (Kassa)', icon: '💰' },
       { key: 'kitchen', label: 'Oshpaz ekrani (KDS)', icon: '🍳' },
       { key: 'printers', label: 'Printer sozlamalari', icon: '🖨️' },
       { key: 'export', label: 'Eksport (Excel)', icon: '📤' },
       { key: 'integrations', label: 'Integratsiyalar', icon: '🔌' },
+      { key: 'api-tokens', label: 'API tokenlar', icon: '🔑' },
+      { key: 'feature-flags', label: 'Feature flags', icon: '🚩' },
       { key: 'settings', label: 'Sozlamalar', icon: '⚙️' }
     ]
   }
@@ -138,6 +167,18 @@ export default function DashboardLayout({
       case 'analytics': return <AnalyticsView />
       case 'integrations': return <IntegrationsView />
       case 'printers': return <PrintersView />
+      case 'refunds': return <RefundsView />
+      case 'wastes': return <WastesView />
+      case 'commissions': return <CommissionsView />
+      case 'inventory-counts': return <InventoryCountsView />
+      case 'loyalty': return <LoyaltyTiersView />
+      case 'marketing': return <MarketingCampaignsView />
+      case 'menu-engineering': return <MenuEngineeringView />
+      case 'clv': return <CLVView />
+      case 'ab-tests': return <AbTestsView />
+      case 'budgets': return <BudgetsView />
+      case 'api-tokens': return <ApiTokensView />
+      case 'feature-flags': return <FeatureFlagsView />
       case 'settings': return <SettingsView restaurant={restaurant} access={access} onLogout={onLogout} />
       case 'shifts': return <ShiftsView />
       case 'kitchen': return <KitchenDisplayView />

@@ -236,6 +236,104 @@
         "defaultExpression": null
       },
       {
+        "name": "subscriptionPlan",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "subscriptionStart",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "subscriptionEnd",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "customLogoUrl",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "customPrimaryColor",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "customDomain",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "onboardingCompleted",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": false
+      },
+      {
+        "name": "onboardingStep",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
         "name": "blockedByAdmin",
         "type": "Boolean",
         "optional": false,
@@ -813,6 +911,248 @@
         "foreignModel": "PrintJob",
         "foreignField": "restaurantId",
         "localField": "id"
+      },
+      {
+        "name": "refunds",
+        "type": "Refund",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "Refund_refunds",
+        "foreignModel": "Refund",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "wastes",
+        "type": "Waste",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "Waste_wastes",
+        "foreignModel": "Waste",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "staffCommissions",
+        "type": "StaffCommission",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "StaffCommission_staffCommissions",
+        "foreignModel": "StaffCommission",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "inventoryCounts",
+        "type": "InventoryCount",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "InventoryCount_inventoryCounts",
+        "foreignModel": "InventoryCount",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "loyaltyTiers",
+        "type": "LoyaltyTier",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "LoyaltyTier_loyaltyTiers",
+        "foreignModel": "LoyaltyTier",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "marketingCampaigns",
+        "type": "MarketingCampaign",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "MarketingCampaign_marketingCampaigns",
+        "foreignModel": "MarketingCampaign",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "featureFlags",
+        "type": "FeatureFlag",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "FeatureFlag_featureFlags",
+        "foreignModel": "FeatureFlag",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "apiTokens",
+        "type": "ApiToken",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "ApiToken_apiTokens",
+        "foreignModel": "ApiToken",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "branchTransfers",
+        "type": "BranchTransfer",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "BranchTransfer_branchTransfers",
+        "foreignModel": "BranchTransfer",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "budgets",
+        "type": "Budget",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "Budget_budgets",
+        "foreignModel": "Budget",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "abTests",
+        "type": "AbTest",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "AbTest_abTests",
+        "foreignModel": "AbTest",
+        "foreignField": "restaurantId",
+        "localField": "id"
       }
     ],
     "relations": [
@@ -1319,6 +1659,248 @@
         ],
         "relationName": "PrintJob_printJobs",
         "foreignModel": "PrintJob",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "refunds",
+        "type": "Refund",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "Refund_refunds",
+        "foreignModel": "Refund",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "wastes",
+        "type": "Waste",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "Waste_wastes",
+        "foreignModel": "Waste",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "staffCommissions",
+        "type": "StaffCommission",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "StaffCommission_staffCommissions",
+        "foreignModel": "StaffCommission",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "inventoryCounts",
+        "type": "InventoryCount",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "InventoryCount_inventoryCounts",
+        "foreignModel": "InventoryCount",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "loyaltyTiers",
+        "type": "LoyaltyTier",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "LoyaltyTier_loyaltyTiers",
+        "foreignModel": "LoyaltyTier",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "marketingCampaigns",
+        "type": "MarketingCampaign",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "MarketingCampaign_marketingCampaigns",
+        "foreignModel": "MarketingCampaign",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "featureFlags",
+        "type": "FeatureFlag",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "FeatureFlag_featureFlags",
+        "foreignModel": "FeatureFlag",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "apiTokens",
+        "type": "ApiToken",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "ApiToken_apiTokens",
+        "foreignModel": "ApiToken",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "branchTransfers",
+        "type": "BranchTransfer",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "BranchTransfer_branchTransfers",
+        "foreignModel": "BranchTransfer",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "budgets",
+        "type": "Budget",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "Budget_budgets",
+        "foreignModel": "Budget",
+        "foreignField": "restaurantId",
+        "localField": "id"
+      },
+      {
+        "name": "abTests",
+        "type": "AbTest",
+        "optional": false,
+        "isList": true,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationFields": [
+          "id"
+        ],
+        "relationReferences": [
+          "restaurantId"
+        ],
+        "relationName": "AbTest_abTests",
+        "foreignModel": "AbTest",
         "foreignField": "restaurantId",
         "localField": "id"
       }
@@ -3852,6 +4434,18 @@
         "defaultValue": "cash"
       },
       {
+        "name": "splitPayments",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
         "name": "status",
         "type": "String",
         "optional": false,
@@ -3863,6 +4457,31 @@
         "hasDefault": true,
         "defaultExpression": "literal",
         "defaultValue": "completed"
+      },
+      {
+        "name": "refundedAmount",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "refundedAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
       },
       {
         "name": "costOfGoods",
@@ -3879,6 +4498,32 @@
       },
       {
         "name": "profit",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "commissionAmount",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "tipAmount",
         "type": "Float",
         "optional": false,
         "isList": false,
@@ -4454,6 +5099,43 @@
         "hasDefault": true,
         "defaultExpression": "literal",
         "defaultValue": 0
+      },
+      {
+        "name": "loyaltyTier",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "lifetimeValue",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "lastVisitAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
       },
       {
         "name": "birthday",
@@ -8191,6 +8873,2132 @@
         "foreignModel": "PrinterStation",
         "foreignField": "id",
         "localField": "printerStationId"
+      }
+    ]
+  },
+  "Refund": {
+    "name": "Refund",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "saleId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "amount",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "reason",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "items",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "restocked",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": false
+      },
+      {
+        "name": "staffId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "Waste": {
+    "name": "Waste",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "ingredientId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "productId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "type",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "waste"
+      },
+      {
+        "name": "quantity",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "unit",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "cost",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "reason",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "staffId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "StaffCommission": {
+    "name": "StaffCommission",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "staffId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "saleId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "type",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "commission"
+      },
+      {
+        "name": "amount",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "isPercent",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": false
+      },
+      {
+        "name": "percent",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "paid",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": false
+      },
+      {
+        "name": "paidAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "InventoryCount": {
+    "name": "InventoryCount",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "planned"
+      },
+      {
+        "name": "startedAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "completedAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "notes",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "items",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "updatedAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": true,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "LoyaltyTier": {
+    "name": "LoyaltyTier",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "minPoints",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "discountPercent",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "color",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "slate"
+      },
+      {
+        "name": "isActive",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": true
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "updatedAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": true,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "MarketingCampaign": {
+    "name": "MarketingCampaign",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "channel",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "sms"
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "message",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "targetAudience",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "all"
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "draft"
+      },
+      {
+        "name": "sentCount",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "deliveredCount",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "scheduledAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "sentAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "SubscriptionPlan": {
+    "name": "SubscriptionPlan",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "priceMonthly",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "priceYearly",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "maxProducts",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 100
+      },
+      {
+        "name": "maxStaff",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 10
+      },
+      {
+        "name": "maxBranches",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 1
+      },
+      {
+        "name": "features",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "isActive",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": true
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "updatedAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": true,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      }
+    ],
+    "relations": []
+  },
+  "FeatureFlag": {
+    "name": "FeatureFlag",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "feature",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "enabled",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": false
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "updatedAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": true,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "ApiToken": {
+    "name": "ApiToken",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "token",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": true,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "scope",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "read"
+      },
+      {
+        "name": "lastUsedAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "expiresAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "isActive",
+        "type": "Boolean",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": true
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "BranchTransfer": {
+    "name": "BranchTransfer",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "fromBranchId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "toBranchId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "pending"
+      },
+      {
+        "name": "items",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "notes",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "sentAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "receivedAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "updatedAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": true,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "Budget": {
+    "name": "Budget",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "period",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "monthly"
+      },
+      {
+        "name": "year",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "month",
+        "type": "Int",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "quarter",
+        "type": "Int",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "category",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "plannedAmount",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "actualAmount",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "notes",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "updatedAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": true,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ]
+  },
+  "AbTest": {
+    "name": "AbTest",
+    "fields": [
+      {
+        "name": "id",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": true,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "cuid"
+      },
+      {
+        "name": "restaurantId",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "description",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "testType",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "price"
+      },
+      {
+        "name": "productId",
+        "type": "String",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "variantA",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "variantB",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "variantACount",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "variantBCount",
+        "type": "Int",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "variantARevenue",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "variantBRevenue",
+        "type": "Float",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": 0
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "literal",
+        "defaultValue": "running"
+      },
+      {
+        "name": "startedAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "endedAt",
+        "type": "DateTime",
+        "optional": true,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": false,
+        "defaultExpression": null
+      },
+      {
+        "name": "createdAt",
+        "type": "DateTime",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": false,
+        "hasDefault": true,
+        "defaultExpression": "now"
+      },
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
+      }
+    ],
+    "relations": [
+      {
+        "name": "restaurant",
+        "type": "Restaurant",
+        "optional": false,
+        "isList": false,
+        "isId": false,
+        "isUnique": false,
+        "isUpdatedAt": false,
+        "isRelation": true,
+        "hasDefault": false,
+        "defaultExpression": null,
+        "relationName": null,
+        "relationFields": [
+          "restaurantId"
+        ],
+        "relationReferences": [
+          "id"
+        ],
+        "foreignModel": "Restaurant",
+        "foreignField": "id",
+        "localField": "restaurantId"
       }
     ]
   }

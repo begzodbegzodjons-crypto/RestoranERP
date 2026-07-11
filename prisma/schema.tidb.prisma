@@ -49,6 +49,19 @@ model Restaurant {
   activationEnd   DateTime? // 30 days from activation
   activationCode  String?  // currently active code
 
+  // === BOSQICH 3: SaaS funksiyalari ===
+  // Obuna turi (Basic | Pro | Enterprise)
+  subscriptionPlan String? // basic | pro | enterprise
+  subscriptionStart DateTime?
+  subscriptionEnd  DateTime?
+  // White-label branding
+  customLogoUrl   String?
+  customPrimaryColor String?
+  customDomain    String?
+  // Onboarding holati
+  onboardingCompleted Boolean @default(false)
+  onboardingStep  Int      @default(0)
+
   // Admin tomonidan boshqarish
   blockedByAdmin  Boolean  @default(false)
   blockedReason   String?  @db.Text
@@ -81,6 +94,18 @@ model Restaurant {
   notifications   Notification[]
   printerStations PrinterStation[]
   printJobs       PrintJob[]
+  // === BOSQICH 1-5: Yangi munosabatlar ===
+  refunds         Refund[]
+  wastes          Waste[]
+  staffCommissions StaffCommission[]
+  inventoryCounts InventoryCount[]
+  loyaltyTiers    LoyaltyTier[]
+  marketingCampaigns MarketingCampaign[]
+  featureFlags    FeatureFlag[]
+  apiTokens       ApiToken[]
+  branchTransfers BranchTransfer[]
+  budgets         Budget[]
+  abTests         AbTest[]
 }
 
 // Session for restaurant login
@@ -318,11 +343,19 @@ model Sale {
   taxAmount     Float    @default(0)
   total         Float
   paidAmount    Float    @default(0)
-  paymentMethod String   @default("cash") // cash | card | transfer
-  status        String   @default("completed") // completed | refunded | pending
+  paymentMethod String   @default("cash") // cash | card | transfer | split
+  // Bo'lib to'lash uchun - JSON: {cash: 50000, card: 100000, transfer: 0}
+  splitPayments String? @db.Text
+  status        String   @default("completed") // completed | refunded | partial_refund | pending
+  // Refund ma'lumotlari
+  refundedAmount Float   @default(0)
+  refundedAt     DateTime?
   // Total cost of goods sold (COGS)
   costOfGoods   Float    @default(0)
   profit        Float    @default(0)
+  // Ofitsiant komissiyasi va choy puli
+  commissionAmount Float @default(0)
+  tipAmount      Float   @default(0)
   notes         String? @db.Text
   createdAt     DateTime @default(now())
 
@@ -370,6 +403,13 @@ model Customer {
   totalSpent    Float    @default(0)
   // Loyalty dasturi
   loyaltyPoints Int      @default(0)
+  // Sodiqlik darajasi (Bronze | Silver | Gold | Platinum)
+  loyaltyTier   String? // bronze | silver | gold | platinum
+  // Mijoz Lifetime Value - umumiy qiymat
+  lifetimeValue Float    @default(0)
+  // Oxirgi tashrif sanasi
+  lastVisitAt   DateTime?
+  // Tug'ilgan kuni uchun
   birthday      DateTime?
   createdAt     DateTime @default(now())
 
@@ -733,4 +773,274 @@ model PrintJob {
   @@index([restaurantId, status])
   @@index([printerStationId, status])
   @@index([autoPrintReady, status])
+}
+
+// ============================================================
+// REFUND - savdo qaytarish (1-bosqich)
+// ============================================================
+model Refund {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  saleId        String
+  amount        Float
+  reason        String   @db.Text
+  // Qaysi itemlar qaytarildi (JSON: [{saleItemId, qty}])
+  items         String? @db.LongText
+  // Qaytarib olingan mahsulot omborga qo'shildimi?
+  restocked     Boolean  @default(false)
+  staffId       String?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@index([saleId])
+}
+
+// ============================================================
+// WASTE - brak/isrof hisobi (1-bosqich)
+// ============================================================
+model Waste {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  ingredientId  String?
+  productId     String?
+  // waste | spoilage | expired | damaged
+  type          String   @default("waste")
+  quantity      Float
+  unit          String
+  // Yo'qotilgan qiymat (so'mda)
+  cost          Float    @default(0)
+  reason        String? @db.Text
+  staffId       String?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, createdAt])
+  @@index([ingredientId])
+  @@index([productId])
+}
+
+// ============================================================
+// STAFF COMMISSION - xodim komissiyasi va choy pullari (1-bosqich)
+// ============================================================
+model StaffCommission {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  staffId       String
+  saleId        String?
+  // commission | tip | bonus | penalty
+  type          String   @default("commission")
+  amount        Float
+  // Foiz yoki summa?
+  isPercent     Boolean  @default(false)
+  percent       Float    @default(0)
+  description   String? @db.Text
+  paid          Boolean  @default(false)
+  paidAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, staffId])
+  @@index([saleId])
+  @@index([paid])
+}
+
+// ============================================================
+// INVENTORY COUNT - ombor inventarizatsiyasi (1-bosqich)
+// ============================================================
+model InventoryCount {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  // planned | in_progress | completed | cancelled
+  status        String   @default("planned")
+  startedAt     DateTime?
+  completedAt   DateTime?
+  notes         String? @db.Text
+  // JSON: [{ingredientId, expectedQty, actualQty, diff, note}]
+  items         String? @db.LongText
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
+}
+
+// ============================================================
+// LOYALTY TIER - sodiqlik darajalari (2-bosqich)
+// ============================================================
+model LoyaltyTier {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String   // Bronze | Silver | Gold | Platinum
+  minPoints     Int      @default(0)
+  discountPercent Float  @default(0)
+  // Rang (UI uchun)
+  color         String   @default("slate")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// MARKETING CAMPAIGN - SMS/Email marketing (2-bosqich)
+// ============================================================
+model MarketingCampaign {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  // sms | email | telegram | push
+  channel       String   @default("sms")
+  title         String
+  message       String   @db.LongText
+  // target: all | tier:gold | birthday | inactive_30d
+  targetAudience String  @default("all")
+  status        String   @default("draft") // draft | scheduled | sent | failed
+  sentCount     Int      @default(0)
+  deliveredCount Int     @default(0)
+  scheduledAt   DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
+}
+
+// ============================================================
+// SUBSCRIPTION PLAN - obuna tariflari (3-bosqich)
+// ============================================================
+model SubscriptionPlan {
+  id            String   @id @default(cuid())
+  name          String   // Basic | Pro | Enterprise
+  priceMonthly  Float    @default(0)
+  priceYearly   Float    @default(0)
+  maxProducts   Int      @default(100)
+  maxStaff      Int      @default(10)
+  maxBranches   Int      @default(1)
+  features      String   @db.LongText // JSON array of features
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================================
+// FEATURE FLAG - funksiyalarni restoran bo'yicha yoqib/o'chirib qo'yish (3-bosqich)
+// ============================================================
+model FeatureFlag {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  feature       String   // feature key, e.g. "ai_forecast", "split_payment"
+  enabled       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, feature])
+  @@index([restaurantId])
+}
+
+// ============================================================
+// API TOKEN - tashqi tizimlar uchun API access (3-bosqich)
+// ============================================================
+model ApiToken {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String   // token nomi (masalan: "1C integratsiya")
+  token         String   @unique
+  // read | write | admin
+  scope         String   @default("read")
+  lastUsedAt    DateTime?
+  expiresAt     DateTime?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+}
+
+// ============================================================
+// BRANCH TRANSFER - filiallararo mahsulot transferi (5-bosqich)
+// ============================================================
+model BranchTransfer {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  fromBranchId  String?
+  toBranchId    String?
+  // pending | in_transit | received | cancelled
+  status        String   @default("pending")
+  // JSON: [{ingredientId, quantity, unit}]
+  items         String   @db.LongText
+  notes         String? @db.Text
+  sentAt        DateTime?
+  receivedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
+}
+
+// ============================================================
+// BUDGET - byudjet rejalashtirish (5-bosqich)
+// ============================================================
+model Budget {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  // monthly | quarterly | yearly
+  period        String   @default("monthly")
+  year          Int
+  month         Int?
+  quarter       Int?
+  // kategoriya bo'yicha (masalan: rent, salary, marketing, inventory)
+  category      String
+  plannedAmount Float
+  actualAmount  Float    @default(0)
+  notes         String? @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, year, month])
+}
+
+// ============================================================
+// AB TEST - A/B testlash (2-bosqich)
+// ============================================================
+model AbTest {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  name          String
+  // test_nomi (masalan: "Manti narxi 25k vs 30k")
+  description   String? @db.Text
+  // price | description | emoji | placement
+  testType      String   @default("price")
+  productId     String?
+  // A varianti (JSON: {price: 25000})
+  variantA      String   @db.LongText
+  // B varianti (JSON: {price: 30000})
+  variantB      String   @db.LongText
+  // Natijalar
+  variantACount Int      @default(0)
+  variantBCount Int      @default(0)
+  variantARevenue Float  @default(0)
+  variantBRevenue Float  @default(0)
+  status        String   @default("running") // draft | running | completed
+  startedAt     DateTime @default(now())
+  endedAt       DateTime?
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, status])
 }
