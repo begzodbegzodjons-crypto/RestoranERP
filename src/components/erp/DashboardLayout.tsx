@@ -32,8 +32,13 @@ import AbTestsView from './AbTestsView'
 import BudgetsView from './BudgetsView'
 import ApiTokensView from './ApiTokensView'
 import FeatureFlagsView from './FeatureFlagsView'
+import TaxView from './TaxView'
+import FloorPlanView from './FloorPlanView'
+import FinancialReportsView from './FinancialReportsView'
+import OnboardingView from './OnboardingView'
+import PaymentsView from './PaymentsView'
 
-type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'refunds' | 'wastes' | 'commissions' | 'inventory-counts' | 'loyalty' | 'marketing' | 'menu-engineering' | 'clv' | 'ab-tests' | 'budgets' | 'api-tokens' | 'feature-flags'
+type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'refunds' | 'wastes' | 'commissions' | 'inventory-counts' | 'loyalty' | 'marketing' | 'menu-engineering' | 'clv' | 'ab-tests' | 'budgets' | 'api-tokens' | 'feature-flags' | 'tax' | 'floor-plan' | 'financial-reports' | 'onboarding' | 'payments'
 
 type Restaurant = {
   id: string
@@ -102,7 +107,9 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     section: 'Analitika',
     items: [
       { key: 'clv', label: 'Mijoz Lifetime Value', icon: '💎' },
-      { key: 'menu-engineering', label: 'Menu Engineering', icon: '📊' }
+      { key: 'menu-engineering', label: 'Menu Engineering', icon: '📊' },
+      { key: 'financial-reports', label: 'Moliyaviy hisobotlar', icon: '💼' },
+      { key: 'tax', label: 'Soliqlar (QQS)', icon: '🏛️' }
     ]
   },
   {
@@ -110,6 +117,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
     items: [
       { key: 'staff', label: 'Xodimlar', icon: '👷' },
       { key: 'commissions', label: 'Komissiya & Choy puli', icon: '💵' },
+      { key: 'floor-plan', label: 'Stol rejasi (Floor plan)', icon: '🗺️' },
       { key: 'rooms', label: 'Xonalar (Zal/VIP)', icon: '🏠' },
       { key: 'tables', label: 'Stollar', icon: '🪑' },
       { key: 'expenses', label: 'Chiqimlar', icon: '💸' },
@@ -119,6 +127,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'shifts', label: 'Smenalar (Kassa)', icon: '💰' },
       { key: 'kitchen', label: 'Oshpaz ekrani (KDS)', icon: '🍳' },
       { key: 'printers', label: 'Printer sozlamalari', icon: '🖨️' },
+      { key: 'payments', label: 'To\'lov tizimlari', icon: '💳' },
       { key: 'export', label: 'Eksport (Excel)', icon: '📤' },
       { key: 'integrations', label: 'Integratsiyalar', icon: '🔌' },
       { key: 'api-tokens', label: 'API tokenlar', icon: '🔑' },
@@ -179,6 +188,11 @@ export default function DashboardLayout({
       case 'budgets': return <BudgetsView />
       case 'api-tokens': return <ApiTokensView />
       case 'feature-flags': return <FeatureFlagsView />
+      case 'tax': return <TaxView />
+      case 'floor-plan': return <FloorPlanView />
+      case 'financial-reports': return <FinancialReportsView />
+      case 'onboarding': return <OnboardingView />
+      case 'payments': return <PaymentsView />
       case 'settings': return <SettingsView restaurant={restaurant} access={access} onLogout={onLogout} />
       case 'shifts': return <ShiftsView />
       case 'kitchen': return <KitchenDisplayView />
