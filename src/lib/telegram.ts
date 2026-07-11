@@ -1,23 +1,44 @@
 // Telegram notification helpers
 // ============================================================================
-// Restoran uchun telegram bot token va chat ID berilgan bo'lsa,
-// xabar yuboradi. Agar berilmagan bo'lsa - hech narsa qilmaydi (no-op).
+// Barcha xabarlar @norinkomp admin'iga yuboriladi (foydalanuvchining botiga EMAS).
+//
+// Sozlash:
+// 1. @BotFather bilan yangi bot yarating (yoki mavjud botni ishlating)
+// 2. Bot token'ini olint: ADMIN_TELEGRAM_BOT_TOKEN
+// 3. @norinkomp akkaunti bilan botga /start yuboring
+// 4. https://api.telegram.org/bot<TOKEN>/getUpdates - chat_id oling
+// 5. ADMIN_TELEGRAM_CHAT_ID sifatida saqlang
+//
+// Flow:
+// - Foydalanuvchi bloklanganda -> admin (@norinkomp) ga xabar boradi
+// - Foydalanuvchi @norinkomp ga yozadi -> to'lov qiladi
+// - Admin paneldan aktivatsiya kodi generatsiya qiladi
+// - Admin @norinkomp orqali foydalanuvchiga kodni yuboradi
+// - Foydalanuvchi kodni dasturga kiritadi -> 30 kun aktivlashadi
 
-interface TelegramConfig {
-  botToken?: string | null
-  chatId?: string | null
+interface AdminTelegramConfig {
+  botToken?: string
+  chatId?: string
 }
 
 /**
- * Telegram xabar yuborish
- * @param config - telegram config (botToken, chatId)
- * @param text - yuboriladigan xabar matni
+ * Admin telegram config'ni env'dan olish
  */
-export async function sendTelegramMessage(
-  config: TelegramConfig,
-  text: string
-): Promise<boolean> {
+function getAdminConfig(): AdminTelegramConfig {
+  return {
+    botToken: process.env.ADMIN_TELEGRAM_BOT_TOKEN,
+    chatId: process.env.ADMIN_TELEGRAM_CHAT_ID,
+  }
+}
+
+/**
+ * Telegram xabar yuborish (admin'ga)
+ * @param text - yuboriladigan xabar matni (HTML format)
+ */
+export async function sendTelegramMessage(text: string): Promise<boolean> {
+  const config = getAdminConfig()
   if (!config.botToken || !config.chatId) {
+    // Bot sozlanmagan - hech narsa qilmaydi (silent fail)
     return false
   }
 
@@ -46,89 +67,91 @@ export async function sendTelegramMessage(
 }
 
 /**
- * Restoran egasiga "sinov muddati tugadi" xabari yuborish
- * @param restaurant - restoran ma'lumotlari (name, telegramBotToken, telegramChatId)
+ * Admin'ga "sinov muddati tugadi" xabari
+ * @param restaurant - bloklangan restoran ma'lumotlari
  */
 export async function notifyTrialExpired(restaurant: {
+  id: string
   name: string
   email: string
-  telegramBotToken?: string | null
-  telegramChatId?: string | null
+  phone?: string | null
+  trialEnd: Date
 }): Promise<boolean> {
   const text = `🚫 <b>Sinov muddati tugadi</b>
 
-Hurmatli <b>${restaurant.name}</b>!
+🏪 <b>Restoran:</b> ${restaurant.name}
+📧 <b>Email:</b> ${restaurant.email}
+${restaurant.phone ? `📞 <b>Telefon:</b> ${restaurant.phone}\n` : ''}📅 <b>Sinov tugashi:</b> ${new Date(restaurant.trialEnd).toLocaleDateString('uz-UZ')}
+🆔 <b>ID:</b> <code>${restaurant.id}</code>
 
-OshxonaERP dasturining bepul sinov muddati tugadi.
+Foydalanuvchi tez orada sizga @norinkomp orqali murojaat qiladi.
+To'lov qabul qilib, aktivatsiya kodini yuboring.`
 
-Dasturdan foydalanishni davom ettirish uchun:
-1. Admin paneldan aktivatsiya kodini oling
-2. @norinkomp telegram akkauntiga murojaat qiling
-3. Aktivatsiya kodini dasturga kiriting
-
-✅ Aktivatsiya kodi 30 kunlik foydalanish huquqini beradi.
-
-Murojaat: @norinkomp`
-
-  return sendTelegramMessage(
-    { botToken: restaurant.telegramBotToken, chatId: restaurant.telegramChatId },
-    text
-  )
+  return sendTelegramMessage(text)
 }
 
 /**
- * Restoran egasiga "aktivatsiya muvaffaqiyatli" xabari yuborish
+ * Admin'ga "aktivatsiya muvaffaqiyatli" xabari
  */
 export async function notifyActivated(
-  restaurant: { name: string; telegramBotToken?: string | null; telegramChatId?: string | null },
+  restaurant: { id: string; name: string; email: string; phone?: string | null },
+  code: string,
   daysLeft: number,
   endDate: Date
 ): Promise<boolean> {
   const text = `✅ <b>Dastur faollashtirildi</b>
 
-Hurmatli <b>${restaurant.name}</b>!
+🏪 <b>Restoran:</b> ${restaurant.name}
+📧 <b>Email:</b> ${restaurant.email}
+${restaurant.phone ? `📞 <b>Telefon:</b> ${restaurant.phone}\n` : ''}🔑 <b>Kod:</b> <code>${code}</code>
+📅 <b>Faollik:</b> ${daysLeft} kun
+📆 <b>Tugash sanasi:</b> ${endDate.toLocaleDateString('uz-UZ')}
 
-Sizning OshxonaERP dasturingiz muvaffaqiyatli faollashtirildi.
+Aktivatsiya muvaffaqiyatli amalga oshirildi.`
 
-📅 Faollik muddati: <b>${daysLeft} kun</b>
-📆 Tugash sanasi: <b>${endDate.toLocaleDateString('uz-UZ')}</b>
-
-Muddati tugagach dastur avtomatik bloklanadi.
-Davom ettirish uchun yangi aktivatsiya kodi oling.
-
-Murojaat: @norinkomp`
-
-  return sendTelegramMessage(
-    { botToken: restaurant.telegramBotToken, chatId: restaurant.telegramChatId },
-    text
-  )
+  return sendTelegramMessage(text)
 }
 
 /**
- * Restoran egasiga "aktivatsiya muddati tugadi" xabari yuborish
+ * Admin'ga "aktivatsiya muddati tugadi" xabari
  */
 export async function notifyActivationExpired(restaurant: {
+  id: string
   name: string
   email: string
-  telegramBotToken?: string | null
-  telegramChatId?: string | null
+  phone?: string | null
+  activationEnd: Date | null
 }): Promise<boolean> {
   const text = `🚫 <b>Aktivatsiya muddati tugadi</b>
 
-Hurmatli <b>${restaurant.name}</b>!
+🏪 <b>Restoran:</b> ${restaurant.name}
+📧 <b>Email:</b> ${restaurant.email}
+${restaurant.phone ? `📞 <b>Telefon:</b> ${restaurant.phone}\n` : ''}📅 <b>Aktivatsiya tugashi:</b> ${restaurant.activationEnd ? new Date(restaurant.activationEnd).toLocaleDateString('uz-UZ') : '-'}
+🆔 <b>ID:</b> <code>${restaurant.id}</code>
 
-Sizning OshxonaERP dasturingizning aktivatsiya muddati tugadi.
-Dastur vaqtincha bloklandi.
+Foydalanuvchi yangi aktivatsiya kodi olish uchun sizga @norinkomp orqali murojaat qiladi.
+To'lov qabul qilib, yangi aktivatsiya kodini yuboring.`
 
-Davom ettirish uchun:
-1. Yangi aktivatsiya kodi oling
-2. @norinkomp telegram akkauntiga murojaat qiling
-3. Aktivatsiya kodini dasturga kiriting
+  return sendTelegramMessage(text)
+}
 
-Murojaat: @norinkomp`
+/**
+ * Admin'ga "yangi foydalanuvchi ro'yxatdan o'tdi" xabari ( statistika uchun)
+ */
+export async function notifyNewRegistration(restaurant: {
+  id: string
+  name: string
+  email: string
+  phone?: string | null
+}): Promise<boolean> {
+  const text = `🆕 <b>Yangi ro'yxatdan o'tgan foydalanuvchi</b>
 
-  return sendTelegramMessage(
-    { botToken: restaurant.telegramBotToken, chatId: restaurant.telegramChatId },
-    text
-  )
+🏪 <b>Restoran:</b> ${restaurant.name}
+📧 <b>Email:</b> ${restaurant.email}
+${restaurant.phone ? `📞 <b>Telefon:</b> ${restaurant.phone}\n` : ''}🆔 <b>ID:</b> <code>${restaurant.id}</code>
+📅 <b>Vaqt:</b> ${new Date().toLocaleString('uz-UZ')}
+
+10 kunlik bepul sinov boshlandi.`
+
+  return sendTelegramMessage(text)
 }

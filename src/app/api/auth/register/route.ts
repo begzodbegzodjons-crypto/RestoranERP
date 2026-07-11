@@ -6,6 +6,7 @@ export async function POST(req: NextRequest) {
     // Dynamic imports - bu xatolarni aniq ushlaydi
     const { db } = await import('@/lib/db')
     const { hashPassword, createSession, getTrialEnd, getAccessStatus } = await import('@/lib/auth')
+    const { notifyNewRegistration } = await import('@/lib/telegram')
 
     const body = await req.json()
     const { name, email, password, phone, address } = body
@@ -37,6 +38,14 @@ export async function POST(req: NextRequest) {
 
     const token = await createSession(restaurant.id)
 
+    // Admin'ga Telegram xabar (best-effort, not blocking)
+    notifyNewRegistration({
+      id: restaurant.id,
+      name: restaurant.name,
+      email: restaurant.email,
+      phone: restaurant.phone,
+    }).catch(() => {})
+
     const response = NextResponse.json({
       success: true,
       restaurant: {
@@ -58,12 +67,8 @@ export async function POST(req: NextRequest) {
     return response
   } catch (e: any) {
     console.error('Register error:', e)
-    // Full error info - debug mode
     return NextResponse.json({
       error: 'Server xatosi: ' + e.message,
-      stack: e.stack,
-      name: e.name,
-      cause: e.cause?.message || e.cause,
     }, { status: 500 })
   }
 }

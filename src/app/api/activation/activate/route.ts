@@ -77,11 +77,10 @@ export async function POST(req: NextRequest) {
       })
     ])
 
-    // Telegram notification (best-effort, not blocking)
+    // Telegram notification - admin'ga (best-effort, not blocking)
     const updated = await db.restaurant.findUnique({ where: { id: restaurant.id } })
     if (updated) {
-      const daysLeft = 30
-      notifyActivated(updated, daysLeft, activationEnd).catch(() => {})
+      notifyActivated(updated, normalizedCode, 30, activationEnd).catch(() => {})
     }
 
     return NextResponse.json({
