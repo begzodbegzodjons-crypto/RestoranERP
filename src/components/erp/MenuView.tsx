@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { api, toast, formatMoney, Modal, useConfirm } from './utils'
+import EmojiPicker from './EmojiPicker'
 
 type Product = {
   id: string
@@ -169,19 +170,9 @@ export default function MenuView() {
               key={p.id}
               className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group"
             >
-              {/* Image */}
-              <div className="aspect-square bg-slate-100 relative overflow-hidden">
-                {p.imageUrl ? (
-                  <img
-                    src={p.imageUrl}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl text-slate-300">
-                    🍽️
-                  </div>
-                )}
+              {/* Image - emoji ko'rsatish (imageUrl maydonida emoji saqlanadi) */}
+              <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden flex items-center justify-center">
+                <span className="text-6xl">{p.imageUrl || '🍽️'}</span>
                 {/* Availability badge */}
                 {!p.isAvailable && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -261,7 +252,7 @@ export default function MenuView() {
   )
 }
 
-// ============== PRODUCT FORM (with image upload) ==============
+// ============== PRODUCT FORM (with emoji picker) ==============
 function ProductForm({ product, categories, onClose, onSaved }: {
   product: Product | null
   categories: Category[]
@@ -278,34 +269,6 @@ function ProductForm({ product, categories, onClose, onSaved }: {
     imageUrl: product?.imageUrl || ''
   })
   const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const res = await fetch('/api/upload/product-image', {
-        method: 'POST',
-        body: formData
-      })
-      const data = await res.json()
-
-      if (!res.ok) throw new Error(data.error || 'Yuklash xatosi')
-
-      setForm({ ...form, imageUrl: data.imageUrl })
-      toast.success('Rasm yuklandi')
-    } catch (e: any) {
-      toast.error(e.message)
-    } finally {
-      setUploading(false)
-    }
-  }
 
   const save = async () => {
     if (!form.name || form.price == null) {
@@ -338,61 +301,21 @@ function ProductForm({ product, categories, onClose, onSaved }: {
   return (
     <Modal open onClose={onClose} title={product ? 'Taomini tahrirlash' : 'Yangi taom qo\'shish'} size="md">
       <div className="space-y-4">
-        {/* Image upload */}
+        {/* Emoji picker - rasm o'rniga emoji ishlatamiz */}
+        {/* Sababi: rasm yuklash TiDB hotirasini tez tugatadi (100-200 ta taom = 100-200 MB) */}
+        {/* Emoji = 4 byte, 1 million ta emoji = 4 MB */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Taom rasmi</label>
-          <div className="flex items-start gap-4">
-            {/* Preview */}
-            <div
-              onClick={() => fileRef.current?.click()}
-              className="w-32 h-32 rounded-xl border-2 border-dashed border-slate-300 hover:border-emerald-400 flex items-center justify-center cursor-pointer overflow-hidden bg-slate-50 transition-colors relative"
-            >
-              {form.imageUrl ? (
-                <>
-                  <img src={form.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/0 hover:bg-black/40 flex items-center justify-center transition-colors">
-                    <span className="text-white text-sm font-medium opacity-0 hover:opacity-100">Almashtirish</span>
-                  </div>
-                </>
-              ) : uploading ? (
-                <div className="flex flex-col items-center gap-2">
-                  <svg className="animate-spin h-6 w-6 text-emerald-500" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  <span className="text-xs text-slate-500">Yuklanmoqda...</span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-1 text-slate-400">
-                  <span className="text-3xl">📷</span>
-                  <span className="text-xs">Rasm yuklash</span>
-                </div>
-              )}
-            </div>
-            <div className="flex-1">
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <p className="text-xs text-slate-500 mb-2">
-                JPG, PNG yoki WebP formatida. Maks 10MB.
-              </p>
-              <p className="text-xs text-slate-400">
-                Rasm avtomatik 800×800 px ga moslanadi.
-              </p>
-              {form.imageUrl && (
-                <button
-                  onClick={() => setForm({ ...form, imageUrl: '' })}
-                  className="mt-2 text-xs text-red-500 hover:text-red-700"
-                >
-                  🗑️ Rasmni o'chirish
-                </button>
-              )}
-            </div>
-          </div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Taom rasmi (emoji)
+          </label>
+          <EmojiPicker
+            value={form.imageUrl}
+            onChange={(emoji) => setForm({ ...form, imageUrl: emoji })}
+          />
+          <p className="text-xs text-slate-500 mt-2">
+            💡 Taom uchun mos emoji tanlang. Rasm yuklash o'rniga emoji ishlatish
+            tezroq va server hotirasini tejaydi.
+          </p>
         </div>
 
         <div>

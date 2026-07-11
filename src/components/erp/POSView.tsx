@@ -186,13 +186,9 @@ export default function POSView() {
                       : 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed'
                   }`}
                 >
-                  {p.imageUrl ? (
-                    <div className="aspect-square bg-slate-100 overflow-hidden">
-                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="aspect-square bg-slate-100 flex items-center justify-center text-4xl">🍽️</div>
-                  )}
+                  <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-5xl">
+                    {p.imageUrl || '🍽️'}
+                  </div>
                   <div className="p-3">
                     <div className="font-semibold text-slate-900 mb-1 line-clamp-2 text-sm">{p.name}</div>
                     <div className="text-emerald-600 font-bold">{formatMoney(p.price)}</div>

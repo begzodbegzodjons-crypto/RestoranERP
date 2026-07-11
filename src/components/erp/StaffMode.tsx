@@ -511,13 +511,9 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
                   onClick={() => addToCart(p)}
                   className="rounded-xl border border-slate-200 hover:border-emerald-400 hover:shadow-md bg-white text-left overflow-hidden"
                 >
-                  {p.imageUrl ? (
-                    <div className="aspect-square bg-slate-100 overflow-hidden">
-                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                    </div>
-                  ) : (
-                    <div className="aspect-square bg-slate-100 flex items-center justify-center text-3xl">🍽️</div>
-                  )}
+                  <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-4xl">
+                    {p.imageUrl || '🍽️'}
+                  </div>
                   <div className="p-2">
                     <div className="font-semibold text-slate-900 text-sm line-clamp-2 mb-1">{p.name}</div>
                     <div className="text-emerald-600 font-bold">{formatMoney(p.price)}</div>
