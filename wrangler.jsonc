@@ -1,8 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "oshxona-erp",
+  "name": "restoran-erp",
   "compatibility_date": "2025-07-01",
-  "compatibility_flags": ["nodejs_compat", "nodejs_compat_v2"],
+  "compatibility_flags": ["nodejs_compat_v2"],
   "main": ".open-next/worker.js",
   "assets": {
     "directory": ".open-next/assets",
