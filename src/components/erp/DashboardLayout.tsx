@@ -41,8 +41,9 @@ import BranchesView from './BranchesView'
 import SubscriptionPlansView from './SubscriptionPlansView'
 import ForecastView from './ForecastView'
 import BirthdaysView from './BirthdaysView'
+import PosPrintMonitor from './PosPrintMonitor'
 
-type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'refunds' | 'wastes' | 'commissions' | 'inventory-counts' | 'loyalty' | 'marketing' | 'menu-engineering' | 'clv' | 'ab-tests' | 'budgets' | 'api-tokens' | 'feature-flags' | 'tax' | 'floor-plan' | 'financial-reports' | 'onboarding' | 'payments' | 'branches' | 'subscription-plans' | 'forecast' | 'birthdays'
+type View = 'dashboard' | 'pos' | 'menu' | 'products' | 'ingredients' | 'purchases' | 'sales' | 'categories' | 'customers' | 'staff' | 'tables' | 'rooms' | 'suppliers' | 'expenses' | 'reports' | 'settings' | 'staffmode' | 'shifts' | 'kitchen' | 'reservations' | 'coupons' | 'debts' | 'export' | 'notifications' | 'analytics' | 'integrations' | 'printers' | 'refunds' | 'wastes' | 'commissions' | 'inventory-counts' | 'loyalty' | 'marketing' | 'menu-engineering' | 'clv' | 'ab-tests' | 'budgets' | 'api-tokens' | 'feature-flags' | 'tax' | 'floor-plan' | 'financial-reports' | 'onboarding' | 'payments' | 'branches' | 'subscription-plans' | 'forecast' | 'birthdays' | 'pos-print-monitor'
 
 type Restaurant = {
   id: string
@@ -67,6 +68,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'staffmode', label: '👤 Xodim kirishi (POS)', icon: '🔌' },
       { key: 'dashboard', label: 'Boshqaruv paneli', icon: '📊' },
       { key: 'pos', label: 'POS Kassa', icon: '💳' },
+      { key: 'pos-print-monitor', label: '🖨️ POS Print Monitor', icon: '🖨️' },
       { key: 'analytics', label: 'Biznes analitikasi', icon: '📈' },
       { key: 'reports', label: 'Hisobotlar', icon: '📋' },
       { key: 'notifications', label: 'Bildirishnomalar', icon: '🔔' }
@@ -139,6 +141,7 @@ export default function DashboardLayout({
     switch (view) {
       case 'dashboard': return <DashboardView restaurantName={restaurant.name} />
       case 'pos': return <POSView />
+      case 'pos-print-monitor': return <PosPrintMonitor />
       case 'menu': return <MenuView />
       case 'products': return <ProductsView />
       case 'ingredients': return <IngredientsView />
