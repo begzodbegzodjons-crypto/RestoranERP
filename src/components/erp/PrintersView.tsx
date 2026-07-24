@@ -570,9 +570,16 @@ function PrinterForm({ station, onClose, onSaved }: {
           </label>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Printer IP (ixtiyoriy)</label>
-          <input className="erp-input font-mono text-sm" value={form.printerIp} onChange={e => setForm({ ...form, printerIp: e.target.value })} placeholder="192.168.1.100" />
-          <p className="text-xs text-slate-500 mt-1">Local network printer IP manzili</p>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Printer IP <span className="text-slate-400 font-normal">(ixtiyoriy - faqat IP printerlar uchun)</span></label>
+          <input className="erp-input font-mono text-sm" value={form.printerIp} onChange={e => setForm({ ...form, printerIp: e.target.value })} placeholder="192.168.1.100 (USB uchun bo'sh qoldiring)" />
+          <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-900">
+              <strong>💡 Eslatma:</strong> USB orqali ulangan printerlar uchun bu maydonni <strong>BO'SH</strong> qoldiring.
+              USB printer'ni "🖨️ POS Print Monitor" bo'limida ulaysiz.
+              <br/>
+              <strong>IP printer</strong> (network printer) uchun esa IP manzilni kiriting (masalan: 192.168.1.100).
+            </p>
+          </div>
         </div>
         <div className="flex gap-3 pt-2">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">Bekor</button>

@@ -266,10 +266,28 @@ export default function PosPrintMonitor() {
       <div>
         <h3 className="text-lg font-bold text-slate-900 mb-3">🖨️ Printer stansiyalari</h3>
         {stations.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-slate-400">
-            <div className="text-4xl mb-2">🖨️</div>
-            <p>Printer stansiyalari yo'q.</p>
-            <p className="text-sm mt-1">Avval "Printer sozlamalari" bo'limidan stansiyalar qo'shing.</p>
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-8 text-center">
+            <div className="text-5xl mb-3">🖨️</div>
+            <h3 className="text-lg font-bold text-amber-900 mb-2">Printer stansiyalari yo'q!</h3>
+            <p className="text-amber-800 text-sm mb-4">
+              Avval printer stansiyalarini qo'shing — har bir printer uchun bitta stansiya.
+            </p>
+            <div className="bg-white rounded-xl p-4 text-left max-w-md mx-auto">
+              <p className="font-semibold text-slate-900 mb-2">📋 Bosqichma-bosqich:</p>
+              <ol className="list-decimal list-inside text-sm text-slate-700 space-y-1.5">
+                <li>Chap menyudan <strong>"⚙️ Boshqaruv" → "🖨️ Printer sozlamalari"</strong> bo'limini oching</li>
+                <li><strong>"+ Yangi stansiya"</strong> tugmasini bosing</li>
+                <li>Stansiya nomini kiriting (masalan: <code className="bg-slate-100 px-1 rounded">Shashlik printer</code>)</li>
+                <li><strong>Printer IP maydonini BO'SH qoldiring</strong> (USB printer uchun kerak emas)</li>
+                <li><strong>"Avtomatik print"</strong> ni yoqing ⚡</li>
+                <li><strong>"Saqlash"</strong> tugmasini bosing</li>
+                <li>4 ta stansiya qo'shing: Shashlik, Oshpaz, Muzqaymoq, Kassa</li>
+                <li>Qaytadan shu yerga (POS Print Monitor) qayting</li>
+              </ol>
+            </div>
+            <p className="text-xs text-amber-700 mt-3">
+              💡 USB printer'ni IP manzilini so'rashga hojat yo'q — u POS monoblokka USB kabel orqali ulanadi
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
