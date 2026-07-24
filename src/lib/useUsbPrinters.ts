@@ -1,18 +1,10 @@
-'use client'
-
-// WebUSB Printer Manager
+// WebUSB printer management hook
 // ============================================================================
 // 4 ta USB thermal printerga ulanish va boshqarish
-// Xprinter XP-58IIH, XP-80IIH va boshqa ESC/POS printerlar uchun
-//
-// Islatish:
-//   const manager = useUsbPrinters()
-//   await manager.connectPrinter('shashlik')  // USB device tanlash
-//   await manager.print('shashlik', escposData)  // print qilish
+// Xprinter XP-58IIH, XP-80IIH, XP-350II va boshqa ESC/POS printerlar uchun
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 
-// USB device ma'lumotlari
 export type UsbDeviceInfo = {
   vendorId: number
   productId: number
@@ -21,36 +13,22 @@ export type UsbDeviceInfo = {
   manufacturerName?: string
 }
 
-// Printer station mapping (localStorage'da saqlanadi)
 type PrinterMapping = {
   [stationId: string]: UsbDeviceInfo | null
 }
 
-const STORAGE_KEY = 'usb_printer_mapping'
+const STORAGE_KEY = 'usb_printer_mapping_v2'
 
-// Xprinter va boshqa thermal printer VID'lari
-// Agar aniq bilmasangiz, bo'sh qoldiring - user har qanday USB device tanlay oladi
-const PRINTER_VIDS = [
-  0x0416,  // Winbond / Generic thermal
-  0x0483,  // STMicroelectronics
-  0x1FC9,  // NXP
-  0x04B8,  // Epson
-  0x0519,  // Xprinter (some models)
-  0x154F,  // Xprinter (other models)
-  0x1659,  // Generic
-  0x28E9,  // GD32 (some XP-58)
-]
+// Singleton - page refresh bo'lsa ham device saqlanadi
+const deviceStore = new Map<string, USBDevice>()
+// Har bir device uchun out endpoint raqami
+const endpointStore = new Map<string, number>()
 
-// Singleton USB device storage (component re-render bo'lsa ham saqlanadi)
-const connectedDevices = new Map<string, USBDevice>()
-
-// ============================================================
-// HOOK: useUsbPrinters
-// ============================================================
 export function useUsbPrinters() {
   const [mapping, setMapping] = useState<PrinterMapping>({})
   const [connected, setConnected] = useState<Set<string>>(new Set())
   const [supported, setSupported] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const initialized = useRef(false)
 
   // WebUSB qo'llab-quvvatlashni tekshirish
@@ -60,7 +38,7 @@ export function useUsbPrinters() {
       return
     }
 
-    // Load mapping from localStorage
+    // Mapping'ni localStorage'dan yuklash
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (saved) {
@@ -68,32 +46,29 @@ export function useUsbPrinters() {
       }
     } catch {}
 
-    // Avval ulangan device'larni qayta ulash (page refresh bo'lganda)
+    // Avval ulangan device'larni qayta ulash
     const reconnectAll = async () => {
-      const savedMapping = localStorage.getItem(STORAGE_KEY)
-      if (!savedMapping) return
+      try {
+        const devices = await navigator.usb.getDevices()
+        const savedMapping = localStorage.getItem(STORAGE_KEY)
+        if (!savedMapping || devices.length === 0) return
 
-      const parsed = JSON.parse(savedMapping) as PrinterMapping
-      for (const [stationId, info] of Object.entries(parsed)) {
-        if (!info) continue
-        try {
-          const devices = await navigator.usb.getDevices()
+        const parsed = JSON.parse(savedMapping) as PrinterMapping
+        for (const [stationId, info] of Object.entries(parsed)) {
+          if (!info) continue
           const device = devices.find(d =>
-            d.vendorId === info.vendorId &&
-            d.productId === info.productId
+            d.vendorId === info.vendorId && d.productId === info.productId
           )
           if (device) {
-            await device.open()
-            if (device.configuration === null) {
-              await device.selectConfiguration(1)
+            const ok = await openAndClaim(device)
+            if (ok) {
+              deviceStore.set(stationId, device)
+              setConnected(prev => new Set(prev).add(stationId))
             }
-            await device.claimInterface(0)
-            connectedDevices.set(stationId, device)
-            setConnected(prev => new Set(prev).add(stationId))
           }
-        } catch (e) {
-          console.warn(`[usb-printer] Reconnect failed for ${stationId}:`, e)
         }
+      } catch (e) {
+        console.warn('[usb-printer] Reconnect failed:', e)
       }
     }
 
@@ -102,12 +77,11 @@ export function useUsbPrinters() {
       reconnectAll()
     }
 
-    // USB disconnect listener
     const disconnectHandler = (event: USBConnectionEvent) => {
-      const device = event.device
-      for (const [stationId, dev] of connectedDevices.entries()) {
-        if (dev === device) {
-          connectedDevices.delete(stationId)
+      for (const [stationId, dev] of deviceStore.entries()) {
+        if (dev === event.device) {
+          deviceStore.delete(stationId)
+          endpointStore.delete(stationId)
           setConnected(prev => {
             const next = new Set(prev)
             next.delete(stationId)
@@ -118,78 +92,114 @@ export function useUsbPrinters() {
     }
 
     navigator.usb.addEventListener('disconnect', disconnectHandler)
-    return () => {
-      navigator.usb.removeEventListener('disconnect', disconnectHandler)
-    }
+    return () => navigator.usb.removeEventListener('disconnect', disconnectHandler)
   }, [])
+
+  // Device'ni ochish va interface claim qilish
+  const openAndClaim = async (device: USBDevice): Promise<boolean> => {
+    try {
+      if (!device.opened) {
+        await device.open()
+      }
+
+      // Configuration tanlash
+      if (device.configuration === null) {
+        if (device.configurations.length > 0) {
+          await device.selectConfiguration(device.configurations[0].configurationValue)
+        } else {
+          return false
+        }
+      }
+
+      const config = device.configuration
+      if (!config) return false
+
+      // Barcha interface'larni ko'rib chiqib, out endpoint'li birini topish
+      for (const iface of config.interfaces) {
+        // Release avval claim qilingan bo'lsa
+        if (iface.claimed) {
+          try { await device.releaseInterface(iface.interfaceNumber) } catch {}
+        }
+        try {
+          await device.claimInterface(iface.interfaceNumber)
+          const alt = iface.alternate
+          if (alt) {
+            const outEp = alt.endpoints.find(ep => ep.direction === 'out')
+            if (outEp) {
+              // Bu interface out endpoint'ga ega - saqlaymiz
+              return true
+            }
+          }
+          // Out endpoint yo'q - release qilamiz
+          try { await device.releaseInterface(iface.interfaceNumber) } catch {}
+        } catch (e) {
+          // Claim failed - keyingi interface
+        }
+      }
+
+      // Hech qaysi interface'da out endpoint topilmadi - 0-interface'ni majburan claim
+      if (config.interfaces.length > 0) {
+        const iface = config.interfaces[0]
+        try {
+          await device.claimInterface(iface.interfaceNumber)
+          return true
+        } catch {
+          return false
+        }
+      }
+
+      return false
+    } catch (e) {
+      console.error('[usb-printer] openAndClaim error:', e)
+      return false
+    }
+  }
+
+  // Out endpoint raqamini topish
+  const findOutEndpoint = (device: USBDevice): number | null => {
+    const config = device.configuration
+    if (!config) return null
+
+    for (const iface of config.interfaces) {
+      if (!iface.claimed) continue
+      const alt = iface.alternate
+      if (alt) {
+        const ep = alt.endpoints.find(e => e.direction === 'out')
+        if (ep) return ep.endpointNumber
+      }
+    }
+    return null
+  }
 
   // USB device'ni tanlash va station'ga biriktirish
   const connectPrinter = useCallback(async (stationId: string): Promise<boolean> => {
-    if (!navigator.usb) return false
+    if (!navigator.usb) {
+      setError('WebUSB qo\'llab-quvvatlanmaydi')
+      return false
+    }
+
+    setError(null)
 
     try {
-      // User'dan USB device tanlashni so'rash - barcha USB device'larni ko'rsatamiz
-      const device = await navigator.usb.requestDevice({
-        filters: []  // bo'sh - barcha device'larni ko'rsatadi
-      })
+      // Barcha USB device'larni ko'rsatish
+      const device = await navigator.usb.requestDevice({ filters: [] })
 
-      // Open
-      await device.open()
-
-      // Configuration tanlash - 1 yoki mavjud configuration
-      if (device.configuration === null) {
-        // Ko'p configuration'li device'lar uchun - 1-ni tanlaymiz
-        if (device.configurations.length > 0) {
-          await device.selectConfiguration(device.configurations[0].configurationValue)
-        }
+      const ok = await openAndClaim(device)
+      if (!ok) {
+        setError('Printer interface\'ga ulana olmadi. Printerni qayta ulang.')
+        return false
       }
 
-      // Out endpoint'li interface'ni topish
-      const config = device.configuration
-      let claimedInterface: USBInterface | null = null
-
-      if (config) {
-        // Barcha interface'larni ko'rib chiqamiz - out endpoint'li birini topamiz
-        for (const iface of config.interfaces) {
-          try {
-            await device.claimInterface(iface.interfaceNumber)
-            // Out endpoint bormi tekshirish
-            const alt = iface.alternate
-            const hasOutEndpoint = alt?.endpoints.some(ep => ep.direction === 'out')
-            if (hasOutEndpoint) {
-              claimedInterface = iface
-              break
-            } else {
-              // Out endpoint yo'q - release qilamiz
-              await device.releaseInterface(iface.interfaceNumber)
-            }
-          } catch (claimErr: any) {
-            // Bu interface claim qilinmadi - keyingisiga o'tamiz
-            console.warn(`[usb-printer] Interface ${iface.interfaceNumber} claim failed:`, claimErr.message)
-          }
-        }
-
-        // Out endpoint topilmasa - 0-interface'ni majburan claim qilamiz
-        if (!claimedInterface && config.interfaces.length > 0) {
-          const iface = config.interfaces[0]
-          try {
-            await device.claimInterface(iface.interfaceNumber)
-            claimedInterface = iface
-          } catch (e) {
-            throw new Error(`Hech qanday interface claim qilinmadi. Printer driver holatini tekshiring.`)
-          }
-        }
+      // Out endpoint'ni topish
+      const endpointNum = findOutEndpoint(device)
+      if (endpointNum === null) {
+        setError('Printer\'da out endpoint topilmadi')
+        return false
       }
 
-      if (!claimedInterface) {
-        await device.close()
-        throw new Error('USB printer\'da hech qanday interface topilmadi.')
-      }
+      deviceStore.set(stationId, device)
+      endpointStore.set(stationId, endpointNum)
 
-      // Store device
-      connectedDevices.set(stationId, device)
-
-      // Save mapping
       const info: UsbDeviceInfo = {
         vendorId: device.vendorId,
         productId: device.productId,
@@ -203,26 +213,33 @@ export function useUsbPrinters() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newMapping))
 
       setConnected(prev => new Set(prev).add(stationId))
-
       return true
     } catch (e: any) {
-      if (e.name === 'NotFoundError') {
-        // User cancelled - not an error
-        return false
-      }
-      console.error('[usb-printer] Connect error:', e)
+      if (e.name === 'NotFoundError') return false
+      const msg = e.message || 'Noma\'lum xato'
+      setError(msg)
       throw e
     }
   }, [mapping])
 
   // USB device'ni uzish
   const disconnectPrinter = useCallback(async (stationId: string) => {
-    const device = connectedDevices.get(stationId)
+    const device = deviceStore.get(stationId)
     if (device) {
       try {
+        // Barcha interface'larni release qilish
+        const config = device.configuration
+        if (config) {
+          for (const iface of config.interfaces) {
+            if (iface.claimed) {
+              try { await device.releaseInterface(iface.interfaceNumber) } catch {}
+            }
+          }
+        }
         await device.close()
       } catch {}
-      connectedDevices.delete(stationId)
+      deviceStore.delete(stationId)
+      endpointStore.delete(stationId)
     }
 
     setConnected(prev => {
@@ -238,86 +255,58 @@ export function useUsbPrinters() {
 
   // Printerga raw data yuborish
   const print = useCallback(async (stationId: string, data: Uint8Array): Promise<boolean> => {
-    let device = connectedDevices.get(stationId)
+    let device = deviceStore.get(stationId)
 
-    // Device yo'q yoki yopiq bo'lsa - reconnect
+    // Device yo'q yoki yopiq - reconnect
     if (!device || !device.opened) {
       const info = mapping[stationId]
-      if (info) {
-        try {
-          const devices = await navigator.usb.getDevices()
-          const dev = devices.find(d =>
-            d.vendorId === info.vendorId && d.productId === info.productId
-          )
-          if (dev) {
-            await dev.open()
-            if (dev.configuration === null && dev.configurations.length > 0) {
-              await dev.selectConfiguration(dev.configurations[0].configurationValue)
-            }
+      if (!info) return false
 
-            // Out endpoint'li interface'ni topish
-            const config = dev.configuration
-            if (config) {
-              for (const iface of config.interfaces) {
-                try {
-                  await dev.claimInterface(iface.interfaceNumber)
-                  const alt = iface.alternate
-                  const hasOut = alt?.endpoints.some(ep => ep.direction === 'out')
-                  if (hasOut) break
-                  await dev.releaseInterface(iface.interfaceNumber)
-                } catch {}
-              }
-            }
+      try {
+        const devices = await navigator.usb.getDevices()
+        const dev = devices.find(d =>
+          d.vendorId === info.vendorId && d.productId === info.productId
+        )
+        if (!dev) return false
 
-            connectedDevices.set(stationId, dev)
-            device = dev
-          }
-        } catch (e) {
-          console.error('[usb-printer] Reconnect failed:', e)
-        }
+        const ok = await openAndClaim(dev)
+        if (!ok) return false
+
+        const ep = findOutEndpoint(dev)
+        if (ep === null) return false
+
+        deviceStore.set(stationId, dev)
+        endpointStore.set(stationId, ep)
+        device = dev
+      } catch (e) {
+        console.error('[usb-printer] Reconnect failed:', e)
+        return false
       }
     }
 
-    if (!device || !device.opened) {
-      return false
+    if (!device) return false
+
+    const endpointNum = endpointStore.get(stationId)
+    if (endpointNum === undefined) {
+      // Qayta topish
+      const ep = findOutEndpoint(device)
+      if (ep === null) return false
+      endpointStore.set(stationId, ep)
     }
 
+    const epNum = endpointStore.get(stationId)!
     try {
-      // Barcha interface'larni ko'rib chiqib, out endpoint'li birini topish
-      const config = device.configuration
-      if (!config) {
-        console.error('[usb-printer] No configuration')
-        return false
-      }
-
-      let outEndpoint: USBEndpoint | null = null
-
-      for (const iface of config.interfaces) {
-        if (!iface.claimed) {
-          try {
-            await device.claimInterface(iface.interfaceNumber)
-          } catch { continue }
-        }
-        const alt = iface.alternate
-        const ep = alt?.endpoints.find(e => e.direction === 'out')
-        if (ep) {
-          outEndpoint = ep
-          break
-        }
-      }
-
-      if (!outEndpoint) {
-        console.error('[usb-printer] No output endpoint found in any interface')
-        return false
-      }
-
-      // Data yuborish - kichik bo'laklarda (USB buffer limit uchun)
-      const CHUNK_SIZE = 1024
+      // Kichik bo'laklarda yuborish - USB buffer limit (4KB dan kam)
+      const CHUNK_SIZE = 512
       for (let offset = 0; offset < data.length; offset += CHUNK_SIZE) {
-        const chunk = data.slice(offset, Math.min(offset + CHUNK_SIZE, data.length))
-        await device.transferOut(outEndpoint.endpointNumber, chunk)
+        const end = Math.min(offset + CHUNK_SIZE, data.length)
+        const chunk = data.slice(offset, end)
+        const result = await device.transferOut(epNum, chunk)
+        if (result.status !== 'ok') {
+          console.error('[usb-printer] Transfer failed:', result.status)
+          return false
+        }
       }
-
       return true
     } catch (e) {
       console.error('[usb-printer] Print error:', e)
@@ -332,7 +321,7 @@ export function useUsbPrinters() {
 
   // Barcha printerlarni uzish
   const disconnectAll = useCallback(async () => {
-    for (const stationId of connectedDevices.keys()) {
+    for (const stationId of Array.from(deviceStore.keys())) {
       await disconnectPrinter(stationId)
     }
   }, [disconnectPrinter])
@@ -341,6 +330,7 @@ export function useUsbPrinters() {
     mapping,
     connected,
     supported,
+    error,
     connectPrinter,
     disconnectPrinter,
     print,

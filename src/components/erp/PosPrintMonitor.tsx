@@ -182,12 +182,25 @@ export default function PosPrintMonitor() {
       const data = buildTestReceipt(stationName)
       const success = await testPrint(stationId, data)
       if (success) {
-        toast.success(`✓ ${stationName} test cheki chiqdi`)
+        toast.success(`✓ ${stationName} - test chek chiqdi!`)
       } else {
-        toast.error(`${stationName} print qila olmadi`)
+        toast.error(`${stationName} - print qila olmadi. Printerni qayta ulang.`)
       }
     } catch (e: any) {
       toast.error(e.message)
+    }
+  }
+
+  // USB device ma'lumotlarini ko'rsatish (debug uchun)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
+  const showDebugInfo = async () => {
+    if (!navigator.usb) return
+    try {
+      const devices = await navigator.usb.getDevices()
+      const info = devices.map(d => `VID:0x${d.vendorId.toString(16)} PID:0x${d.productId.toString(16)} ${d.productName || ''} ${d.manufacturerName || ''} | interfaces: ${d.configurations.length}`).join('\n')
+      setDebugInfo(info || 'No devices')
+    } catch (e: any) {
+      setDebugInfo(e.message)
     }
   }
 
@@ -260,6 +273,37 @@ export default function PosPrintMonitor() {
             </ol>
           </div>
         </div>
+      </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">❌</span>
+            <div className="flex-1 text-sm text-red-900">
+              <p className="font-semibold mb-1">Xato:</p>
+              <p className="text-red-700 font-mono text-xs bg-white p-2 rounded">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Debug info */}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-2">
+          <p className="font-semibold text-slate-900 text-sm">🔧 USB device ma'lumotlari (debug)</p>
+          <button onClick={showDebugInfo} className="px-3 py-1 rounded-lg bg-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-300">
+            Ko'rsatish
+          </button>
+        </div>
+        {debugInfo && (
+          <pre className="bg-white p-3 rounded text-xs font-mono text-slate-700 whitespace-pre-wrap max-h-32 overflow-y-auto">
+            {debugInfo}
+          </pre>
+        )}
+        <p className="text-xs text-slate-500 mt-2">
+          Bu ma'lumot menga (yuborganizda) printerning xatosini aniqlashga yordam beradi.
+        </p>
       </div>
 
       {/* Printer stations grid */}
