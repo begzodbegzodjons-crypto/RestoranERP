@@ -161,88 +161,98 @@ export async function POST(req: NextRequest) {
     })
 
     // === AUTOMATIC PRINT JOB CREATION ===
-    // Har bir taomni kategoriyasi orqali printer stansiyasiga bog'lash
-    // Agar kategoriya printerga bog'lanmagan bo'lsa - barcha aktiv stansiyalarga yuborish
-    const printJobMap = new Map<string, any[]>()
-
-    // Barcha aktiv printer stansiyalarini olish (fallback uchun)
-    const allStations = await db.printerStation.findMany({
-      where: { restaurantId: staff.restaurantId, isActive: true }
-    })
-
-    for (const it of itemsData) {
-      // Product'ni olish (include ishlamasligi mumkin - alohida query)
-      const product = await db.product.findUnique({
-        where: { id: it.productId }
+    // HAR DOIM print job yaratish - barcha aktiv printer stansiyalariga
+    // Kategoriya bog'lanishiga qaramasdan, har bir stansiya o'z taomlarini oladi
+    try {
+      // Barcha aktiv printer stansiyalarini olish (isActive filter'siz - hammasi)
+      const allStations = await db.printerStation.findMany({
+        where: { restaurantId: staff.restaurantId }
       })
 
-      if (!product) continue
+      // Har bir stansiya uchun print job yaratish
+      for (const station of allStations) {
+        // Bu stansiyaga tegishli taomlarni topish
+        // 1. Stansiya kategoriya bog'lanishlari orqali
+        const stationItems: any[] = []
 
-      // Category'ni alohida olish (include muammosini chetlab o'tish)
-      let printerStationId: string | null = null
-      if (product.categoryId) {
-        const category = await db.category.findUnique({
-          where: { id: product.categoryId }
-        })
-        printerStationId = category?.printerStationId || null
-      }
+        for (const it of itemsData) {
+          const product = await db.product.findUnique({
+            where: { id: it.productId }
+          })
 
-      // Agar kategoriya printerga bog'lanmagan bo'lsa - barcha stansiyalarga yuborish
-      if (!printerStationId && allStations.length > 0) {
-        // Barcha stansiyalarga yuborish (har bir stansiya uchun alohida)
-        for (const station of allStations) {
-          if (!printJobMap.has(station.id)) {
-            printJobMap.set(station.id, [])
+          if (!product) continue
+
+          let belongsToStation = false
+
+          // Kategoriya orqali tekshirish
+          if (product.categoryId) {
+            const category = await db.category.findUnique({
+              where: { id: product.categoryId }
+            })
+            if (category?.printerStationId === station.id) {
+              belongsToStation = true
+            }
           }
-          printJobMap.get(station.id)!.push({
-            productName: product.name,
-            quantity: it.quantity,
-            unitPrice: it.unitPrice,
-            total: it.total,
-            notes: it.notes || null
+
+          // Agar kategoriya printerga bog'lanmagan bo'lsa - barcha stansiyalarga yuborish
+          if (!belongsToStation) {
+            // Product'ning kategoriyasi printerga bog'lanmagan - barcha stansiyalarga
+            const product2 = await db.product.findUnique({
+              where: { id: it.productId }
+            })
+            if (product2?.categoryId) {
+              const cat = await db.category.findUnique({
+                where: { id: product2.categoryId }
+              })
+              if (!cat?.printerStationId) {
+                belongsToStation = true // barcha stansiyalarga
+              }
+            } else {
+              belongsToStation = true // kategoriya yo'q - barcha stansiyalarga
+            }
+          }
+
+          if (belongsToStation) {
+            stationItems.push({
+              productName: product.name,
+              quantity: it.quantity,
+              unitPrice: it.unitPrice,
+              total: it.total,
+              notes: it.notes || null
+            })
+          }
+        }
+
+        // Agar bu stansiyaga tegishli taomlar bo'lsa - print job yaratish
+        if (stationItems.length > 0) {
+          const content = JSON.stringify({
+            orderNo: order.invoiceNo,
+            table: order.table?.name || '',
+            waiter: order.waiter?.name || '',
+            createdAt: order.createdAt,
+            items: stationItems,
+            printerStationName: station.name,
+            restaurantName: staff.restaurant?.name || '',
+          })
+
+          await db.printJob.create({
+            data: {
+              restaurantId: staff.restaurantId,
+              orderId: order.id,
+              printerStationId: station.id,
+              status: 'pending',
+              content,
+              autoPrintReady: true
+            }
           })
         }
-      } else if (printerStationId) {
-        if (!printJobMap.has(printerStationId)) {
-          printJobMap.set(printerStationId, [])
-        }
-        printJobMap.get(printerStationId)!.push({
-          productName: product.name,
-          quantity: it.quantity,
-          unitPrice: it.unitPrice,
-          total: it.total,
-          notes: it.notes || null
-        })
       }
+    } catch (printError: any) {
+      console.error('Print job creation error:', printError)
+      // Print xatosi buyurtmani buzmasin
     }
 
-    // Print job yaratish - HAR DOIM autoPrintReady = true
-    for (const [printerStationId, stationItems] of printJobMap) {
-      const station = allStations.find(s => s.id === printerStationId)
-
-      const content = JSON.stringify({
-        orderNo: order.invoiceNo,
-        table: order.table?.name || '',
-        waiter: order.waiter?.name || '',
-        createdAt: order.createdAt,
-        items: stationItems,
-        printerStationName: station?.name || 'Printer',
-        restaurantName: staff.restaurant?.name || '',
-      })
-
-      await db.printJob.create({
-        data: {
-          restaurantId: staff.restaurantId,
-          orderId: order.id,
-          printerStationId,
-          status: 'pending',
-          content,
-          autoPrintReady: true  // HAR DOIM true - station.autoPrint ga bog'liq emas
-        }
-      })
-    }
-
-    return NextResponse.json({ item: order, printJobsCreated: printJobMap.size })
+    return NextResponse.json({ item: order })
   } catch (e: any) {
     console.error('Order create error:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
