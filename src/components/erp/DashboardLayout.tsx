@@ -327,8 +327,8 @@ export default function DashboardLayout({
         </div>
       </main>
 
-      {/* AutoPrintMonitor - avtomatik print (har sahifada ishlaydi, staffmode bundan tashqari) */}
-      {view !== 'staffmode' && <AutoPrintMonitor />}
+      {/* AutoPrintMonitor o'chirildi - endi faqat Print Server (/print-server) poll qiladi */}
+      {/* {view !== 'staffmode' && <AutoPrintMonitor />} */}
     </div>
   )
 }
