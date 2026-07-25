@@ -69,6 +69,7 @@ const NAV: { section: string; items: { key: View; label: string; icon: string }[
       { key: 'dashboard', label: 'Boshqaruv paneli', icon: '📊' },
       { key: 'pos', label: 'POS Kassa', icon: '💳' },
       { key: 'pos-print-monitor', label: '🖨️ POS Print Monitor', icon: '🖨️' },
+      { key: 'print-server', label: '🖨️ Print Server (Kassa)', icon: '🔴' },
       { key: 'analytics', label: 'Biznes analitikasi', icon: '📈' },
       { key: 'reports', label: 'Hisobotlar', icon: '📋' },
       { key: 'notifications', label: 'Bildirishnomalar', icon: '🔔' }
@@ -142,6 +143,28 @@ export default function DashboardLayout({
       case 'dashboard': return <DashboardView restaurantName={restaurant.name} />
       case 'pos': return <POSView />
       case 'pos-print-monitor': return <PosPrintMonitor />
+      case 'print-server': return (
+        <div className="text-center py-8">
+          <div className="bg-slate-800 rounded-2xl p-6 max-w-md mx-auto">
+            <div className="text-5xl mb-3">🖨️</div>
+            <h2 className="text-xl font-bold text-white mb-2">Print Server</h2>
+            <p className="text-slate-400 text-sm mb-4">
+              Print Server alohida oynada ochilishi kerak. Pastdagi tugmani bosing.
+            </p>
+            <a
+              href="/print-server"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-6 py-3 rounded-xl bg-emerald-500 text-white font-semibold"
+            >
+              🔴 Print Server'ni ochish →
+            </a>
+            <p className="text-slate-500 text-xs mt-3">
+              Print Server yangi tab'da ochiladi. Uni yopmang!
+            </p>
+          </div>
+        </div>
+      )
       case 'menu': return <MenuView />
       case 'products': return <ProductsView />
       case 'ingredients': return <IngredientsView />
