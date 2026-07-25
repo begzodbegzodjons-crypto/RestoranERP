@@ -104,17 +104,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // === KASSA CHEKI PRINT JOB YARATISH ===
     // Kassir to'lov qabul qilganda avtomatik kassa cheki chiqishi kerak
     // Buning uchun "Kassa" yoki "Cashier" nomli printer stansiyasini topamiz
-    const cashierStation = await db.printerStation.findFirst({
-      where: {
-        restaurantId: staff.restaurantId,
-        isActive: true,
-        OR: [
-          { name: { contains: 'Kassa', mode: 'insensitive' } },
-          { name: { contains: 'Cashier', mode: 'insensitive' } },
-          { name: { contains: 'kassa', mode: 'insensitive' } },
-          { name: { contains: 'cashier', mode: 'insensitive' } },
-        ]
-      }
+    const allStations = await db.printerStation.findMany({
+      where: { restaurantId: staff.restaurantId, isActive: true }
+    })
+    const cashierStation = allStations.find((s: any) => {
+      const name = (s.name || '').toLowerCase()
+      return name.includes('kassa') || name.includes('cashier')
     })
 
     if (cashierStation) {
@@ -151,7 +146,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           printerStationId: cashierStation.id,
           status: 'pending',
           content: receiptContent,
-          autoPrintReady: cashierStation.autoPrint ?? true,
+          autoPrintReady: true,  // HAR DOIM true
         }
       })
     }

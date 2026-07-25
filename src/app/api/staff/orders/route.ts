@@ -161,25 +161,53 @@ export async function POST(req: NextRequest) {
     })
 
     // === AUTOMATIC PRINT JOB CREATION ===
-    // Group items by their category's printer station
-    // Each printer station gets its own print job
+    // Har bir taomni kategoriyasi orqali printer stansiyasiga bog'lash
+    // Agar kategoriya printerga bog'lanmagan bo'lsa - barcha aktiv stansiyalarga yuborish
     const printJobMap = new Map<string, any[]>()
 
+    // Barcha aktiv printer stansiyalarini olish (fallback uchun)
+    const allStations = await db.printerStation.findMany({
+      where: { restaurantId: staff.restaurantId, isActive: true }
+    })
+
     for (const it of itemsData) {
-      // Get the product's category's printerStationId
+      // Product'ni olish (include ishlamasligi mumkin - alohida query)
       const product = await db.product.findUnique({
-        where: { id: it.productId },
-        include: { category: true }
+        where: { id: it.productId }
       })
 
-      const printerStationId = product?.category?.printerStationId
+      if (!product) continue
 
-      if (printerStationId) {
+      // Category'ni alohida olish (include muammosini chetlab o'tish)
+      let printerStationId: string | null = null
+      if (product.categoryId) {
+        const category = await db.category.findUnique({
+          where: { id: product.categoryId }
+        })
+        printerStationId = category?.printerStationId || null
+      }
+
+      // Agar kategoriya printerga bog'lanmagan bo'lsa - barcha stansiyalarga yuborish
+      if (!printerStationId && allStations.length > 0) {
+        // Barcha stansiyalarga yuborish (har bir stansiya uchun alohida)
+        for (const station of allStations) {
+          if (!printJobMap.has(station.id)) {
+            printJobMap.set(station.id, [])
+          }
+          printJobMap.get(station.id)!.push({
+            productName: product.name,
+            quantity: it.quantity,
+            unitPrice: it.unitPrice,
+            total: it.total,
+            notes: it.notes || null
+          })
+        }
+      } else if (printerStationId) {
         if (!printJobMap.has(printerStationId)) {
           printJobMap.set(printerStationId, [])
         }
         printJobMap.get(printerStationId)!.push({
-          productName: product!.name,
+          productName: product.name,
           quantity: it.quantity,
           unitPrice: it.unitPrice,
           total: it.total,
@@ -188,21 +216,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create a print job for each printer station
-    // autoPrintReady = true agar printerda autoPrint yoqilgan bo'lsa
+    // Print job yaratish - HAR DOIM autoPrintReady = true
     for (const [printerStationId, stationItems] of printJobMap) {
-      // Get printer station to check autoPrint setting
-      const station = await db.printerStation.findUnique({
-        where: { id: printerStationId }
-      })
+      const station = allStations.find(s => s.id === printerStationId)
 
       const content = JSON.stringify({
         orderNo: order.invoiceNo,
-        table: order.table.name,
-        waiter: order.waiter.name,
+        table: order.table?.name || '',
+        waiter: order.waiter?.name || '',
         createdAt: order.createdAt,
         items: stationItems,
-        printerStationName: station?.name || 'Printer'
+        printerStationName: station?.name || 'Printer',
+        restaurantName: staff.restaurant?.name || '',
       })
 
       await db.printJob.create({
@@ -212,7 +237,7 @@ export async function POST(req: NextRequest) {
           printerStationId,
           status: 'pending',
           content,
-          autoPrintReady: station?.autoPrint ?? true
+          autoPrintReady: true  // HAR DOIM true - station.autoPrint ga bog'liq emas
         }
       })
     }
