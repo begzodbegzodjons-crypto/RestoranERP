@@ -1,18 +1,34 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentRestaurant } from '@/lib/auth'
+import { getCurrentStaff } from '@/lib/staff-auth'
 
 // GET /api/print-jobs/auto - avtomatik print uchun kutilayotgan print joblar
-// AutoPrintMonitor komponenti har 2 soniyada chaqiradi
-// Faqat autoPrintReady=true va status=pending bo'lgan joblarni qaytaradi
+// Restoran egasi Yoki ofitsiant/kassir bilan ishlaydi
+// AutoPrintMonitor komponenti har 3 soniyada chaqiradi
 export async function GET() {
   try {
+    // Avval restoran egasi sifatida tekshirish
+    let restaurantId: string | null = null
+
     const restaurant = await getCurrentRestaurant()
-    if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
+    if (restaurant) {
+      restaurantId = restaurant.id
+    } else {
+      // Ofitsiant/kassir sifatida tekshirish
+      const staff = await getCurrentStaff()
+      if (staff) {
+        restaurantId = staff.restaurantId
+      }
+    }
+
+    if (!restaurantId) {
+      return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
+    }
 
     const jobs = await db.printJob.findMany({
       where: {
-        restaurantId: restaurant.id,
+        restaurantId,
         status: 'pending',
         autoPrintReady: true
       },
@@ -28,7 +44,7 @@ export async function GET() {
 
     const formatted = jobs.map(j => ({
       id: j.id,
-      content: JSON.parse(j.content),
+      content: j.content ? (typeof j.content === 'string' ? JSON.parse(j.content) : j.content) : {},
       printerStation: {
         id: j.printerStation.id,
         name: j.printerStation.name

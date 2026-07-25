@@ -101,11 +101,66 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       data: { status: 'free' }
     })
 
+    // === KASSA CHEKI PRINT JOB YARATISH ===
+    // Kassir to'lov qabul qilganda avtomatik kassa cheki chiqishi kerak
+    // Buning uchun "Kassa" yoki "Cashier" nomli printer stansiyasini topamiz
+    const cashierStation = await db.printerStation.findFirst({
+      where: {
+        restaurantId: staff.restaurantId,
+        isActive: true,
+        OR: [
+          { name: { contains: 'Kassa', mode: 'insensitive' } },
+          { name: { contains: 'Cashier', mode: 'insensitive' } },
+          { name: { contains: 'kassa', mode: 'insensitive' } },
+          { name: { contains: 'cashier', mode: 'insensitive' } },
+        ]
+      }
+    })
+
+    if (cashierStation) {
+      // Kassa cheki uchun content
+      const receiptContent = JSON.stringify({
+        type: 'payment',
+        invoiceNo: updated.invoiceNo,
+        table: order.table?.name || '',
+        waiter: order.waiter?.name || '',
+        cashier: staff.name,
+        createdAt: new Date().toISOString(),
+        items: order.items.map(it => ({
+          name: it.product?.name || '',
+          productName: it.product?.name || '',
+          qty: it.quantity,
+          quantity: it.quantity,
+          price: it.unitPrice,
+          total: it.total,
+        })),
+        subtotal: order.subtotal,
+        discount: discountAmount,
+        serviceCharge: serviceCharge,
+        taxAmount: 0,
+        total: finalTotal,
+        paymentMethod: paymentMethod,
+        restaurantName: staff.restaurant?.name || '',
+        restaurantPhone: staff.restaurant?.phone || null,
+      })
+
+      await db.printJob.create({
+        data: {
+          restaurantId: staff.restaurantId,
+          orderId: order.id,
+          printerStationId: cashierStation.id,
+          status: 'pending',
+          content: receiptContent,
+          autoPrintReady: cashierStation.autoPrint ?? true,
+        }
+      })
+    }
+
     return NextResponse.json({
       success: true,
       order: updated,
       saleId: sale.id,
-      message: 'To\'lov qabul qilindi. Chek chop etish tayyor.'
+      message: 'To\'lov qabul qilindi. Kassa cheki tayyor.'
     })
   } catch (e: any) {
     console.error('Pay error:', e)

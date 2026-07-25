@@ -299,6 +299,7 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [processingPrint, setProcessingPrint] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -314,6 +315,116 @@ function WaiterView({ restaurant }: { restaurant: Restaurant | null }) {
       setLoading(false)
     }
   }
+
+  // === AVTOMATIK PRINT POLLING ===
+  // Ofitsiant paneli ochiq bo'lsa, har 3 soniyada print job'larni tekshirish
+  // Ofitsiant buyurtma berganda oshxona/shashlik/muzqaymoq cheki avtomatik chiqsin
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    let mounted = true
+
+    const pollPrintJobs = async () => {
+      if (!mounted || processingPrint) return
+      try {
+        const res = await api('/api/print-jobs/auto')
+        if (res.jobs && res.jobs.length > 0) {
+          setProcessingPrint(true)
+          for (const job of res.jobs) {
+            await processPrintJob(job)
+          }
+          setProcessingPrint(false)
+        }
+      } catch (e) {
+        // silent
+      }
+    }
+
+    const processPrintJob = async (job: any) => {
+      try {
+        const content = typeof job.content === 'string' ? JSON.parse(job.content) : job.content
+        let html = ''
+
+        if (content.type === 'payment') {
+          html = `
+            <div style="text-align:center; font-weight:bold; font-size:18px;">${content.restaurantName || ''}</div>
+            ${content.restaurantPhone ? `<div style="text-align:center;">Tel: ${content.restaurantPhone}</div>` : ''}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div>Chek: ${content.invoiceNo || ''}</div>
+            <div>Stol: ${content.table || ''}</div>
+            <div>Ofitsiant: ${content.waiter || ''}</div>
+            ${content.cashier ? `<div>Kassir: ${content.cashier}</div>` : ''}
+            <div>Vaqt: ${new Date(content.createdAt || Date.now()).toLocaleString('uz-UZ')}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            ${(content.items || []).map((it: any) => `<div>${(it.productName || it.name || '').substring(0, 20)} ${it.qty || it.quantity || 1}x = ${((it.total) || (it.price * (it.qty || it.quantity || 1)) || 0).toLocaleString('uz-UZ')}</div>`).join('')}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:right;">Jami: ${(content.subtotal || 0).toLocaleString('uz-UZ')}</div>
+            ${content.discount > 0 ? `<div style="text-align:right;">Chegirma: -${content.discount.toLocaleString('uz-UZ')}</div>` : ''}
+            ${content.serviceCharge > 0 ? `<div style="text-align:right;">Xizmat: +${content.serviceCharge.toLocaleString('uz-UZ')}</div>` : ''}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:right; font-weight:bold; font-size:18px;">TO'LOV: ${(content.total || 0).toLocaleString('uz-UZ')}</div>
+            <div style="text-align:right;">${({ cash: 'Naqd', card: 'Karta', transfer: 'O\'tkazma' } as any)[content.paymentMethod] || content.paymentMethod}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:center; font-weight:bold; font-size:18px;">RAHMAT!</div>
+          `
+        } else {
+          html = `
+            ${content.restaurantName ? `<div style="text-align:center; font-weight:bold; font-size:18px;">${content.restaurantName}</div>` : ''}
+            <div style="text-align:center; font-weight:bold; font-size:24px;">${job.printerStation.name}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="font-weight:bold;">Buyurtma: ${content.orderNo || ''}</div>
+            <div style="font-weight:bold;">Stol: ${content.table || ''}</div>
+            <div style="font-weight:bold;">Ofitsiant: ${content.waiter || ''}</div>
+            <div>Vaqt: ${new Date(content.createdAt || Date.now()).toLocaleString('uz-UZ')}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="font-weight:bold;">TAOMLAR:</div>
+            ${(content.items || []).map((it: any) => `<div style="font-weight:bold; font-size:18px;">${it.quantity || it.qty} x ${it.productName || it.name || ''}</div>${it.notes ? `<div style="margin-left:10px;">>> ${it.notes}</div>` : ''}`).join('')}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:center;">${new Date().toLocaleTimeString('uz-UZ')}</div>
+          `
+        }
+
+        const iframe = document.createElement('iframe')
+        iframe.style.position = 'fixed'
+        iframe.style.right = '0'
+        iframe.style.bottom = '0'
+        iframe.style.width = '0'
+        iframe.style.height = '0'
+        iframe.style.border = 'none'
+
+        await new Promise<void>((resolve) => {
+          iframe.onload = () => {
+            try {
+              iframe.contentWindow?.focus()
+              iframe.contentWindow?.print()
+            } catch {}
+            resolve()
+            setTimeout(() => {
+              try { document.body.removeChild(iframe) } catch {}
+            }, 5000)
+          }
+          document.body.appendChild(iframe)
+          const doc = iframe.contentWindow?.document
+          if (doc) {
+            doc.open()
+            doc.write(`<html><head><style>@media print { @page { margin: 0; size: 80mm auto; } body { margin: 0; font-family: monospace; } }</style></head><body>${html}</body></html>`)
+            doc.close()
+          }
+        })
+
+        await api(`/api/print-jobs/${job.id}/mark-printed`, { method: 'POST' })
+      } catch (e) {
+        try {
+          await api(`/api/print-jobs/${job.id}/mark-printed`, { method: 'PUT' })
+        } catch {}
+      }
+    }
+
+    interval = setInterval(pollPrintJobs, 3000)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
+  }, [processingPrint])
 
   useEffect(() => { load() }, [])
 
@@ -604,6 +715,7 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [discount, setDiscount] = useState(0)
   const [lastPaidOrder, setLastPaidOrder] = useState<any | null>(null)
+  const [processingPrint, setProcessingPrint] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -621,6 +733,120 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
       setLoading(false)
     }
   }
+
+  // === AVTOMATIK PRINT POLLING ===
+  // Kassir paneli ochiq bo'lsa, har 3 soniyada print job'larni tekshirish
+  // Kassir to'lov qabul qilganda kassa cheki avtomatik chiqsin
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    let mounted = true
+
+    const pollPrintJobs = async () => {
+      if (!mounted || processingPrint) return
+      try {
+        const res = await api('/api/print-jobs/auto')
+        if (res.jobs && res.jobs.length > 0) {
+          setProcessingPrint(true)
+          for (const job of res.jobs) {
+            await processPrintJob(job)
+          }
+          setProcessingPrint(false)
+        }
+      } catch (e) {
+        // silent
+      }
+    }
+
+    const processPrintJob = async (job: any) => {
+      try {
+        const content = typeof job.content === 'string' ? JSON.parse(job.content) : job.content
+        // Kassa cheki uchun HTML generatsiya
+        let html = ''
+        if (content.type === 'payment') {
+          html = `
+            <div style="text-align:center; font-weight:bold; font-size:18px;">${content.restaurantName || ''}</div>
+            ${content.restaurantPhone ? `<div style="text-align:center;">Tel: ${content.restaurantPhone}</div>` : ''}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div>Chek: ${content.invoiceNo || ''}</div>
+            <div>Stol: ${content.table || ''}</div>
+            <div>Ofitsiant: ${content.waiter || ''}</div>
+            ${content.cashier ? `<div>Kassir: ${content.cashier}</div>` : ''}
+            <div>Vaqt: ${new Date(content.createdAt || Date.now()).toLocaleString('uz-UZ')}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            ${(content.items || []).map((it: any) => `<div>${(it.productName || it.name || '').substring(0, 20)} ${it.qty || it.quantity || 1}x = ${((it.total) || (it.price * (it.qty || it.quantity || 1)) || 0).toLocaleString('uz-UZ')}</div>`).join('')}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:right;">Jami: ${(content.subtotal || 0).toLocaleString('uz-UZ')}</div>
+            ${content.discount > 0 ? `<div style="text-align:right;">Chegirma: -${content.discount.toLocaleString('uz-UZ')}</div>` : ''}
+            ${content.serviceCharge > 0 ? `<div style="text-align:right;">Xizmat: +${content.serviceCharge.toLocaleString('uz-UZ')}</div>` : ''}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:right; font-weight:bold; font-size:18px;">TO'LOV: ${(content.total || 0).toLocaleString('uz-UZ')}</div>
+            <div style="text-align:right;">${({ cash: 'Naqd', card: 'Karta', transfer: 'O\'tkazma' } as any)[content.paymentMethod] || content.paymentMethod}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:center; font-weight:bold; font-size:18px;">RAHMAT!</div>
+          `
+        } else {
+          // Oshxona cheki
+          html = `
+            ${content.restaurantName ? `<div style="text-align:center; font-weight:bold; font-size:18px;">${content.restaurantName}</div>` : ''}
+            <div style="text-align:center; font-weight:bold; font-size:24px;">${job.printerStation.name}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="font-weight:bold;">Buyurtma: ${content.orderNo || ''}</div>
+            <div style="font-weight:bold;">Stol: ${content.table || ''}</div>
+            <div style="font-weight:bold;">Ofitsiant: ${content.waiter || ''}</div>
+            <div>Vaqt: ${new Date(content.createdAt || Date.now()).toLocaleString('uz-UZ')}</div>
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="font-weight:bold;">TAOMLAR:</div>
+            ${(content.items || []).map((it: any) => `<div style="font-weight:bold; font-size:18px;">${it.quantity || it.qty} x ${it.productName || it.name || ''}</div>${it.notes ? `<div style="margin-left:10px;">>> ${it.notes}</div>` : ''}`).join('')}
+            <div style="border-top:1px dashed #000; margin:4px 0;"></div>
+            <div style="text-align:center;">${new Date().toLocaleTimeString('uz-UZ')}</div>
+          `
+        }
+
+        // Print qilish - hidden iframe orqali
+        const iframe = document.createElement('iframe')
+        iframe.style.position = 'fixed'
+        iframe.style.right = '0'
+        iframe.style.bottom = '0'
+        iframe.style.width = '0'
+        iframe.style.height = '0'
+        iframe.style.border = 'none'
+
+        await new Promise<void>((resolve) => {
+          iframe.onload = () => {
+            try {
+              iframe.contentWindow?.focus()
+              iframe.contentWindow?.print()
+            } catch {}
+            resolve()
+            setTimeout(() => {
+              try { document.body.removeChild(iframe) } catch {}
+            }, 5000)
+          }
+          document.body.appendChild(iframe)
+          const doc = iframe.contentWindow?.document
+          if (doc) {
+            doc.open()
+            doc.write(`<html><head><style>@media print { @page { margin: 0; size: 80mm auto; } body { margin: 0; font-family: monospace; } }</style></head><body>${html}</body></html>`)
+            doc.close()
+          }
+        })
+
+        // Job'ni "printed" deb belgilash
+        await api(`/api/print-jobs/${job.id}/mark-printed`, { method: 'POST' })
+      } catch (e) {
+        // Xato bo'lsa job'ni "failed" deb belgilash
+        try {
+          await api(`/api/print-jobs/${job.id}/mark-printed`, { method: 'PUT' })
+        } catch {}
+      }
+    }
+
+    interval = setInterval(pollPrintJobs, 3000)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
+  }, [processingPrint])
 
   useEffect(() => { load() }, [])
 

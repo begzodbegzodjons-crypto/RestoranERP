@@ -1,20 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getCurrentRestaurant } from '@/lib/auth'
+import { getCurrentStaff } from '@/lib/staff-auth'
 
 // POST /api/print-jobs/[id]/mark-printed
-// Print job ni "chop etilgan" deb belgilash (restaurant auth bilan)
+// Print job ni "chop etilgan" deb belgilash (restaurant YOKI staff auth bilan)
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let restaurantId: string | null = null
+
     const restaurant = await getCurrentRestaurant()
-    if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
+    if (restaurant) {
+      restaurantId = restaurant.id
+    } else {
+      const staff = await getCurrentStaff()
+      if (staff) {
+        restaurantId = staff.restaurantId
+      }
+    }
+
+    if (!restaurantId) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
 
     const { id } = await params
     const job = await db.printJob.findFirst({
-      where: { id, restaurantId: restaurant.id }
+      where: { id, restaurantId }
     })
     if (!job) return NextResponse.json({ error: 'Print job topilmadi' }, { status: 404 })
 
@@ -32,18 +44,29 @@ export async function POST(
   }
 }
 
-// POST /api/print-jobs/[id]/mark-failed
+// PUT /api/print-jobs/[id]/mark-failed
 export async function PUT(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    let restaurantId: string | null = null
+
     const restaurant = await getCurrentRestaurant()
-    if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
+    if (restaurant) {
+      restaurantId = restaurant.id
+    } else {
+      const staff = await getCurrentStaff()
+      if (staff) {
+        restaurantId = staff.restaurantId
+      }
+    }
+
+    if (!restaurantId) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
 
     const { id } = await params
     const job = await db.printJob.findFirst({
-      where: { id, restaurantId: restaurant.id }
+      where: { id, restaurantId }
     })
     if (!job) return NextResponse.json({ error: 'Print job topilmadi' }, { status: 404 })
 
