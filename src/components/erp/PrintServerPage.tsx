@@ -201,6 +201,24 @@ export default function PrintServerPage() {
     }
   }
 
+  // Test job yaratish - server'da test print job yaratadi
+  const createTestJob = async () => {
+    log('Test job yaratilmoqda...')
+    try {
+      const res = await fetch('/api/print-jobs/test-create', { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        log(`✅ ${data.count} ta test job yaratildi! (stansiyalar uchun)`)
+        // Darhol poll qilish
+        setTimeout(() => manualPoll(), 500)
+      } else {
+        log(`❌ Test job xato: ${data.error}`)
+      }
+    } catch (e: any) {
+      log(`Test job xato: ${e.message}`)
+    }
+  }
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">Yuklanmoqda...</div>
   }
@@ -228,7 +246,8 @@ export default function PrintServerPage() {
               <h1 className="text-2xl font-bold text-white">🖨️ Print Server</h1>
               <p className="text-slate-400 text-sm">{restaurant?.name}</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={createTestJob} className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold">🧪 Test job yaratish</button>
               <button onClick={manualPoll} className="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold">🔍 Tekshirish</button>
               <button onClick={() => setAutoPrint(!autoPrint)} className={`px-4 py-2 rounded-xl text-sm font-semibold ${autoPrint ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>
                 {autoPrint ? '⏸ To\'xtatish' : '▶ Yoqish'}
@@ -306,13 +325,32 @@ export default function PrintServerPage() {
         <div className="bg-blue-900/30 border border-blue-700 rounded-xl p-4">
           <p className="text-blue-100 text-sm font-semibold mb-2">📋 Ko'rsatma:</p>
           <ol className="list-decimal list-inside text-blue-200 text-sm space-y-1">
-            <li>Har bir stansiya uchun "🧪 Test" tugmasini bosing</li>
-            <li>Chrome print oynasi ochiladi - printerni tanlang</li>
+            <li>"🧪 Test job yaratish" tugmasini bosing — server test job yaratadi</li>
+            <li>Log'da "X ta test job yaratildi" va "X ta job topildi" ko'rinadi</li>
+            <li>Chrome print oynasi ochiladi — printerni tanlang</li>
             <li>"Save" tugmasini bosing (Chrome eslab qoladi)</li>
-            <li>Bu sahifani yopmang - avtomatik print shu yerda ishlaydi</li>
+            <li>Ofitsiant buyurtma berganda avtomatik print bo'ladi</li>
           </ol>
           <p className="text-blue-300 text-xs mt-2">
-            Agar chek chiqmasa, "🔍 Tekshirish" tugmasini bosing va log'ni menga yuboring.
+            Agar "0 ta job" chiqsa — print job yaratilmayapti, "Test job yaratish" bilan tekshiring.
+          </p>
+        </div>
+
+        {/* Kiosk mode */}
+        <div className="bg-emerald-900/30 border border-emerald-700 rounded-xl p-4">
+          <p className="text-emerald-100 text-sm font-semibold mb-2">🚀 100% AVTOMATIK PRINT (Chrome Kiosk):</p>
+          <p className="text-emerald-200 text-sm mb-2">
+            Print dialog chiqmasdan avtomatik print uchun:
+          </p>
+          <ol className="list-decimal list-inside text-emerald-200 text-sm space-y-1">
+            <li>Chrome'ni yoping</li>
+            <li>Windows'da Win+R bosing, quyidagini yozing:</li>
+          </ol>
+          <pre className="bg-slate-900 p-2 rounded text-xs text-emerald-300 mt-2 overflow-x-auto">
+            chrome.exe --kiosk-printing "https://restoran-erp.begzodbegzodjons.workers.dev/print-server"
+          </pre>
+          <p className="text-emerald-300 text-xs mt-2">
+            Bu rejimda Chrome print dialog'ni o'chiryapti — avtomatik print qiladi!
           </p>
         </div>
       </div>
