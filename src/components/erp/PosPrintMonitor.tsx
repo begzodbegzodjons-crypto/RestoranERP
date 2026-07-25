@@ -5,19 +5,6 @@ import { api, toast } from './utils'
 import { useUsbPrinters } from '@/lib/useUsbPrinters'
 import { buildKitchenReceipt, buildPaymentReceipt, buildTestReceipt } from '@/lib/escpos'
 
-// ============================================================
-// POS PRINT MONITOR
-// ============================================================
-// Bu komponent POS monoblokda (Chrome brauzer) ishlaydi.
-// Har 2 soniyada server'dan print job'larni tekshiradi.
-// Yangi job kelganda, tegishli USB printerga ESC/POS data yuboradi.
-//
-// Foydalanish:
-// - Restoran egasi o'z panelida "POS Print Monitor" bo'limini ochadi
-// - 4 ta USB printer'ni stansiyalarga biriktiradi
-// - Bu sahifa ochiq turadi (background'da polling ishlaydi)
-// - Ofitsiantlar telefon'dan buyurtma berganda -> avtomatik print
-
 type PrintJob = {
   id: string
   content: any
@@ -33,8 +20,9 @@ type PrinterStation = {
 }
 
 export default function PosPrintMonitor() {
+  // === BARCHA HOOK'LAR ENG YUQORIDA - hech qanday if dan oldin emas ===
   const {
-    mapping, connected, supported,
+    mapping, connected, supported, error,
     connectPrinter, disconnectPrinter, print, testPrint
   } = useUsbPrinters()
 
@@ -44,35 +32,35 @@ export default function PosPrintMonitor() {
   const [jobQueue, setJobQueue] = useState<PrintJob[]>([])
   const [printLog, setPrintLog] = useState<Array<{ id: string; station: string; time: string; status: 'ok' | 'fail' }>>([])
   const [processing, setProcessing] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
   const autoPrintRef = useRef(autoPrint)
 
   useEffect(() => { autoPrintRef.current = autoPrint }, [autoPrint])
 
   // Printer stansiyalarini yuklash
-  const loadStations = async () => {
+  const loadStations = useCallback(async () => {
     try {
       const res = await api('/api/printers')
       setStations(res.items || [])
     } catch (e: any) {
-      toast.error(e.message)
+      // toast.error(e.message) - silent fail
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { loadStations() }, [])
+  useEffect(() => { loadStations() }, [loadStations])
 
   // Print job'larni poll qilish (har 2 soniyada)
   const pollJobs = useCallback(async () => {
     if (!autoPrintRef.current || processing) return
-
     try {
       const res = await api('/api/print-jobs/auto')
       if (res.jobs && res.jobs.length > 0) {
         setJobQueue(prev => [...prev, ...res.jobs])
       }
     } catch (e) {
-      // Silent fail - polling shouldn't show errors
+      // Silent fail
     }
   }, [processing])
 
@@ -90,12 +78,10 @@ export default function PosPrintMonitor() {
       setProcessing(true)
 
       try {
-        // Station ID orqali USB printer topish
         const stationId = job.printerStation.id
         const isConnected = connected.has(stationId)
 
         if (!isConnected) {
-          // Printer ulanmagan - skip va keyin qayta urinish
           setJobQueue(prev => prev.slice(1))
           setPrintLog(prev => [{
             id: job.id,
@@ -103,16 +89,13 @@ export default function PosPrintMonitor() {
             time: new Date().toLocaleTimeString('uz-UZ'),
             status: 'fail'
           }, ...prev].slice(0, 50))
-          toast.error(`Printer ulanmagan: ${job.printerStation.name}`)
           return
         }
 
-        // ESC/POS data generatsiya qilish
         const content = job.content
         let escposData: Uint8Array
 
         if (content.type === 'payment') {
-          // Kassa cheki
           escposData = buildPaymentReceipt({
             invoiceNo: content.invoiceNo || '',
             table: content.table || '',
@@ -130,7 +113,6 @@ export default function PosPrintMonitor() {
             restaurantPhone: content.restaurantPhone,
           })
         } else {
-          // Oshxona/order cheki
           escposData = buildKitchenReceipt({
             orderNo: content.orderNo || '',
             table: content.table || '',
@@ -142,11 +124,9 @@ export default function PosPrintMonitor() {
           })
         }
 
-        // Print qilish
         const success = await print(stationId, escposData)
 
         if (success) {
-          // Job'ni "printed" deb belgilash
           await api(`/api/print-jobs/${job.id}/mark-printed`, { method: 'POST' })
           setPrintLog(prev => [{
             id: job.id,
@@ -155,7 +135,6 @@ export default function PosPrintMonitor() {
             status: 'ok'
           }, ...prev].slice(0, 50))
         } else {
-          // Print failed
           await api(`/api/print-jobs/${job.id}/mark-printed`, { method: 'PUT' })
           setPrintLog(prev => [{
             id: job.id,
@@ -163,10 +142,9 @@ export default function PosPrintMonitor() {
             time: new Date().toLocaleTimeString('uz-UZ'),
             status: 'fail'
           }, ...prev].slice(0, 50))
-          toast.error(`Print xatosi: ${job.printerStation.name}`)
         }
-      } catch (e: any) {
-        console.error('Print process error:', e)
+      } catch (e) {
+        // Silent
       } finally {
         setJobQueue(prev => prev.slice(1))
         setProcessing(false)
@@ -177,7 +155,7 @@ export default function PosPrintMonitor() {
   }, [jobQueue, processing, connected, print])
 
   // Test print
-  const handleTestPrint = async (stationId: string, stationName: string) => {
+  const handleTestPrint = useCallback(async (stationId: string, stationName: string) => {
     try {
       const data = buildTestReceipt(stationName)
       const success = await testPrint(stationId, data)
@@ -189,20 +167,41 @@ export default function PosPrintMonitor() {
     } catch (e: any) {
       toast.error(e.message)
     }
-  }
+  }, [testPrint])
 
-  // USB device ma'lumotlarini ko'rsatish (debug uchun)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
-  const showDebugInfo = async () => {
-    if (!navigator.usb) return
+  // USB device ma'lumotlarini ko'rsatish (debug)
+  const showDebugInfo = useCallback(async () => {
+    if (typeof navigator === 'undefined' || !navigator.usb) {
+      setDebugInfo('WebUSB qo\'llab-quvvatlanmaydi')
+      return
+    }
     try {
       const devices = await navigator.usb.getDevices()
-      const info = devices.map(d => `VID:0x${d.vendorId.toString(16)} PID:0x${d.productId.toString(16)} ${d.productName || ''} ${d.manufacturerName || ''} | interfaces: ${d.configurations.length}`).join('\n')
-      setDebugInfo(info || 'No devices')
+      if (devices.length === 0) {
+        setDebugInfo('Hech qanday USB device topilmadi.\n\nAvval "USB ulash" tugmasi bilan printerni tanlang.\nTanlaganidan keyin shu yerda ko\'rinadi.')
+        return
+      }
+      const info = devices.map((d, i) => {
+        const ifaces = d.configurations.length > 0
+          ? d.configurations[0].interfaces.map((iface: any) => `iface#${iface.interfaceNumber}(eps:${iface.alternate?.endpoints?.length || 0})`).join(', ')
+          : 'no config'
+        return `Device ${i + 1}:
+  VID: 0x${d.vendorId.toString(16).padStart(4, '0')}
+  PID: 0x${d.productId.toString(16).padStart(4, '0')}
+  Name: ${d.productName || '(noma\'lum)'}
+  Manufacturer: ${d.manufacturerName || '(noma\'lum)'}
+  Serial: ${d.serialNumber || '-'}
+  Configurations: ${d.configurations.length}
+  Interfaces: ${ifaces}
+  Opened: ${d.opened}`
+      }).join('\n\n---\n\n')
+      setDebugInfo(info)
     } catch (e: any) {
-      setDebugInfo(e.message)
+      setDebugInfo('Xato: ' + e.message)
     }
-  }
+  }, [])
+
+  // === END OF HOOKS ===
 
   // WebUSB qo'llab-quvvatlanmaydi
   if (!supported) {
@@ -259,6 +258,19 @@ export default function PosPrintMonitor() {
         </button>
       </div>
 
+      {/* Error banner */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">❌</span>
+            <div className="flex-1 text-sm text-red-900">
+              <p className="font-semibold mb-1">Ulanish xatosi:</p>
+              <p className="text-red-700 font-mono text-xs bg-white p-2 rounded break-all">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Info banner */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
         <div className="flex items-start gap-3">
@@ -275,34 +287,24 @@ export default function PosPrintMonitor() {
         </div>
       </div>
 
-      {/* Error banner */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">❌</span>
-            <div className="flex-1 text-sm text-red-900">
-              <p className="font-semibold mb-1">Xato:</p>
-              <p className="text-red-700 font-mono text-xs bg-white p-2 rounded">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Debug info */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
         <div className="flex items-center justify-between mb-2">
           <p className="font-semibold text-slate-900 text-sm">🔧 USB device ma'lumotlari (debug)</p>
-          <button onClick={showDebugInfo} className="px-3 py-1 rounded-lg bg-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-300">
+          <button
+            onClick={showDebugInfo}
+            className="px-3 py-1 rounded-lg bg-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-300"
+          >
             Ko'rsatish
           </button>
         </div>
         {debugInfo && (
-          <pre className="bg-white p-3 rounded text-xs font-mono text-slate-700 whitespace-pre-wrap max-h-32 overflow-y-auto">
+          <pre className="bg-white p-3 rounded text-xs font-mono text-slate-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
             {debugInfo}
           </pre>
         )}
         <p className="text-xs text-slate-500 mt-2">
-          Bu ma'lumot menga (yuborganizda) printerning xatosini aniqlashga yordam beradi.
+          Agar printer ulanmasa, bu ma'lumotni menga yuboring - men xatoni aniqlay olaman.
         </p>
       </div>
 
