@@ -161,55 +161,39 @@ export async function POST(req: NextRequest) {
     })
 
     // === AUTOMATIC PRINT JOB CREATION ===
-    // HAR DOIM print job yaratish - barcha aktiv printer stansiyalariga
-    // Kategoriya bog'lanishiga qaramasdan, har bir stansiya o'z taomlarini oladi
+    // HAR DOIM print job yaratish - barcha printer stansiyalariga
+    // Agar kategoriya printerga bog'langan bo'lsa - faqat o'sha stansiyaga
+    // Agar bog'lanmagan bo'lsa - barcha stansiyalarga
+    let printJobsCreated = 0
     try {
-      // Barcha aktiv printer stansiyalarini olish (isActive filter'siz - hammasi)
       const allStations = await db.printerStation.findMany({
         where: { restaurantId: staff.restaurantId }
       })
 
-      // Har bir stansiya uchun print job yaratish
       for (const station of allStations) {
-        // Bu stansiyaga tegishli taomlarni topish
-        // 1. Stansiya kategoriya bog'lanishlari orqali
         const stationItems: any[] = []
 
         for (const it of itemsData) {
           const product = await db.product.findUnique({
             where: { id: it.productId }
           })
-
           if (!product) continue
 
           let belongsToStation = false
 
-          // Kategoriya orqali tekshirish
           if (product.categoryId) {
             const category = await db.category.findUnique({
               where: { id: product.categoryId }
             })
             if (category?.printerStationId === station.id) {
               belongsToStation = true
+            } else if (!category?.printerStationId) {
+              // Kategoriya printerga bog'lanmagan - barcha stansiyalarga
+              belongsToStation = true
             }
-          }
-
-          // Agar kategoriya printerga bog'lanmagan bo'lsa - barcha stansiyalarga yuborish
-          if (!belongsToStation) {
-            // Product'ning kategoriyasi printerga bog'lanmagan - barcha stansiyalarga
-            const product2 = await db.product.findUnique({
-              where: { id: it.productId }
-            })
-            if (product2?.categoryId) {
-              const cat = await db.category.findUnique({
-                where: { id: product2.categoryId }
-              })
-              if (!cat?.printerStationId) {
-                belongsToStation = true // barcha stansiyalarga
-              }
-            } else {
-              belongsToStation = true // kategoriya yo'q - barcha stansiyalarga
-            }
+          } else {
+            // Kategoriya yo'q - barcha stansiyalarga
+            belongsToStation = true
           }
 
           if (belongsToStation) {
@@ -223,7 +207,6 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Agar bu stansiyaga tegishli taomlar bo'lsa - print job yaratish
         if (stationItems.length > 0) {
           const content = JSON.stringify({
             orderNo: order.invoiceNo,
@@ -245,14 +228,14 @@ export async function POST(req: NextRequest) {
               autoPrintReady: true
             }
           })
+          printJobsCreated++
         }
       }
     } catch (printError: any) {
       console.error('Print job creation error:', printError)
-      // Print xatosi buyurtmani buzmasin
     }
 
-    return NextResponse.json({ item: order })
+    return NextResponse.json({ item: order, printJobsCreated })
   } catch (e: any) {
     console.error('Order create error:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })

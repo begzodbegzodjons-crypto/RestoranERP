@@ -336,21 +336,35 @@ export default function PrintServerPage() {
           </p>
         </div>
 
-        {/* Kiosk mode */}
+        {/* Kiosk mode - Edge uchun */}
         <div className="bg-emerald-900/30 border border-emerald-700 rounded-xl p-4">
-          <p className="text-emerald-100 text-sm font-semibold mb-2">🚀 100% AVTOMATIK PRINT (Chrome Kiosk):</p>
-          <p className="text-emerald-200 text-sm mb-2">
-            Print dialog chiqmasdan avtomatik print uchun:
+          <p className="text-emerald-100 text-sm font-bold mb-3">🚀 100% AVTOMATIK PRINT — EDGE KIOSK REJIMI:</p>
+          <p className="text-emerald-200 text-sm mb-3">
+            <strong>Edge'da print dialog chiqmasdan avtomatik print uchun:</strong>
           </p>
-          <ol className="list-decimal list-inside text-emerald-200 text-sm space-y-1">
-            <li>Chrome'ni yoping</li>
-            <li>Windows'da Win+R bosing, quyidagini yozing:</li>
+          <ol className="list-decimal list-inside text-emerald-200 text-sm space-y-2 mb-3">
+            <li>Edge'ni yoping (to'liq)</li>
+            <li>Windows'da <strong>Win+R</strong> tugmalarini bosing</li>
+            <li>Quyidagi buyruqni nusxalab, Win+R oynasiga joylang:</li>
           </ol>
-          <pre className="bg-slate-900 p-2 rounded text-xs text-emerald-300 mt-2 overflow-x-auto">
-            chrome.exe --kiosk-printing "https://restoran-erp.begzodbegzodjons.workers.dev/print-server"
+          <pre className="bg-slate-950 p-3 rounded-lg text-xs text-emerald-300 mt-2 overflow-x-auto select-all cursor-pointer">
+            msedge.exe --kiosk-printing "https://restoran-erp.begzodbegzodjons.workers.dev/print-server"
           </pre>
-          <p className="text-emerald-300 text-xs mt-2">
-            Bu rejimda Chrome print dialog'ni o'chiryapti — avtomatik print qiladi!
+          <p className="text-emerald-200 text-sm mt-3 mb-2">
+            <strong>2-bosqich:</strong> Edge ochildi, tizimga kiring (restoran egasi). Keyin:
+          </p>
+          <ol className="list-decimal list-inside text-emerald-200 text-sm space-y-1 mb-3">
+            <li>Har bir stansiyada "Test" tugmasini bosing</li>
+            <li>Edge print oynasi ochiladi — printerni tanlang</li>
+            <li>"Cancel" emas, "Print" tugmasini bosing (1 marta)</li>
+            <li>Edge bu printerni eslab qoladi</li>
+          </ol>
+          <p className="text-emerald-200 text-sm mt-3 mb-2">
+            <strong>3-bosqich:</strong> Endi avtomatik!
+          </p>
+          <p className="text-emerald-300 text-sm">
+            Ofitsiant buyurtma beradi → Print Server avtomatik print qiladi.<br/>
+            <strong>Print dialog chiqmaydi!</strong> Kiosk rejimi uni o'chiradi.
           </p>
         </div>
       </div>

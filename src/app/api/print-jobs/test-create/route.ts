@@ -3,11 +3,13 @@ import { db } from '@/lib/db'
 import { getCurrentRestaurant } from '@/lib/auth'
 
 // POST /api/print-jobs/test-create
+// Test print job yaratish - ofitsiant buyurtmasini simulyatsiya qiladi
 export async function POST() {
   try {
     const restaurant = await getCurrentRestaurant()
     if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
 
+    // Barcha printer stansiyalarini olish
     const stations = await db.printerStation.findMany({
       where: { restaurantId: restaurant.id }
     })
@@ -16,22 +18,31 @@ export async function POST() {
       return NextResponse.json({ error: 'Printer stansiyalari yoq' }, { status: 400 })
     }
 
+    // Stollarni olish
+    const tables = await db.restaurantTable.findMany({
+      where: { restaurantId: restaurant.id }
+    })
+    const tableName = tables[0]?.name || 'Test stol'
+
+    // Productlarni olish
+    const products = await db.product.findMany({
+      where: { restaurantId: restaurant.id }
+    })
+    const productName = products[0]?.name || 'Test taom'
+
     const created = []
     for (const station of stations) {
       const content = JSON.stringify({
         orderNo: 'TEST-' + Date.now(),
-        table: 'Test stol',
-        waiter: 'Test',
+        table: tableName,
+        waiter: 'Test ofitsiant',
         createdAt: new Date().toISOString(),
-        items: [{ productName: 'Test taom', quantity: 1, notes: 'Test izoh' }],
+        items: [{ productName: productName, quantity: 2, notes: 'Achchiqroq qiling' }],
         printerStationName: station.name,
         restaurantName: restaurant.name,
       })
 
-      // orderId ni o'tkazib yuboramiz - PrintJob table'da orderId nullable emas
-      // lekin biz NULL qo'yish uchun to'g'ridan-to'g'ri SQL ishlatamiz
-      const conn = (db as any)._getConnection?.() || null
-      // SQL wrapper orqali create qilamiz, orderId bo'sh
+      // orderId NULL - foreign key muammosi yo'q
       const job = await db.printJob.create({
         data: {
           restaurantId: restaurant.id,
