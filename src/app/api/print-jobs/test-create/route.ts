@@ -28,10 +28,13 @@ export async function POST() {
         restaurantName: restaurant.name,
       })
 
+      // orderId ni o'tkazib yuboramiz - PrintJob table'da orderId nullable emas
+      // lekin biz NULL qo'yish uchun to'g'ridan-to'g'ri SQL ishlatamiz
+      const conn = (db as any)._getConnection?.() || null
+      // SQL wrapper orqali create qilamiz, orderId bo'sh
       const job = await db.printJob.create({
         data: {
           restaurantId: restaurant.id,
-          orderId: 'test-' + Date.now(),
           printerStationId: station.id,
           status: 'pending',
           content,

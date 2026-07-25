@@ -755,7 +755,7 @@ model PrinterStation {
 model PrintJob {
   id            String   @id @default(cuid())
   restaurantId  String
-  orderId       String
+  orderId       String?
   printerStationId String
   status        String   @default("pending") // pending | printed | failed
   // JSON content: { table, waiter, items, orderNo, createdAt }
@@ -767,7 +767,7 @@ model PrintJob {
   autoPrintReady Boolean @default(false)
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order         Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
   printerStation PrinterStation @relation(fields: [printerStationId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId, status])
