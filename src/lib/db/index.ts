@@ -615,6 +615,55 @@ async function loadIncludes(modelName: string, records: any[], include: IncludeI
   if (!include || records.length === 0) return
 
   for (const [relName, includeVal] of Object.entries(include)) {
+    // === _count special handling ===
+    // Prisma: include: { _count: { select: { products: true } } }
+    // Har bir record uchun bog'liq model sonini hisoblash
+    if (relName === '_count') {
+      const countFields = typeof includeVal === 'object' && includeVal !== null
+        ? (includeVal as any).select || includeVal
+        : {}
+      const _countResult: Record<string, number> = {}
+
+      for (const [countField, enabled] of Object.entries(countFields)) {
+        if (!enabled) continue
+        const relField = getRelationField(modelName, countField)
+        if (!relField) continue
+
+        if (relField.isList) {
+          // "one" tomonidagi relation - bu model'ning ID'si related model'da FK sifatida
+          const localField = relField.localField || 'id'
+          const foreignField = relField.foreignField || 'id'
+          const ids = records.map(r => r[localField]).filter(Boolean)
+          if (ids.length === 0) {
+            for (const r of records) {
+              if (!r._count) r._count = {}
+              r._count[countField] = 0
+            }
+            continue
+          }
+          const placeholders = ids.map(() => '?').join(', ')
+          const sql = `SELECT ${escapeIdentifier(foreignField)} as fk, COUNT(*) as cnt FROM ${escapeIdentifier(getTableName(relField.type))} WHERE ${escapeIdentifier(foreignField)} IN (${placeholders}) GROUP BY ${escapeIdentifier(foreignField)}`
+          const rows = await execute(sql, ids)
+          const countMap = new Map<string, number>()
+          for (const row of rows) {
+            countMap.set(row.fk, parseInt(row.cnt, 10))
+          }
+          for (const r of records) {
+            if (!r._count) r._count = {}
+            r._count[countField] = countMap.get(r[localField]) || 0
+          }
+        } else {
+          // "many" tomonidagi relation - related model'lar bu model'ga bog'liq
+          // Bu holatda count = 0 yoki 1 (bitta related record)
+          for (const r of records) {
+            if (!r._count) r._count = {}
+            r._count[countField] = r[countField] ? 1 : 0
+          }
+        }
+      }
+      continue
+    }
+
     const relField = getRelationField(modelName, relName)
     if (!relField) continue
 
