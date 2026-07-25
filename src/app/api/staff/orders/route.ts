@@ -127,6 +127,68 @@ export async function POST(req: NextRequest) {
         data: { status: 'occupied' }
       })
 
+      // === PRINT JOB YARATISH (mavjud order'ga qo'shilgan taomlar uchun) ===
+      try {
+        const allStations = await db.printerStation.findMany({
+          where: { restaurantId: staff.restaurantId }
+        })
+
+        for (const station of allStations) {
+          const stationItems = []
+          for (const it of itemsData) {
+            const product = await db.product.findUnique({ where: { id: it.productId } })
+            if (!product) continue
+
+            let belongsToStation = false
+            if (product.categoryId) {
+              const category = await db.category.findUnique({ where: { id: product.categoryId } })
+              if (category?.printerStationId === station.id) {
+                belongsToStation = true
+              } else if (!category?.printerStationId) {
+                belongsToStation = true
+              }
+            } else {
+              belongsToStation = true
+            }
+
+            if (belongsToStation) {
+              stationItems.push({
+                productName: product.name,
+                quantity: it.quantity,
+                unitPrice: it.unitPrice,
+                total: it.total,
+                notes: it.notes || null
+              })
+            }
+          }
+
+          if (stationItems.length > 0) {
+            const content = JSON.stringify({
+              orderNo: updated.invoiceNo,
+              table: updated.table?.name || '',
+              waiter: updated.waiter?.name || '',
+              createdAt: new Date().toISOString(),
+              items: stationItems,
+              printerStationName: station.name,
+              restaurantName: staff.restaurant?.name || '',
+            })
+
+            await db.printJob.create({
+              data: {
+                restaurantId: staff.restaurantId,
+                orderId: updated.id,
+                printerStationId: station.id,
+                status: 'pending',
+                content,
+                autoPrintReady: true
+              }
+            })
+          }
+        }
+      } catch (printError) {
+        console.error('Print job creation error (existing order):', printError)
+      }
+
       return NextResponse.json({ item: updated, added: true })
     }
 
