@@ -3,9 +3,9 @@ import { db } from '@/lib/db'
 import { getCurrentRestaurant } from '@/lib/auth'
 
 // GET /api/reports/z-report - KUNNIY YAKUNIY HISOBOT (Z-otchet)
-// Kun yakunlangan hisobot - noldan boshlab hisob
-// ?date=2026-06-29 (ixtiyoriy, default bugun)
-// Z-otchet kuni "yopilgan" deb belgilanadi
+// Z-otchet olingan vaqtdan keyingi savdolarni hisoblaydi (0'dan boshlaydi)
+// POST /api/reports/z-report - Z-otchetni "yopish" (lastZReportAt ni yangilaydi)
+
 export async function GET(req: NextRequest) {
   try {
     const restaurant = await getCurrentRestaurant()
@@ -20,11 +20,17 @@ export async function GET(req: NextRequest) {
     const endOfDay = new Date(date)
     endOfDay.setHours(23, 59, 59, 999)
 
-    // Get all sales for this day
+    // Agar lastZReportAt bo'lsa, undan keyingi savdolarni olamiz
+    // Aks holda kun boshidan
+    const startTime = restaurant.lastZReportAt && !dateStr
+      ? restaurant.lastZReportAt
+      : startOfDay
+
+    // Get all sales since last Z-report (or start of day)
     const sales = await db.sale.findMany({
       where: {
         restaurantId: restaurant.id,
-        createdAt: { gte: startOfDay, lte: endOfDay },
+        createdAt: { gte: startTime, lte: endOfDay },
         status: 'completed'
       },
       include: {
@@ -35,19 +41,29 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'asc' }
     })
 
-    // Get expenses for this day
+    // Cancelled sales (rad etilgan)
+    const cancelledSales = await db.sale.findMany({
+      where: {
+        restaurantId: restaurant.id,
+        createdAt: { gte: startTime, lte: endOfDay },
+        status: 'cancelled'
+      },
+      include: { staff: true, table: true }
+    })
+
+    // Get expenses
     const expenses = await db.expense.findMany({
       where: {
         restaurantId: restaurant.id,
-        date: { gte: startOfDay, lte: endOfDay }
+        date: { gte: startTime, lte: endOfDay }
       }
     })
 
-    // Get purchases for this day
+    // Get purchases
     const purchases = await db.purchase.findMany({
       where: {
         restaurantId: restaurant.id,
-        createdAt: { gte: startOfDay, lte: endOfDay }
+        createdAt: { gte: startTime, lte: endOfDay }
       }
     })
 
@@ -62,6 +78,9 @@ export async function GET(req: NextRequest) {
     const totalExpenses = expenses.reduce((s, x) => s + x.amount, 0)
     const totalPurchases = purchases.reduce((s, x) => s + x.totalAmount, 0)
     const netProfit = totalProfit - totalExpenses
+
+    // Cancelled totals (rad etilgan summa)
+    const cancelledTotal = cancelledSales.reduce((s, x) => s + x.total, 0)
 
     // By waiter
     const waiterMap = new Map<string, { name: string; orders: number; revenue: number; profit: number }>()
@@ -85,22 +104,14 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Check if any shift was closed today (Z-report already generated)
-    const closedShift = await db.shift.findFirst({
-      where: {
-        restaurantId: restaurant.id,
-        status: 'closed',
-        closedAt: { gte: startOfDay, lte: endOfDay }
-      }
-    })
-
     return NextResponse.json({
       type: 'Z',
       restaurantName: restaurant.name,
       date: startOfDay,
       dateStr: startOfDay.toLocaleDateString('uz-UZ'),
       timeStr: new Date().toLocaleTimeString('uz-UZ'),
-      isClosed: !!closedShift,
+      lastZReportAt: restaurant.lastZReportAt,
+      periodStart: startTime,
       summary: {
         totalSales,
         totalProfit,
@@ -113,7 +124,9 @@ export async function GET(req: NextRequest) {
         totalPurchases,
         netProfit,
         orderCount: sales.length,
-        avgOrder: sales.length > 0 ? totalSales / sales.length : 0
+        avgOrder: sales.length > 0 ? totalSales / sales.length : 0,
+        cancelledCount: cancelledSales.length,
+        cancelledTotal,
       },
       byWaiter: Array.from(waiterMap.values()),
       byProduct: Array.from(productMap.values()).sort((a, b) => b.total - a.total),
@@ -125,7 +138,15 @@ export async function GET(req: NextRequest) {
         paymentMethod: s.paymentMethod,
         waiter: s.staff?.name || '—',
         table: s.table?.name || '—',
-        kassir: s.notes?.includes('Kassir:') ? s.notes.split('Kassir:')[1].trim() : '—'
+      })),
+      cancelledSales: cancelledSales.map(s => ({
+        invoiceNo: s.invoiceNo,
+        time: s.createdAt,
+        total: s.total,
+        waiter: s.staff?.name || '—',
+        table: s.table?.name || '—',
+        reason: s.cancelledReason || '—',
+        cancelledAt: s.cancelledAt,
       })),
       expenses: expenses.map(e => ({
         category: e.category,
@@ -136,6 +157,31 @@ export async function GET(req: NextRequest) {
         invoiceNo: p.invoiceNo,
         totalAmount: p.totalAmount
       }))
+    })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}
+
+// POST /api/reports/z-report - Z-otchetni YOPISH
+// lastZReportAt ni hozirgi vaqtga yangilaydi
+// Keyingi Z-otchet shu vaqtdan keyingi savdolarni hisoblaydi (0'dan boshlaydi)
+export async function POST() {
+  try {
+    const restaurant = await getCurrentRestaurant()
+    if (!restaurant) return NextResponse.json({ error: 'Avtorizatsiya' }, { status: 401 })
+
+    const now = new Date()
+
+    await db.restaurant.update({
+      where: { id: restaurant.id },
+      data: { lastZReportAt: now }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Z-otchet yopildi. Hisob 0\'dan boshlandi.',
+      closedAt: now,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

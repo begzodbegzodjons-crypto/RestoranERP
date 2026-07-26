@@ -61,6 +61,8 @@ model Restaurant {
   // Onboarding holati
   onboardingCompleted Boolean @default(false)
   onboardingStep  Int      @default(0)
+  // Z-otchet olingan oxirgi vaqt - shu vaqtdan keyingi savdolar yangi kun
+  lastZReportAt   DateTime?
 
   // Admin tomonidan boshqarish
   blockedByAdmin  Boolean  @default(false)
@@ -346,7 +348,11 @@ model Sale {
   paymentMethod String   @default("cash") // cash | card | transfer | split
   // Bo'lib to'lash uchun - JSON: {cash: 50000, card: 100000, transfer: 0}
   splitPayments String? @db.Text
-  status        String   @default("completed") // completed | refunded | partial_refund | pending
+  status        String   @default("completed") // completed | refunded | partial_refund | pending | cancelled
+  // Rad etilgan (cancelled) buyurtma uchun
+  cancelledReason String? @db.Text
+  cancelledAt     DateTime?
+  cancelledByStaffId String?
   // Refund ma'lumotlari
   refundedAmount Float   @default(0)
   refundedAt     DateTime?

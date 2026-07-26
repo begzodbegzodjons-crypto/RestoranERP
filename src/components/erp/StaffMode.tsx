@@ -604,6 +604,9 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [discount, setDiscount] = useState(0)
   const [lastPaidOrder, setLastPaidOrder] = useState<any | null>(null)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelling, setCancelling] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -623,6 +626,26 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
   }
 
   useEffect(() => { load() }, [])
+
+  const cancelOrder = async () => {
+    if (!selectedOrder || !cancelReason) return
+    setCancelling(true)
+    try {
+      await api(`/api/staff/orders/${selectedOrder.id}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({ reason: cancelReason })
+      })
+      toast.success('Buyurtma bekor qilindi')
+      setShowCancelModal(false)
+      setCancelReason('')
+      setSelectedOrder(null)
+      load()
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   const payOrder = async () => {
     if (!selectedOrder) return
@@ -809,11 +832,59 @@ function CashierView({ restaurant }: { restaurant: Restaurant | null }) {
                 Bekor
               </button>
               <button
+                onClick={() => setShowCancelModal(true)}
+                disabled={paying}
+                className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold disabled:opacity-50 hover:bg-red-600"
+              >
+                ✗ Bekor qilish
+              </button>
+              <button
                 onClick={payOrder}
                 disabled={paying}
                 className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/25 disabled:opacity-50"
               >
                 {paying ? 'Qabul qilinmoqda...' : '✓ To\'lov + Chek'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Cancel order modal */}
+      {showCancelModal && selectedOrder && (
+        <Modal open onClose={() => setShowCancelModal(false)} title="Buyurtmani bekor qilish" size="sm">
+          <div className="space-y-4">
+            <p className="text-slate-600 text-sm">
+              Buyurtma <strong>{selectedOrder.invoiceNo}</strong> (Stol: {selectedOrder.table?.name}) ni bekor qilishni tasdiqlang.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Bekor qilish sababi *</label>
+              <input
+                className="erp-input"
+                value={cancelReason}
+                onChange={e => setCancelReason(e.target.value)}
+                placeholder="Masalan: Mijoz rad etdi"
+              />
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+              <p className="text-xs text-amber-800">
+                ⚠️ Bekor qilingan buyurtma hisobotlarda "Rad etilgan" bo'limida saqlanadi.
+                Summa bugungi savdodan ayiriladi.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowCancelModal(false); setCancelReason('') }}
+                className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50"
+              >
+                Yo'q
+              </button>
+              <button
+                onClick={cancelOrder}
+                disabled={!cancelReason || cancelling}
+                className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold disabled:opacity-50 hover:bg-red-600"
+              >
+                {cancelling ? 'Bekor qilinmoqda...' : '✗ Bekor qilish'}
               </button>
             </div>
           </div>
