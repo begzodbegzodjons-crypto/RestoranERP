@@ -45,6 +45,18 @@ export async function PUT(req: NextRequest) {
     if (body.telegramChatId !== undefined) {
       updates.telegramChatId = body.telegramChatId || null
     }
+    if (body.name !== undefined) {
+      if (!body.name || body.name.trim().length < 2) {
+        return NextResponse.json({ error: 'Restoran nomi kamida 2 ta belgi' }, { status: 400 })
+      }
+      updates.name = body.name.trim()
+    }
+    if (body.phone !== undefined) {
+      updates.phone = body.phone || null
+    }
+    if (body.address !== undefined) {
+      updates.address = body.address || null
+    }
 
     const updated = await db.restaurant.update({
       where: { id: restaurant.id },
@@ -55,7 +67,10 @@ export async function PUT(req: NextRequest) {
       success: true,
       serviceChargePercent: updated.serviceChargePercent,
       vatRate: updated.vatRate,
-      telegramConfigured: !!updated.telegramBotToken
+      telegramConfigured: !!updated.telegramBotToken,
+      name: updated.name,
+      phone: updated.phone,
+      address: updated.address,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

@@ -36,6 +36,31 @@ export default function SettingsView({
   const [savingCharge, setSavingCharge] = useState(false)
   const [savingVat, setSavingVat] = useState(false)
   const [savingTelegram, setSavingTelegram] = useState(false)
+  const [editName, setEditName] = useState(restaurant.name)
+  const [editPhone, setEditPhone] = useState(restaurant.phone || '')
+  const [editAddress, setEditAddress] = useState(restaurant.address || '')
+  const [savingInfo, setSavingInfo] = useState(false)
+
+  const saveRestaurantInfo = async () => {
+    setSavingInfo(true)
+    try {
+      await api('/api/staff/settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: editName,
+          phone: editPhone,
+          address: editAddress,
+        })
+      })
+      toast.success('Restoran ma\'lumotlari saqlandi!')
+      // Sahifani yangilash
+      setTimeout(() => window.location.reload(), 1000)
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setSavingInfo(false)
+    }
+  }
 
   useEffect(() => {
     api('/api/staff/settings').then(r => {
@@ -241,6 +266,47 @@ export default function SettingsView({
           <InfoRow label="Manzil" value={restaurant.address || '—'} />
           <InfoRow label="Valyuta" value={restaurant.currency} />
           <InfoRow label="ID" value={restaurant.id} mono />
+        </div>
+
+        {/* Edit restaurant info */}
+        <div className="mt-6 pt-6 border-t border-slate-200">
+          <h4 className="font-bold text-slate-900 mb-3">✏️ Restoran ma'lumotlarini tahrirlash</h4>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Restoran nomi</label>
+              <input
+                className="erp-input"
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                placeholder="Restoran nomi"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Telefon</label>
+              <input
+                className="erp-input"
+                value={editPhone}
+                onChange={e => setEditPhone(e.target.value)}
+                placeholder="+998901234567"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Manzil</label>
+              <input
+                className="erp-input"
+                value={editAddress}
+                onChange={e => setEditAddress(e.target.value)}
+                placeholder="Manzil"
+              />
+            </div>
+            <button
+              onClick={saveRestaurantInfo}
+              disabled={savingInfo}
+              className="px-6 py-2.5 rounded-xl bg-emerald-500 text-white font-bold disabled:opacity-50 hover:bg-emerald-600"
+            >
+              {savingInfo ? 'Saqlanmoqda...' : '💾 Saqlash'}
+            </button>
+          </div>
         </div>
       </div>
 
