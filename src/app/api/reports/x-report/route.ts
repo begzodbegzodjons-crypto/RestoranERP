@@ -20,11 +20,14 @@ export async function GET(req: NextRequest) {
     const endOfDay = new Date(date)
     endOfDay.setHours(23, 59, 59, 999)
 
-    // Get all sales for this day
+    // Z-otchet olingan bo'lsa, undan keyingi savdolarni hisoblash
+    const periodStart = restaurant.lastZReportAt && !dateStr ? restaurant.lastZReportAt : startOfDay
+
+    // Get all sales since last Z-report (or start of day)
     const sales = await db.sale.findMany({
       where: {
         restaurantId: restaurant.id,
-        createdAt: { gte: startOfDay, lte: endOfDay },
+        createdAt: { gte: periodStart, lte: endOfDay },
         status: 'completed'
       },
       include: {

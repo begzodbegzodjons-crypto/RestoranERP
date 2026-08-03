@@ -240,6 +240,28 @@ export default function ReportsView() {
             <button onClick={printXZ} className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800">
               🖨️ Printerdan chek chiqarish
             </button>
+
+            {/* Z-otchetni yopish tugmasi - savdoyi 0 qiladi */}
+            {xzReport.type === 'Z' && (
+              <button
+                onClick={async () => {
+                  if (!confirm('Z-otchet yopilsinmi? Hisob 0\'dan boshlanadi. Avvalgi savdolar saqlanadi.')) return
+                  try {
+                    await api('/api/reports/z-report', { method: 'POST' })
+                    toast.success('Z-otchet yopildi! Hisob 0\'dan boshlandi.')
+                    setXzReport(null)
+                    setXzType(null)
+                    load()
+                  } catch (e: any) {
+                    toast.error(e.message)
+                  }
+                }}
+                className="w-full py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600"
+              >
+                🔒 Z-otchetni YOPISH (savdoni 0 ga tushirish)
+              </button>
+            )}
+
             <button onClick={() => { setXzReport(null); setXzType(null) }} className="w-full py-2 text-slate-500 text-sm font-medium">
               Yopish
             </button>

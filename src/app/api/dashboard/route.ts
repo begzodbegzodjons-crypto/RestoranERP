@@ -13,11 +13,14 @@ export async function GET() {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-    // Today's sales
+    // Z-otchet olingan bo'lsa, undan keyingi savdolarni hisoblash (0'dan boshlash)
+    const todayStart = restaurant.lastZReportAt || startOfToday
+
+    // Today's sales (Z-otchet dan keyin)
     const todaySales = await db.sale.findMany({
       where: {
         restaurantId: restaurant.id,
-        createdAt: { gte: startOfToday },
+        createdAt: { gte: todayStart },
         status: 'completed'
       },
       select: { total: true, profit: true, costOfGoods: true }
