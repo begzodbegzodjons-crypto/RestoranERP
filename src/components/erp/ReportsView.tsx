@@ -10,6 +10,9 @@ export default function ReportsView() {
   const [xzType, setXzType] = useState<'X' | 'Z' | null>(null)
   const [xzDate, setXzDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [xzLoading, setXzLoading] = useState(false)
+  const [todayReport, setTodayReport] = useState<any | null>(null)
+  const [todayLoading, setTodayLoading] = useState(false)
+  const [showTodayModal, setShowTodayModal] = useState(false)
   const [from, setFrom] = useState(() => {
     const d = new Date()
     d.setDate(d.getDate() - 90)
@@ -22,10 +25,26 @@ export default function ReportsView() {
     try {
       const res = await api(`/api/reports?from=${from}&to=${to}`)
       setReport(res)
+      // Bugungi savdo (Z-otchet dan keyin)
+      const todayRes = await api('/api/reports/today')
+      setTodayReport(todayRes)
     } catch (e: any) {
       toast.error(e.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadTodayReport = async () => {
+    setTodayLoading(true)
+    try {
+      const res = await api('/api/reports/today')
+      setTodayReport(res)
+      setShowTodayModal(true)
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setTodayLoading(false)
     }
   }
 
@@ -270,6 +289,26 @@ export default function ReportsView() {
       )}
 
       {/* ===== SUMMARY ===== */}
+      {/* Bugungi savdo - ustiga bosilganda batafsil ko'rinadi */}
+      {todayReport && (
+        <div
+          onClick={loadTodayReport}
+          className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-5 text-white cursor-pointer hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-emerald-50 text-sm font-medium">📅 Bugungi savdo (Z-otchet dan keyin)</div>
+              <div className="text-3xl font-bold mt-1">{formatMoney(todayReport.totalSales || 0)}</div>
+              <div className="text-emerald-100 text-xs mt-1">
+                {todayReport.orderCount || 0} ta buyurtma • Foyda: {formatMoney(todayReport.totalProfit || 0)}
+              </div>
+            </div>
+            <div className="text-4xl opacity-50">📊</div>
+          </div>
+          <div className="text-emerald-100 text-xs mt-2 text-right">Batafsil ko'rish uchun bosing →</div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Stat label="Jami savdo" value={formatMoney(s.totalSales)} color="emerald" icon="💰" />
         <Stat label="Sof foyda (savdo)" value={formatMoney(s.totalProfit)} color="teal" icon="📈" />
@@ -560,6 +599,123 @@ export default function ReportsView() {
           </div>
         )}
       </div>
+
+      {/* Bugungi savdo batafsil modal */}
+      {showTodayModal && todayReport && (
+        <Modal open onClose={() => setShowTodayModal(false)} title="📅 Bugungi savdo (batafsil)" size="lg">
+          <div className="space-y-4">
+            {/* Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-emerald-50 rounded-xl p-3">
+                <div className="text-xs text-emerald-700">Jami savdo</div>
+                <div className="text-xl font-bold text-emerald-900">{formatMoney(todayReport.totalSales || 0)}</div>
+              </div>
+              <div className="bg-teal-50 rounded-xl p-3">
+                <div className="text-xs text-teal-700">Sof foyda</div>
+                <div className="text-xl font-bold text-teal-900">{formatMoney(todayReport.totalProfit || 0)}</div>
+              </div>
+              <div className="bg-amber-50 rounded-xl p-3">
+                <div className="text-xs text-amber-700">Naqd</div>
+                <div className="text-xl font-bold text-amber-900">{formatMoney(todayReport.cashSales || 0)}</div>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-3">
+                <div className="text-xs text-blue-700">Karta</div>
+                <div className="text-xl font-bold text-blue-900">{formatMoney(todayReport.cardSales || 0)}</div>
+              </div>
+            </div>
+
+            {/* Taomlar bo'yicha */}
+            <div>
+              <h4 className="font-bold text-slate-900 mb-2">🍽️ Taomlar bo'yicha savdo</h4>
+              {todayReport.byProduct && todayReport.byProduct.length > 0 ? (
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Taom</th>
+                        <th className="px-3 py-2 text-center text-xs font-semibold text-slate-600">Soni</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-slate-600">Summa</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {todayReport.byProduct.map((p: any, i: number) => (
+                        <tr key={i}>
+                          <td className="px-3 py-2 text-sm text-slate-900">{p.name}</td>
+                          <td className="px-3 py-2 text-center text-sm text-slate-600">{p.qty} ta</td>
+                          <td className="px-3 py-2 text-right text-sm font-semibold text-emerald-600">{formatMoney(p.total)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-slate-400 text-sm">Bugungi savdo yo'q</p>
+              )}
+            </div>
+
+            {/* Ofitsiantlar bo'yicha */}
+            {todayReport.byWaiter && todayReport.byWaiter.length > 0 && (
+              <div>
+                <h4 className="font-bold text-slate-900 mb-2">👥 Ofitsiantlar bo'yicha</h4>
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600">Ofitsiant</th>
+                        <th className="px-3 py-2 text-center text-xs font-semibold text-slate-600">Buyurtma</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-slate-600">Summa</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-slate-600">Foyda</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {todayReport.byWaiter.map((w: any, i: number) => (
+                        <tr key={i}>
+                          <td className="px-3 py-2 text-sm text-slate-900">{w.name}</td>
+                          <td className="px-3 py-2 text-center text-sm text-slate-600">{w.orders}</td>
+                          <td className="px-3 py-2 text-right text-sm font-semibold text-emerald-600">{formatMoney(w.revenue)}</td>
+                          <td className="px-3 py-2 text-right text-sm text-teal-600">{formatMoney(w.profit)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Rad etilgan */}
+            {todayReport.cancelledCount > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                <div className="text-sm font-semibold text-red-900">
+                  ✗ Bekor qilingan: {todayReport.cancelledCount} ta • {formatMoney(todayReport.cancelledTotal || 0)}
+                </div>
+              </div>
+            )}
+
+            {/* Buyurtmalar ro'yxati */}
+            {todayReport.sales && todayReport.sales.length > 0 && (
+              <div>
+                <h4 className="font-bold text-slate-900 mb-2">🧾 Buyurtmalar ({todayReport.sales.length})</h4>
+                <div className="bg-white border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+                  {todayReport.sales.map((s: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between px-3 py-2 border-b border-slate-100 last:border-0">
+                      <div>
+                        <span className="text-sm font-medium text-slate-900">{s.invoiceNo}</span>
+                        <span className="text-xs text-slate-400 ml-2">{new Date(s.time || s.createdAt).toLocaleTimeString('uz-UZ')}</span>
+                        <span className="text-xs text-slate-400 ml-2">{s.table || '—'}</span>
+                        <span className="text-xs text-slate-400 ml-2">{s.waiter || '—'}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-semibold text-emerald-600">{formatMoney(s.total)}</span>
+                        <span className="text-xs text-slate-400 ml-2">{s.paymentMethod || ''}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
