@@ -1,0 +1,5451 @@
+{
+  "tables": {
+    "AbTest": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "testType",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "price",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "productId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "variantA",
+          "type": "longtext",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "variantB",
+          "type": "longtext",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "variantACount",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "variantBCount",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "variantARevenue",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "variantBRevenue",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "running",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "startedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "endedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "AbTest_restaurantId_status_idx",
+          "columns": "restaurantId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "ActivationCode": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "code",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "UNI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": "unused",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "validDays",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "30",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "usedBy",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "usedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "expiresAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ActivationCode_code_key",
+          "columns": "code",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "ActivationCode_status_idx",
+          "columns": "status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "AdminLog": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "action",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "detail",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "ip",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "ApiToken": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "token",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "UNI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "scope",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "read",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "lastUsedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "expiresAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ApiToken_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "ApiToken_token_key",
+          "columns": "token",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Branch": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "address",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Branch_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "BranchTransfer": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "fromBranchId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "toBranchId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "pending",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "items",
+          "type": "longtext",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "sentAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "receivedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "BranchTransfer_restaurantId_status_idx",
+          "columns": "restaurantId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Budget": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "period",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "monthly",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "year",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "month",
+          "type": "int",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "quarter",
+          "type": "int",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "category",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "plannedAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "actualAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Budget_restaurantId_year_month_idx",
+          "columns": "restaurantId,year,month",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Category": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "printerStationId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Category_printerStationId_fkey",
+          "columns": "printerStationId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Category_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Coupon": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "code",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "discountType",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "percent",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "discountValue",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "minOrder",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "maxUses",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "usedCount",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "validFrom",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "validUntil",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Coupon_restaurantId_code_key",
+          "columns": "restaurantId,code",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Coupon_restaurantId_isActive_idx",
+          "columns": "restaurantId,isActive",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Customer": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "email",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "totalOrders",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "totalSpent",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "loyaltyPoints",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "birthday",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "lastVisitAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "lifetimeValue",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "loyaltyTier",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Customer_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "CustomerDebt": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "customerId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "customerName",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "amount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paidAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "remaining",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "unpaid",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "dueDate",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "CustomerDebt_customerId_idx",
+          "columns": "customerId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "CustomerDebt_restaurantId_status_idx",
+          "columns": "restaurantId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Expense": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "category",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "amount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "date",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Expense_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "FeatureFlag": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "feature",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "enabled",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "FeatureFlag_restaurantId_feature_key",
+          "columns": "restaurantId,feature",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "FeatureFlag_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Ingredient": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unit",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "stock",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "minStock",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unitPrice",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "supplierId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Ingredient_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Ingredient_supplierId_fkey",
+          "columns": "supplierId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "InventoryCount": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "planned",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "startedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "completedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "items",
+          "type": "longtext",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "InventoryCount_restaurantId_status_idx",
+          "columns": "restaurantId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "InventoryItem": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "ingredientId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "quantity",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unitPrice",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "reason",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "refType",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "refId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "InventoryItem_ingredientId_fkey",
+          "columns": "ingredientId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "InventoryItem_restaurantId_ingredientId_idx",
+          "columns": "restaurantId,ingredientId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "LoyaltyTier": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "minPoints",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "discountPercent",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "color",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "slate",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "LoyaltyTier_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "MarketingCampaign": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "channel",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "sms",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "message",
+          "type": "longtext",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "targetAudience",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "all",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "draft",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "sentCount",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "deliveredCount",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "scheduledAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "sentAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "MarketingCampaign_restaurantId_status_idx",
+          "columns": "restaurantId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Notification": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "message",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "audience",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "all",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isRead",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Notification_restaurantId_audience_idx",
+          "columns": "restaurantId,audience",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Notification_restaurantId_isRead_idx",
+          "columns": "restaurantId,isRead",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Order": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "tableId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "waiterId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cashierId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": "open",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "kitchenStatus",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "new",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "kitchenStartedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "kitchenReadyAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "invoiceNo",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "shiftId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "subtotal",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "serviceChargePercent",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "serviceChargeAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "discount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "total",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paymentMethod",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paidAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "Order_cashierId_fkey",
+          "columns": "cashierId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Order_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Order_status_idx",
+          "columns": "status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Order_tableId_idx",
+          "columns": "tableId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Order_waiterId_idx",
+          "columns": "waiterId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "OrderItem": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "orderId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "productId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "quantity",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unitPrice",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unitCost",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "total",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "totalCost",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "OrderItem_orderId_idx",
+          "columns": "orderId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "OrderItem_productId_idx",
+          "columns": "productId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "PrintJob": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "orderId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "printerStationId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "pending",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "content",
+          "type": "longtext",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "printedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "autoPrintReady",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "PrintJob_autoPrintReady_status_idx",
+          "columns": "autoPrintReady,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PrintJob_orderId_fkey",
+          "columns": "orderId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PrintJob_printerStationId_status_idx",
+          "columns": "printerStationId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PrintJob_restaurantId_status_idx",
+          "columns": "restaurantId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "PrinterStation": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "sortOrder",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "autoPrint",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "printerIp",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "PrinterStation_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Product": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "categoryId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "price",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cost",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unit",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "dona",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "imageUrl",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isAvailable",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Product_categoryId_idx",
+          "columns": "categoryId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Product_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Purchase": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "supplierId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "invoiceNo",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "totalAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paidAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "paid",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Purchase_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Purchase_supplierId_idx",
+          "columns": "supplierId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "PurchaseItem": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "purchaseId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "ingredientId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "quantity",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unit",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unitPrice",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "total",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "PurchaseItem_ingredientId_idx",
+          "columns": "ingredientId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "PurchaseItem_purchaseId_idx",
+          "columns": "purchaseId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Recipe": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "productId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "ingredientId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "quantity",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unit",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cost",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Recipe_ingredientId_fkey",
+          "columns": "ingredientId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Recipe_productId_ingredientId_key",
+          "columns": "productId,ingredientId",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Recipe_restaurantId_productId_idx",
+          "columns": "restaurantId,productId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Refund": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "saleId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "amount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "items",
+          "type": "longtext",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restocked",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "staffId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Refund_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Refund_saleId_idx",
+          "columns": "saleId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Reservation": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "tableId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "customerName",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "partySize",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "2",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "reservationDate",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "reservationTime",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": "pending",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Reservation_restaurantId_reservationDate_idx",
+          "columns": "restaurantId,reservationDate",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Reservation_status_idx",
+          "columns": "status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Reservation_tableId_fkey",
+          "columns": "tableId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Restaurant": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "email",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "UNI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "passwordHash",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "logoUrl",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "currency",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "UZS",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "taxRate",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "serviceChargePercent",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "vatRate",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "telegramBotToken",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "telegramChatId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "trial",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "trialStart",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "trialEnd",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "activatedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "activationEnd",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "activationCode",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "blockedByAdmin",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "blockedReason",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "blockedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "adminNotes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "customDomain",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "customLogoUrl",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "customPrimaryColor",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "onboardingCompleted",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "onboardingStep",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "subscriptionEnd",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "subscriptionPlan",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "subscriptionStart",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "lastZReportAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Restaurant_email_key",
+          "columns": "email",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "RestaurantTable": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "roomId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "seats",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "4",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "free",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "RestaurantTable_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "RestaurantTable_roomId_idx",
+          "columns": "roomId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Room": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "color",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "emerald",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "sortOrder",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Room_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Sale": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "invoiceNo",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "tableId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "customerId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "staffId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "subtotal",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "discount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "taxAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "total",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paidAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paymentMethod",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "cash",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "completed",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "costOfGoods",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "profit",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "commissionAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "refundedAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "refundedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "splitPayments",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "tipAmount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cancelledAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cancelledByStaffId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cancelledReason",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Sale_customerId_idx",
+          "columns": "customerId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Sale_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Sale_staffId_fkey",
+          "columns": "staffId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Sale_tableId_idx",
+          "columns": "tableId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "SaleItem": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "saleId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "productId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "quantity",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unitPrice",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unitCost",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "total",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "totalCost",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "SaleItem_productId_idx",
+          "columns": "productId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "SaleItem_saleId_idx",
+          "columns": "saleId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Session": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "token",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "UNI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "expiresAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Session_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Session_token_key",
+          "columns": "token",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Shift": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "staffId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "open",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "openingCash",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "expectedCash",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "closingCash",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cashDiff",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "totalSales",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cashSales",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cardSales",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "transferSales",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "orderCount",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "openedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "closedAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Shift_restaurantId_status_idx",
+          "columns": "restaurantId,status",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Shift_staffId_idx",
+          "columns": "staffId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Staff": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "position",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "salary",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "active",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "pin",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "passwordHash",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Staff_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "StaffCommission": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "staffId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "saleId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "commission",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "amount",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isPercent",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "percent",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paid",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "paidAt",
+          "type": "datetime(3)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "StaffCommission_paid_idx",
+          "columns": "paid",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "StaffCommission_restaurantId_staffId_idx",
+          "columns": "restaurantId,staffId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "StaffCommission_saleId_idx",
+          "columns": "saleId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "StaffSession": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "staffId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "token",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "UNI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "expiresAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "StaffSession_staffId_idx",
+          "columns": "staffId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "StaffSession_token_key",
+          "columns": "token",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "SubscriptionPlan": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "priceMonthly",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "priceYearly",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "maxProducts",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "100",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "maxStaff",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "10",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "maxBranches",
+          "type": "int",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "features",
+          "type": "longtext",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO",
+          "key": "",
+          "default": "1",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Supplier": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Supplier_restaurantId_idx",
+          "columns": "restaurantId",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    },
+    "Waste": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "PRI",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "restaurantId",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "ingredientId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "productId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "MUL",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": "waste",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "quantity",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "unit",
+          "type": "varchar(191)",
+          "nullable": "NO",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "cost",
+          "type": "double",
+          "nullable": "NO",
+          "key": "",
+          "default": "0",
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "staffId",
+          "type": "varchar(191)",
+          "nullable": "YES",
+          "key": "",
+          "default": null,
+          "extra": "",
+          "comment": ""
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO",
+          "key": "",
+          "default": "CURRENT_TIMESTAMP(3)",
+          "extra": "",
+          "comment": ""
+        }
+      ],
+      "indexes": [
+        {
+          "name": "PRIMARY",
+          "columns": "id",
+          "non_unique": "0",
+          "type": "BTREE"
+        },
+        {
+          "name": "Waste_ingredientId_idx",
+          "columns": "ingredientId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Waste_productId_idx",
+          "columns": "productId",
+          "non_unique": "1",
+          "type": "BTREE"
+        },
+        {
+          "name": "Waste_restaurantId_createdAt_idx",
+          "columns": "restaurantId,createdAt",
+          "non_unique": "1",
+          "type": "BTREE"
+        }
+      ]
+    }
+  },
+  "foreign_keys": [
+    {
+      "table": "AbTest",
+      "column": "restaurantId",
+      "constraint": "AbTest_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "ApiToken",
+      "column": "restaurantId",
+      "constraint": "ApiToken_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Branch",
+      "column": "restaurantId",
+      "constraint": "Branch_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "BranchTransfer",
+      "column": "restaurantId",
+      "constraint": "BranchTransfer_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Budget",
+      "column": "restaurantId",
+      "constraint": "Budget_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Category",
+      "column": "printerStationId",
+      "constraint": "Category_printerStationId_fkey",
+      "ref_table": "PrinterStation",
+      "ref_column": "id"
+    },
+    {
+      "table": "Category",
+      "column": "restaurantId",
+      "constraint": "Category_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Coupon",
+      "column": "restaurantId",
+      "constraint": "Coupon_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Customer",
+      "column": "restaurantId",
+      "constraint": "Customer_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "CustomerDebt",
+      "column": "customerId",
+      "constraint": "CustomerDebt_customerId_fkey",
+      "ref_table": "Customer",
+      "ref_column": "id"
+    },
+    {
+      "table": "CustomerDebt",
+      "column": "restaurantId",
+      "constraint": "CustomerDebt_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Expense",
+      "column": "restaurantId",
+      "constraint": "Expense_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "FeatureFlag",
+      "column": "restaurantId",
+      "constraint": "FeatureFlag_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Ingredient",
+      "column": "restaurantId",
+      "constraint": "Ingredient_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Ingredient",
+      "column": "supplierId",
+      "constraint": "Ingredient_supplierId_fkey",
+      "ref_table": "Supplier",
+      "ref_column": "id"
+    },
+    {
+      "table": "InventoryCount",
+      "column": "restaurantId",
+      "constraint": "InventoryCount_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "InventoryItem",
+      "column": "restaurantId",
+      "constraint": "InventoryItem_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "InventoryItem",
+      "column": "ingredientId",
+      "constraint": "InventoryItem_ingredientId_fkey",
+      "ref_table": "Ingredient",
+      "ref_column": "id"
+    },
+    {
+      "table": "LoyaltyTier",
+      "column": "restaurantId",
+      "constraint": "LoyaltyTier_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "MarketingCampaign",
+      "column": "restaurantId",
+      "constraint": "MarketingCampaign_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Notification",
+      "column": "restaurantId",
+      "constraint": "Notification_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Order",
+      "column": "cashierId",
+      "constraint": "Order_cashierId_fkey",
+      "ref_table": "Staff",
+      "ref_column": "id"
+    },
+    {
+      "table": "Order",
+      "column": "restaurantId",
+      "constraint": "Order_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Order",
+      "column": "waiterId",
+      "constraint": "Order_waiterId_fkey",
+      "ref_table": "Staff",
+      "ref_column": "id"
+    },
+    {
+      "table": "Order",
+      "column": "tableId",
+      "constraint": "Order_tableId_fkey",
+      "ref_table": "RestaurantTable",
+      "ref_column": "id"
+    },
+    {
+      "table": "OrderItem",
+      "column": "productId",
+      "constraint": "OrderItem_productId_fkey",
+      "ref_table": "Product",
+      "ref_column": "id"
+    },
+    {
+      "table": "OrderItem",
+      "column": "orderId",
+      "constraint": "OrderItem_orderId_fkey",
+      "ref_table": "Order",
+      "ref_column": "id"
+    },
+    {
+      "table": "PrintJob",
+      "column": "restaurantId",
+      "constraint": "PrintJob_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "PrintJob",
+      "column": "printerStationId",
+      "constraint": "PrintJob_printerStationId_fkey",
+      "ref_table": "PrinterStation",
+      "ref_column": "id"
+    },
+    {
+      "table": "PrintJob",
+      "column": "orderId",
+      "constraint": "PrintJob_orderId_fkey",
+      "ref_table": "Order",
+      "ref_column": "id"
+    },
+    {
+      "table": "PrinterStation",
+      "column": "restaurantId",
+      "constraint": "PrinterStation_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Product",
+      "column": "restaurantId",
+      "constraint": "Product_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Product",
+      "column": "categoryId",
+      "constraint": "Product_categoryId_fkey",
+      "ref_table": "Category",
+      "ref_column": "id"
+    },
+    {
+      "table": "Purchase",
+      "column": "restaurantId",
+      "constraint": "Purchase_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Purchase",
+      "column": "supplierId",
+      "constraint": "Purchase_supplierId_fkey",
+      "ref_table": "Supplier",
+      "ref_column": "id"
+    },
+    {
+      "table": "PurchaseItem",
+      "column": "purchaseId",
+      "constraint": "PurchaseItem_purchaseId_fkey",
+      "ref_table": "Purchase",
+      "ref_column": "id"
+    },
+    {
+      "table": "PurchaseItem",
+      "column": "ingredientId",
+      "constraint": "PurchaseItem_ingredientId_fkey",
+      "ref_table": "Ingredient",
+      "ref_column": "id"
+    },
+    {
+      "table": "Recipe",
+      "column": "restaurantId",
+      "constraint": "Recipe_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Recipe",
+      "column": "ingredientId",
+      "constraint": "Recipe_ingredientId_fkey",
+      "ref_table": "Ingredient",
+      "ref_column": "id"
+    },
+    {
+      "table": "Recipe",
+      "column": "productId",
+      "constraint": "Recipe_productId_fkey",
+      "ref_table": "Product",
+      "ref_column": "id"
+    },
+    {
+      "table": "Refund",
+      "column": "restaurantId",
+      "constraint": "Refund_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Reservation",
+      "column": "restaurantId",
+      "constraint": "Reservation_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Reservation",
+      "column": "tableId",
+      "constraint": "Reservation_tableId_fkey",
+      "ref_table": "RestaurantTable",
+      "ref_column": "id"
+    },
+    {
+      "table": "RestaurantTable",
+      "column": "restaurantId",
+      "constraint": "RestaurantTable_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "RestaurantTable",
+      "column": "roomId",
+      "constraint": "RestaurantTable_roomId_fkey",
+      "ref_table": "Room",
+      "ref_column": "id"
+    },
+    {
+      "table": "Room",
+      "column": "restaurantId",
+      "constraint": "Room_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Sale",
+      "column": "restaurantId",
+      "constraint": "Sale_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Sale",
+      "column": "staffId",
+      "constraint": "Sale_staffId_fkey",
+      "ref_table": "Staff",
+      "ref_column": "id"
+    },
+    {
+      "table": "Sale",
+      "column": "customerId",
+      "constraint": "Sale_customerId_fkey",
+      "ref_table": "Customer",
+      "ref_column": "id"
+    },
+    {
+      "table": "Sale",
+      "column": "tableId",
+      "constraint": "Sale_tableId_fkey",
+      "ref_table": "RestaurantTable",
+      "ref_column": "id"
+    },
+    {
+      "table": "SaleItem",
+      "column": "productId",
+      "constraint": "SaleItem_productId_fkey",
+      "ref_table": "Product",
+      "ref_column": "id"
+    },
+    {
+      "table": "SaleItem",
+      "column": "saleId",
+      "constraint": "SaleItem_saleId_fkey",
+      "ref_table": "Sale",
+      "ref_column": "id"
+    },
+    {
+      "table": "Session",
+      "column": "restaurantId",
+      "constraint": "Session_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Shift",
+      "column": "staffId",
+      "constraint": "Shift_staffId_fkey",
+      "ref_table": "Staff",
+      "ref_column": "id"
+    },
+    {
+      "table": "Shift",
+      "column": "restaurantId",
+      "constraint": "Shift_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Staff",
+      "column": "restaurantId",
+      "constraint": "Staff_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "StaffCommission",
+      "column": "restaurantId",
+      "constraint": "StaffCommission_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "StaffSession",
+      "column": "staffId",
+      "constraint": "StaffSession_staffId_fkey",
+      "ref_table": "Staff",
+      "ref_column": "id"
+    },
+    {
+      "table": "Supplier",
+      "column": "restaurantId",
+      "constraint": "Supplier_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    },
+    {
+      "table": "Waste",
+      "column": "restaurantId",
+      "constraint": "Waste_restaurantId_fkey",
+      "ref_table": "Restaurant",
+      "ref_column": "id"
+    }
+  ]
+}
