@@ -17,7 +17,7 @@
  */
 import { Router } from 'express';
 import { pool, RowDataPacket, ResultSetHeader, withTransaction } from '../db';
-import { authRequired, requirePerm, validateBody, auditReq } from '../middleware';
+import { authRequired, requirePerm, validateBody, validateQuery, auditReq } from '../middleware';
 import { z } from 'zod';
 import {
   createOrderSchema, addOrderItemSchema, cancelOrderItemSchema,
@@ -167,9 +167,9 @@ ordersRouter.post('/', requirePerm('order.create'), validateBody(createOrderSche
 // ============================================================
 // LIST ORDERS
 // ============================================================
-ordersRouter.get('/', requirePerm('order.read'), validateBody(listOrdersQuerySchema), async (req, res, next) => {
+ordersRouter.get('/', requirePerm('order.read'), validateQuery(listOrdersQuerySchema), async (req, res, next) => {
   try {
-    const q = req.body; // validated via body schema but actually query
+    const q = req.query as any;
     const where: string[] = ['o.restaurant_id = ?', 'o.deleted_at IS NULL'];
     const params: unknown[] = [req.ctx!.restaurantId];
     if (q.status) { where.push('o.status = ?'); params.push(q.status); }

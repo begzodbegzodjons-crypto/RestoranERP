@@ -3,6 +3,8 @@
  * Loads .env, ensures DB connection works.
  */
 import dotenv from 'dotenv';
+// Set test env BEFORE app is imported
+process.env.NODE_ENV = 'test';
 dotenv.config();
 
 // Increase timeout for DB operations

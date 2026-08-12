@@ -9,7 +9,7 @@
 import { Router } from 'express';
 import { pool, RowDataPacket } from '../db';
 import { verifyPassword, hashToken, signAccessToken, signRefreshToken, verifyToken, AccessPayload, fingerprint } from '../auth/jwt';
-import { validateBody, authRequired } from '../middleware';
+import { validateBody, authRequired, optionalAuth } from '../middleware';
 import { loginSchema, refreshSchema, logoutSchema } from '../validation/auth';
 import { AuthError } from '../errors';
 import { ok } from '../utils/response';
@@ -20,9 +20,10 @@ import rateLimit from 'express-rate-limit';
 export const authRouter = Router();
 
 // Strict rate limit for login — 10 attempts / minute per IP
+// In test environment, allow more attempts so tests don't interfere
 const loginLimiter = rateLimit({
   windowMs: 60_000,
-  max: 10,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { ok: false, code: 'RATE_LIMIT', message: 'Too many login attempts, try again in a minute' },
@@ -88,8 +89,8 @@ authRouter.post('/login', loginLimiter, validateBody(loginSchema), async (req, r
         hashToken(access),
         refreshHash,
         req.ip ?? null,
-        req.headers['user-agent'] ?? null,
-        fp,
+        (req.headers['user-agent'] as string) ?? null,
+        fp || null,
       ]
     );
 
@@ -151,7 +152,10 @@ authRouter.post('/refresh', validateBody(refreshSchema), async (req, res, next) 
     await pool.execute(
       `INSERT INTO sessions (id, user_id, token_hash, refresh_hash, ip, user_agent, fingerprint, expires_at, refresh_expires_at, created_at)
        VALUES (UUID(), ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(3), INTERVAL 15 MINUTE), DATE_ADD(NOW(3), INTERVAL 7 DAY), NOW(3))`,
-      [sess.user_id, hashToken(access), hashToken(newRefresh), req.ip, req.headers['user-agent'], fp]
+      [sess.user_id, hashToken(access), hashToken(newRefresh),
+       req.ip ?? null,
+       (req.headers['user-agent'] as string) ?? null,
+       fp || null]
     );
 
     return ok(res, { accessToken: access, refreshToken: newRefresh });
@@ -160,18 +164,19 @@ authRouter.post('/refresh', validateBody(refreshSchema), async (req, res, next) 
   }
 });
 
-authRouter.post('/logout', validateBody(logoutSchema), async (req, res, next) => {
+authRouter.post('/logout', optionalAuth, validateBody(logoutSchema), async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
     if (refreshToken) {
       const refreshHash = hashToken(refreshToken);
       await pool.execute(`UPDATE sessions SET revoked_at = NOW(3) WHERE refresh_hash = ?`, [refreshHash]);
     }
+    // If we have an authenticated user (from access token), log the audit entry
     if (req.ctx) {
       await writeAudit({
         restaurantId: req.ctx.restaurantId, userId: req.ctx.userId,
         action: 'logout', entity: 'user', entityId: req.ctx.userId,
-        ip: req.ip, userAgent: req.headers['user-agent'],
+        ip: req.ip, userAgent: req.headers['user-agent'] as string,
       });
     }
     return ok(res, { loggedOut: true });

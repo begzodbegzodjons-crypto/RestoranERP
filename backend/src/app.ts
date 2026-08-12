@@ -46,9 +46,10 @@ export function createApp(): express.Express {
   }
 
   // Global rate limit (per IP)
+  // In test environment, allow more requests so tests don't interfere
   app.use(rateLimit({
     windowMs: config.rateLimit.windowMs,
-    max: config.rateLimit.max,
+    max: config.nodeEnv === 'test' ? 10000 : config.rateLimit.max,
     standardHeaders: true,
     legacyHeaders: false,
   }));

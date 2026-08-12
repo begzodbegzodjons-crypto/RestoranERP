@@ -12,6 +12,7 @@ export const CASHIER_USER = 'user_cashier_v2';
 export const WAITER_USER = 'user_waiter_v2';
 export const KITCHEN_USER = 'user_kitchen_v2';
 export const KEBAB_USER = 'user_kebab_v2';
+export const WAREHOUSE_USER = 'user_warehouse_v2';
 
 export const app = createApp();
 
