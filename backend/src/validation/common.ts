@@ -3,7 +3,7 @@
  */
 import { z } from 'zod';
 
-export const cuidSchema = z.string().min(10).max(28);
+export const cuidSchema = z.string().min(5).max(28);
 export const uuidSchema = z.string().uuid();
 export const phoneSchema = z.string().regex(/^\+998\d{9}$/).or(z.literal(''));
 export const currencySchema = z.number().min(0).max(9999999999.99);
