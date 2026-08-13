@@ -41,7 +41,7 @@ export function CashierApp() {
     setSelectedTable(table);
     if (table.current_order_id) {
       try {
-        const order = await apiData<Order>(`/api/orders/${table.current_order_id}`);
+        const ordersData = await apiData<{items: Order[]}>(`/api/orders`); const order = (ordersData?.items ?? []).find(o => o.id === table.current_order_id);
         setSelectedOrder(order);
         setScreen('order');
       } catch (err) {
@@ -86,7 +86,7 @@ export function CashierApp() {
         onCheckout={() => setScreen('payment')}
         onRefreshOrder={async () => {
           try {
-            const updated = await apiData<Order>(`/api/orders/${selectedOrder.id}`);
+            const ordersData = await apiData<{items: Order[]}>(`/api/orders`); const updated = (ordersData?.items ?? []).find(o => o.id === selectedOrder.id);
             setSelectedOrder(updated);
           } catch {}
         }}

@@ -28,7 +28,7 @@ export function OrderStatusScreen({ orderId, onBack }: OrderStatusScreenProps) {
 
   const fetchOrder = useCallback(async () => {
     try {
-      const res = await apiData<Order>(`/api/orders/${orderId}`);
+      const ordersData = await apiData<{items: Order[]}>(`/api/orders`); const res = (ordersData?.items ?? []).find(o => o.id === orderId);
       setOrder(res);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : 'Buyurtma topilmadi');
