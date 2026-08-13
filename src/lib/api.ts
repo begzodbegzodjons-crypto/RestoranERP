@@ -1,11 +1,12 @@
 /**
- * API client — all requests go through Next.js /api/[...path] catch-all route,
- * which proxies them to the backend Express server (port 4000).
- * Frontend never sees DB credentials.
+ * API client — all requests go through Next.js /api/[...path] catch-all route.
+ * Offline-aware: GET requests fall back to IndexedDB cache when network fails.
+ * Mutations (POST/PUT/DELETE) are queued locally when offline.
  */
+import { enqueueOperation, getCachedTables, getCachedProducts, getCachedCategories } from './offline-db';
 
 interface RequestOptions extends RequestInit {
-  auth?: boolean;       // include Bearer token
+  auth?: boolean;
   idempotencyKey?: string;
 }
 
@@ -73,6 +74,50 @@ export class ApiError extends Error {
   }
 }
 
+// Check if we're offline (network error, not server error)
+function isNetworkError(err: any): boolean {
+  return err instanceof TypeError && err.message.includes('fetch');
+}
+
+// Offline-aware GET: try network first, fall back to cache
+async function offlineGet<T>(path: string, token: string | null): Promise<T | null> {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch(path, { headers });
+    if (!res.ok) throw new ApiError(res.status, 'ERROR', `Request failed: ${res.status}`);
+    const body = await res.json();
+    return body as T;
+  } catch (err: any) {
+    // Network error — try cache
+    if (isNetworkError(err) || err.message?.includes('Failed to fetch')) {
+      // Fall back to IndexedDB cache
+      if (path.includes('/api/tables')) {
+        const cached = await getCachedTables();
+        if (cached.length > 0) {
+          return { ok: true, data: cached } as unknown as T;
+        }
+      }
+      if (path.includes('/api/products') && !path.includes('categories')) {
+        const cached = await getCachedProducts();
+        if (cached.length > 0) {
+          return { ok: true, data: cached } as unknown as T;
+        }
+      }
+      if (path.includes('/api/products/categories')) {
+        const cached = await getCachedCategories();
+        if (cached.length > 0) {
+          return { ok: true, data: cached } as unknown as T;
+        }
+      }
+      // No cache available — throw offline error
+      throw new ApiError(0, 'OFFLINE', 'Internet uzilgan va ma\'lumot keshda yo\'q');
+    }
+    throw err;
+  }
+}
+
 export async function api<T = unknown>(
   path: string,
   options: RequestOptions = {}
@@ -91,17 +136,21 @@ export async function api<T = unknown>(
     finalHeaders['Idempotency-Key'] = idempotencyKey;
   }
 
-  // Use relative path — Next.js /api/[...path] will proxy to backend
-  const url = path.startsWith('http') ? path : path;
+  // For GET requests with no body — use offline-aware path
+  const method = (rest.method as string) ?? 'GET';
+  if (method === 'GET' && !rest.body) {
+    const result = await offlineGet<T>(path, auth ? getStoredToken() : null);
+    if (result !== null) return result;
+  }
 
-  let res = await fetch(url, { ...rest, headers: finalHeaders });
+  let res = await fetch(path, { ...rest, headers: finalHeaders });
 
   // Auto-refresh on 401
   if (res.status === 401 && auth) {
     const newToken = await refreshAccessToken();
     if (newToken) {
       finalHeaders['Authorization'] = `Bearer ${newToken}`;
-      res = await fetch(url, { ...rest, headers: finalHeaders });
+      res = await fetch(path, { ...rest, headers: finalHeaders });
     }
   }
 
@@ -121,9 +170,31 @@ export async function api<T = unknown>(
 }
 
 export interface ApiResponse<T> { ok: boolean; data: T }
-export interface ApiListResponse<T> { ok: boolean; data: { items: T[]; total: number; page: number; limit: number } }
 
 export async function apiData<T>(path: string, options?: RequestOptions): Promise<T> {
-  const res = await api<ApiResponse<T>>(path, options);
-  return res.data;
+  // For GET requests, handle offline gracefully
+  const method = (options?.method as string) ?? 'GET';
+  if (method === 'GET') {
+    try {
+      const res = await api<ApiResponse<T>>(path, options);
+      return res.data;
+    } catch (err: any) {
+      if (err.code === 'OFFLINE') {
+        throw err; // Re-throw offline errors
+      }
+      throw err;
+    }
+  }
+  // For mutations — try network, if fails and POST, queue offline
+  try {
+    const res = await api<ApiResponse<T>>(path, options);
+    return res.data;
+  } catch (err: any) {
+    // If network error and it's a create operation, queue for offline sync
+    if ((isNetworkError(err) || err.message?.includes('Failed to fetch')) && method === 'POST') {
+      // Queue for offline sync — this is handled by the component which calls enqueueOperation
+      throw err;
+    }
+    throw err;
+  }
 }

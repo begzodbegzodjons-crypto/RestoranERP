@@ -10,6 +10,7 @@ import { CashierApp } from '@/components/cashier/cashier-app';
 import { PrintersAdmin } from '@/components/admin/printers-admin';
 import { WarehouseApp } from '@/components/warehouse/warehouse-app';
 import { ReportsApp } from '@/components/reports/reports-app';
+import { OfflineIndicator } from '@/components/offline-indicator';
 
 type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'printers' | 'warehouse' | 'reports';
 
@@ -86,6 +87,7 @@ export default function Home() {
           </div>
         )}
       </main>
+      <OfflineIndicator />
     </div>
   );
 }

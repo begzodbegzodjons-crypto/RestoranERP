@@ -97,6 +97,35 @@ export function CartScreen({ tableId, orderId, onOrderCreated, onBack }: CartScr
       }
     } catch (err) {
       const apiErr = err as ApiError;
+      // If offline (network error), queue the order for offline sync
+      if (apiErr.code === 'OFFLINE' || apiErr.message?.includes('Failed to fetch')) {
+        try {
+          const { enqueueOperation } = await import('@/lib/offline-db');
+          const opUuid = await enqueueOperation('order.create', 'order', {
+            tableId,
+            orderType: 'dine_in',
+            items: cart.map(i => ({
+              productId: i.productId,
+              name: i.name,
+              unitPrice: i.unitPrice,
+              costPrice: i.costPrice,
+              quantity: i.quantity,
+              notes: i.notes ?? null,
+              station: i.station,
+              variantId: i.variantId ?? null,
+            })),
+            idempotencyKey: uuidv4(),
+          });
+          toast.success('Buyurtma offline saqlandi!', {
+            description: `Internet qaytganda avtomatik yuboriladi. ID: ${opUuid.substring(0, 8)}`,
+          });
+          clearCart();
+          onBack();
+          return;
+        } catch (queueErr) {
+          toast.error('Offline navbatga saqlash amalga oshmadi');
+        }
+      }
       toast.error(
         apiErr.code === 'CONFLICT'
           ? 'Stol band qilingan yoki buyurtma o\'zgartirilgan. Yangilab qayta urining.'

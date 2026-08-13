@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
+import { OfflineProvider } from "@/lib/offline-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,8 +38,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <CartProvider>
-            {children}
-            <Sonner position="top-center" richColors />
+            <OfflineProvider>
+              {children}
+              <Sonner position="top-center" richColors />
+            </OfflineProvider>
           </CartProvider>
         </AuthProvider>
       </body>

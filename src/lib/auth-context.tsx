@@ -64,11 +64,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ phone, pin }),
     });
     setAuth(res.data.accessToken, res.data.refreshToken, res.data.user);
+    // Store in IndexedDB for offline access
+    try {
+      const { storeOfflineSession } = await import('./offline-db');
+      await storeOfflineSession(res.data.user, res.data.accessToken, res.data.refreshToken);
+    } catch {}
     // Fetch full user profile with permissions
     const me = await api<{ ok: boolean; data: User }>('/api/auth/me', {
       headers: { Authorization: `Bearer ${res.data.accessToken}` },
     });
     setAuth(res.data.accessToken, res.data.refreshToken, me.data);
+    try {
+      const { storeOfflineSession } = await import('./offline-db');
+      await storeOfflineSession(me.data, res.data.accessToken, res.data.refreshToken);
+    } catch {}
     setUser(me.data);
   }, []);
 
