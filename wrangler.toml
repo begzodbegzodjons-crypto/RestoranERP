@@ -2,5 +2,6 @@ name = "restoran-erp"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-[vars]
-NEXT_PUBLIC_API_URL = "https://restoran-erp.begzodbegzodjons.workers.dev"
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
