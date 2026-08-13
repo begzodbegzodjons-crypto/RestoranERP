@@ -1,28 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { LoginScreen } from '@/components/waiter/login-screen';
-import { TablesScreen } from '@/components/waiter/tables-screen';
-import { OrderScreen } from '@/components/waiter/order-screen';
-import { MenuBrowser } from '@/components/waiter/menu-browser';
-import { CartScreen } from '@/components/waiter/cart-screen';
-import { OrderStatusScreen } from '@/components/waiter/order-status-screen';
 import { Header } from '@/components/waiter/header';
-import type { Table, Order } from '@/lib/types';
+import { WaiterApp } from '@/components/waiter/waiter-app';
+import { StationScreen } from '@/components/station/station-screen';
 
-type Screen =
-  | { name: 'tables' }
-  | { name: 'order'; tableId: string; orderId?: string }
-  | { name: 'menu'; tableId: string; orderId?: string }
-  | { name: 'cart'; tableId: string; orderId?: string }
-  | { name: 'status'; orderId: string };
+type View = 'waiter' | 'kitchen' | 'kebab';
 
 export default function Home() {
   const { user, loading } = useAuth();
-  const [screen, setScreen] = useState<Screen>({ name: 'tables' });
+  const [view, setView] = useState<View>('waiter');
 
-  // If not logged in → show login
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -30,69 +20,99 @@ export default function Home() {
       </div>
     );
   }
+
   if (!user) {
     return <LoginScreen />;
   }
 
-  // Verify waiter has waiter permission (or admin who can also act as waiter)
-  const canUseWaiter = user.permissions.includes('*') ||
+  // Determine which views the user can access based on role
+  const canWaiter  = user.permissions.includes('*') ||
     user.permissions.includes('order.create') ||
     user.permissions.includes('station.kitchen.view') ||
     user.permissions.includes('station.kebab.view');
-  if (!canUseWaiter) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Ruxsat yo'q</h1>
-          <p className="text-slate-500 text-sm">Sizda ofitsiant huquqlari yo'q.</p>
-          <button
-            onClick={() => { localStorage.clear(); window.location.href = '/'; }}
-            className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm"
-          >
-            Chiqish
-          </button>
-        </div>
-      </div>
-    );
+  const canKitchen = user.permissions.includes('*') ||
+    user.permissions.includes('station.kitchen.view');
+  const canKebab   = user.permissions.includes('*') ||
+    user.permissions.includes('station.kebab.view');
+
+  // If current view not allowed, switch to allowed view
+  let activeView = view;
+  if (activeView === 'kitchen' && !canKitchen) activeView = canWaiter ? 'waiter' : canKebab ? 'kebab' : 'waiter';
+  if (activeView === 'kebab' && !canKebab) activeView = canWaiter ? 'waiter' : canKitchen ? 'kitchen' : 'waiter';
+  if (activeView === 'waiter' && !canWaiter) activeView = canKitchen ? 'kitchen' : canKebab ? 'kebab' : 'kitchen';
+
+  // Auto-route based on role (initial)
+  if (user.roleName === 'kitchen' && view === 'waiter' && !canWaiter) {
+    setView('kitchen');
+    return null;
+  }
+  if (user.roleName === 'kebab' && view === 'waiter' && !canWaiter) {
+    setView('kebab');
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header onHome={() => setScreen({ name: 'tables' })} />
+      <Header
+        onHome={() => setView('waiter')}
+        viewSwitcher={
+          (canWaiter || canKitchen || canKebab) ? (
+            <ViewSwitcher
+              active={activeView}
+              onChange={setView}
+              canWaiter={canWaiter}
+              canKitchen={canKitchen}
+              canKebab={canKebab}
+            />
+          ) : null
+        }
+      />
       <main className="flex-1">
-        {screen.name === 'tables' && (
-          <TablesScreen onSelectTable={(tableId, orderId) => setScreen({ name: 'order', tableId, orderId })} />
-        )}
-        {screen.name === 'order' && (
-          <OrderScreen
-            tableId={screen.tableId}
-            orderId={screen.orderId}
-            onAddItems={() => setScreen({ name: 'menu', tableId: screen.tableId, orderId: screen.orderId })}
-            onViewStatus={(orderId) => setScreen({ name: 'status', orderId })}
-            onBack={() => setScreen({ name: 'tables' })}
-          />
-        )}
-        {screen.name === 'menu' && (
-          <MenuBrowser
-            onAddToCart={() => setScreen({ name: 'cart', tableId: screen.tableId, orderId: screen.orderId })}
-            onBack={() => setScreen({ name: 'order', tableId: screen.tableId, orderId: screen.orderId })}
-          />
-        )}
-        {screen.name === 'cart' && (
-          <CartScreen
-            tableId={screen.tableId}
-            orderId={screen.orderId}
-            onOrderCreated={(orderId) => setScreen({ name: 'order', tableId: screen.tableId, orderId })}
-            onBack={() => setScreen({ name: 'menu', tableId: screen.tableId, orderId: screen.orderId })}
-          />
-        )}
-        {screen.name === 'status' && (
-          <OrderStatusScreen
-            orderId={screen.orderId}
-            onBack={() => setScreen({ name: 'tables' })}
-          />
+        {activeView === 'waiter' && canWaiter && <WaiterApp />}
+        {activeView === 'kitchen' && canKitchen && <StationScreen station="kitchen" title="Oshxona ekrani" accentColor="orange" />}
+        {activeView === 'kebab' && canKebab && <StationScreen station="kebab" title="Kabob ekrani" accentColor="red" />}
+        {!canWaiter && !canKitchen && !canKebab && (
+          <div className="text-center py-12 text-slate-500">
+            Sizda hech qanday tizimga ruxsat yo&apos;q. Administratorga murojaat qiling.
+          </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function ViewSwitcher({
+  active, onChange, canWaiter, canKitchen, canKebab,
+}: {
+  active: View;
+  onChange: (v: View) => void;
+  canWaiter: boolean;
+  canKitchen: boolean;
+  canKebab: boolean;
+}) {
+  const buttons: Array<{ v: View; label: string; emoji: string; show: boolean }> = [
+    { v: 'waiter',  label: 'Ofitsiant', emoji: '🍽️', show: canWaiter },
+    { v: 'kitchen', label: 'Oshxona',   emoji: '👨‍🍳', show: canKitchen },
+    { v: 'kebab',   label: 'Kabob',     emoji: '🍢',  show: canKebab },
+  ];
+  const visible = buttons.filter(b => b.show);
+  if (visible.length <= 1) return null;
+  return (
+    <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
+      {visible.map(b => (
+        <button
+          key={b.v}
+          onClick={() => onChange(b.v)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            active === b.v
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span className="mr-1">{b.emoji}</span>
+          {b.label}
+        </button>
+      ))}
     </div>
   );
 }

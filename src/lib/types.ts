@@ -132,12 +132,17 @@ export interface StationQueueItem {
   line_total: string | number;
   notes: string | null;
   station: 'kitchen' | 'kebab' | 'bar';
-  status: 'pending' | 'cooking';
+  status: 'pending' | 'cooking' | 'ready' | 'served' | 'cancelled';
   chef_id: string | null;
   chef_name: string | null;
   started_at: string | null;
   ready_at: string | null;
+  served_at: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
   opened_at: string;
+  waiter_id: string | null;
+  waiter_name: string | null;
   age_seconds: number;
   urgency: 'ok' | 'warning' | 'overdue';
 }
