@@ -83,6 +83,7 @@ export default function Home() {
         {view === 'kitchen' && canKitchen && <StationScreen station="kitchen" title="Oshxona ekrani" accentColor="orange" />}
         {view === 'kebab' && canKebab && <StationScreen station="kebab" title="Kabob ekrani" accentColor="red" />}
         {view === 'cashier' && canCashier && <CashierApp />}
+        {view === 'admin' && canAdmin && <AdminPanel />}
         {view === 'printers' && canAdmin && <PrintersAdmin />}
         {view === 'warehouse' && canWarehouse && <WarehouseApp />}
         {view === 'reports' && canReports && <ReportsApp />}
