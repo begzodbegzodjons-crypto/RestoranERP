@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { LoginScreen } from '@/components/waiter/login-screen';
 import { Header } from '@/components/waiter/header';
 import { WaiterApp } from '@/components/waiter/waiter-app';
+import { AdminPanel } from "@/components/admin/admin-panel";
 import { StationScreen } from '@/components/station/station-screen';
 import { CashierApp } from '@/components/cashier/cashier-app';
 import { PrintersAdmin } from '@/components/admin/printers-admin';
@@ -13,7 +14,7 @@ import { ReportsApp } from '@/components/reports/reports-app';
 import { OfflineIndicator } from '@/components/offline-indicator';
 import { BackupSecurityApp } from '@/components/admin/backup-security';
 
-type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'printers' | 'warehouse' | 'reports' | 'backup';
+type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'admin' | 'printers' | 'warehouse' | 'reports' | 'backup';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -116,6 +117,7 @@ function ViewSwitcher({
     { v: 'kitchen', label: 'Oshxona',   emoji: '👨‍🍳', show: canKitchen },
     { v: 'kebab',   label: 'Kabob',     emoji: '🍢',  show: canKebab },
     { v: 'cashier', label: 'Kassir',    emoji: '💳',  show: canCashier },
+    { v: 'admin',   label: 'Boshqaruv', emoji: '⚙️',  show: canAdmin },
     { v: 'printers',label: 'Printer',   emoji: '🖨️',  show: canAdmin },
     { v: 'warehouse',label: 'Ombor',    emoji: '📦',  show: canWarehouse },
     { v: 'reports', label: 'Hisobot',   emoji: '📊',  show: canReports },

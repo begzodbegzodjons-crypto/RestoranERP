@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await api<{ ok: boolean; data: LoginResponse }>('/api/auth/login', {
       method: 'POST',
       auth: false,
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ phone, password }),
     });
     setAuth(res.data.accessToken, res.data.refreshToken, res.data.user);
     // Store in IndexedDB for offline access
