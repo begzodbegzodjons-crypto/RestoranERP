@@ -11,8 +11,9 @@ import { PrintersAdmin } from '@/components/admin/printers-admin';
 import { WarehouseApp } from '@/components/warehouse/warehouse-app';
 import { ReportsApp } from '@/components/reports/reports-app';
 import { OfflineIndicator } from '@/components/offline-indicator';
+import { BackupSecurityApp } from '@/components/admin/backup-security';
 
-type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'printers' | 'warehouse' | 'reports';
+type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'printers' | 'warehouse' | 'reports' | 'backup';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -47,6 +48,8 @@ export default function Home() {
     user.permissions.includes('inventory.read');
   const canReports = user.permissions.includes('*') ||
     user.permissions.includes('report.view');
+  const canBackup = user.permissions.includes('*') ||
+    user.permissions.includes('backup.manage');
 
   // Auto-route based on role
   if (user.roleName === 'kitchen' && view === 'waiter' && !canWaiter) { setView('kitchen'); return null; }
@@ -58,7 +61,7 @@ export default function Home() {
       <Header
         onHome={() => setView('waiter')}
         viewSwitcher={
-          (canWaiter || canKitchen || canKebab || canCashier || canAdmin || canWarehouse || canReports) ? (
+          (canWaiter || canKitchen || canKebab || canCashier || canAdmin || canWarehouse || canReports || canBackup) ? (
             <ViewSwitcher
               active={view}
               onChange={setView}
@@ -69,6 +72,7 @@ export default function Home() {
               canAdmin={canAdmin}
               canWarehouse={canWarehouse}
               canReports={canReports}
+              canBackup={canBackup}
             />
           ) : null
         }
@@ -81,7 +85,8 @@ export default function Home() {
         {view === 'printers' && canAdmin && <PrintersAdmin />}
         {view === 'warehouse' && canWarehouse && <WarehouseApp />}
         {view === 'reports' && canReports && <ReportsApp />}
-        {!canWaiter && !canKitchen && !canKebab && !canCashier && !canAdmin && !canWarehouse && !canReports && (
+        {view === 'backup' && canBackup && <BackupSecurityApp />}
+        {!canWaiter && !canKitchen && !canKebab && !canCashier && !canAdmin && !canWarehouse && !canReports && !canBackup && (
           <div className="text-center py-12 text-slate-500">
             Sizda hech qanday tizimga ruxsat yo&apos;q. Administratorga murojaat qiling.
           </div>
@@ -93,7 +98,7 @@ export default function Home() {
 }
 
 function ViewSwitcher({
-  active, onChange, canWaiter, canKitchen, canKebab, canCashier, canAdmin, canWarehouse, canReports,
+  active, onChange, canWaiter, canKitchen, canKebab, canCashier, canAdmin, canWarehouse, canReports, canBackup,
 }: {
   active: View;
   onChange: (v: View) => void;
@@ -104,6 +109,7 @@ function ViewSwitcher({
   canAdmin: boolean;
   canWarehouse: boolean;
   canReports: boolean;
+  canBackup: boolean;
 }) {
   const buttons: Array<{ v: View; label: string; emoji: string; show: boolean }> = [
     { v: 'waiter',  label: 'Ofitsiant', emoji: '🍽️', show: canWaiter },
@@ -113,6 +119,7 @@ function ViewSwitcher({
     { v: 'printers',label: 'Printer',   emoji: '🖨️',  show: canAdmin },
     { v: 'warehouse',label: 'Ombor',    emoji: '📦',  show: canWarehouse },
     { v: 'reports', label: 'Hisobot',   emoji: '📊',  show: canReports },
+    { v: 'backup',  label: 'Backup',    emoji: '🛡️',  show: canBackup },
   ];
   const visible = buttons.filter(b => b.show);
   if (visible.length <= 1) return null;
