@@ -57,11 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; };
   }, []);
 
-  const login = useCallback(async (phone: string, pin: string) => {
+  const login = useCallback(async (phone: string, password: string) => {
     const res = await api<{ ok: boolean; data: LoginResponse }>('/api/auth/login', {
       method: 'POST',
       auth: false,
-      body: JSON.stringify({ phone, pin }),
+      body: JSON.stringify({ password }),
     });
     setAuth(res.data.accessToken, res.data.refreshToken, res.data.user);
     // Store in IndexedDB for offline access
@@ -69,16 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { storeOfflineSession } = await import('./offline-db');
       await storeOfflineSession(res.data.user, res.data.accessToken, res.data.refreshToken);
     } catch {}
-    // Fetch full user profile with permissions
-    const me = await api<{ ok: boolean; data: User }>('/api/auth/me', {
-      headers: { Authorization: `Bearer ${res.data.accessToken}` },
-    });
-    setAuth(res.data.accessToken, res.data.refreshToken, me.data);
-    try {
-      const { storeOfflineSession } = await import('./offline-db');
-      await storeOfflineSession(me.data, res.data.accessToken, res.data.refreshToken);
-    } catch {}
-    setUser(me.data);
+    setUser(res.data.user);
   }, []);
 
   const logout = useCallback(async () => {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query, execute, entityId } from '@/lib/serverless-db';
+import { query, execute } from '@/lib/serverless-db';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -8,34 +8,41 @@ const JWT_ISSUER = 'restoran-pos-v2';
 
 export async function POST(req: NextRequest) {
   try {
-    const { phone, pin } = await req.json();
-    if (!phone || !pin) {
-      return NextResponse.json({ ok: false, code: 'VALIDATION_ERROR', message: 'Phone and PIN required' }, { status: 400 });
+    const { password } = await req.json();
+    if (!password) {
+      return NextResponse.json({ ok: false, code: 'VALIDATION_ERROR', message: 'Parol kiriting' }, { status: 400 });
     }
 
-    // Find user
-    const { rows } = await query(
-      `SELECT u.id, u.restaurant_id, u.role_id, u.pin_hash, u.is_active, u.failed_attempts, u.locked_until, r.name AS role_name
-       FROM users u LEFT JOIN roles r ON r.id = u.role_id
-       WHERE u.phone = ? AND u.is_active = 1 AND u.deleted_at IS NULL LIMIT 1`,
-      [phone]
+    // Get all active users with their roles
+    const { rows: users } = await query(
+      `SELECT u.id, u.restaurant_id, u.role_id, u.pin_hash, u.password_hash,
+              u.name, u.phone, u.is_active, u.failed_attempts, u.locked_until,
+              r.name AS role_name, r.display_name AS role_display_name
+       FROM users u
+       LEFT JOIN roles r ON r.id = u.role_id
+       WHERE u.is_active = 1 AND u.deleted_at IS NULL
+       ORDER BY r.name ASC`,
+      []
     );
-    if (rows.length === 0) {
-      return NextResponse.json({ ok: false, code: 'UNAUTHORIZED', message: 'Invalid credentials' }, { status: 401 });
-    }
-    const user = rows[0];
-    
-    if (user.locked_until && new Date(user.locked_until) > new Date()) {
-      return NextResponse.json({ ok: false, code: 'ACCOUNT_LOCKED', message: 'Account locked' }, { status: 401 });
+
+    // Try to find a user whose pin_hash matches the password
+    let matchedUser = null;
+    for (const user of users) {
+      if (!user.locked_until || new Date(user.locked_until) <= new Date()) {
+        try {
+          if (user.pin_hash && await bcrypt.compare(password, user.pin_hash)) {
+            matchedUser = user;
+            break;
+          }
+        } catch {}
+      }
     }
 
-    const valid = await bcrypt.compare(pin, user.pin_hash);
-    if (!valid) {
-      const newFails = (user.failed_attempts ?? 0) + 1;
-      const lockUntil = newFails >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
-      await execute(`UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?`, [newFails, lockUntil, user.id]);
-      return NextResponse.json({ ok: false, code: 'UNAUTHORIZED', message: 'Invalid credentials' }, { status: 401 });
+    if (!matchedUser) {
+      return NextResponse.json({ ok: false, code: 'UNAUTHORIZED', message: 'Noto\'g\'ri parol' }, { status: 401 });
     }
+
+    const user = matchedUser;
 
     // Reset failed attempts
     await execute(`UPDATE users SET failed_attempts = 0, locked_until = NULL, last_login_at = NOW(3) WHERE id = ?`, [user.id]);
@@ -58,14 +65,6 @@ export async function POST(req: NextRequest) {
       JWT_SECRET, { expiresIn: '7d', issuer: JWT_ISSUER }
     );
 
-    // Get user details
-    const { rows: userDetails } = await query(
-      `SELECT u.id, u.name, u.phone, u.restaurant_id, u.role_id, r.name AS role_name, r.display_name AS role_display_name
-       FROM users u LEFT JOIN roles r ON r.id = u.role_id WHERE u.id = ?`,
-      [user.id]
-    );
-    const ud = userDetails[0];
-
     // Write audit log
     await execute(
       `INSERT INTO audit_logs (restaurant_id, user_id, action, entity, entity_id, ip, user_agent, created_at)
@@ -79,9 +78,9 @@ export async function POST(req: NextRequest) {
         accessToken,
         refreshToken,
         user: {
-          id: ud.id, name: ud.name, phone: ud.phone,
-          restaurantId: ud.restaurant_id, roleId: ud.role_id,
-          roleName: ud.role_name, roleDisplayName: ud.role_display_name,
+          id: user.id, name: user.name, phone: user.phone,
+          restaurantId: user.restaurant_id, roleId: user.role_id,
+          roleName: user.role_name, roleDisplayName: user.role_display_name,
           permissions,
         }
       }

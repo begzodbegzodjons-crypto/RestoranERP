@@ -159,7 +159,8 @@ export async function api<T = unknown>(
 
   if (!res.ok) {
     const errBody = body as { code?: string; message?: string; details?: unknown } | null;
-    if (res.status === 401 && auth) {
+    if (res.status === 401 && auth && !path.includes('/api/auth/')) {
+      // Only clear auth if it's not a login/refresh attempt
       clearAuth();
       if (typeof window !== 'undefined') window.location.href = '/';
     }
