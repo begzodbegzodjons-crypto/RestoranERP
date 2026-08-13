@@ -158,3 +158,53 @@ export interface CartItem {
   station: 'kitchen' | 'kebab' | 'bar' | 'other';
   variantId?: string | null;
 }
+
+export interface Shift {
+  id: string;
+  restaurant_id: string;
+  cashier_id: string;
+  cashier_name?: string;
+  opening_cash: string | number;
+  closing_cash: string | number | null;
+  expected_cash: string | number | null;
+  cash_difference: string | number | null;
+  total_sales: string | number;
+  cash_sales: string | number;
+  card_sales: string | number;
+  click_sales: string | number;
+  payme_sales: string | number;
+  refunds: string | number;
+  voids: number;
+  status: 'open' | 'closed';
+  opened_at: string;
+  closed_at: string | null;
+  note?: string | null;
+}
+
+export interface Payment {
+  id: string;
+  restaurant_id: string;
+  order_id: string;
+  shift_id: string | null;
+  cashier_id: string;
+  cashier_name?: string;
+  subtotal: string | number;
+  discount_amount: string | number;
+  tax_amount: string | number;
+  tip_amount: string | number;
+  total_paid: string | number;
+  change_amount: string | number;
+  payment_method: 'cash' | 'click' | 'payme' | 'card' | 'mixed';
+  cash_amount: string | number;
+  card_amount: string | number;
+  click_amount: string | number;
+  payme_amount: string | number;
+  reference: string | null;
+  paid_at: string;
+  created_at: string;
+  // Joined fields
+  order_number?: string;
+  table_id?: string | null;
+  table_name?: string | null;
+  items?: Array<{ method: string; amount: string | number }>;
+}

@@ -35,7 +35,7 @@ export const paymentsRouter = Router();
 paymentsRouter.use(authRequired);
 
 // ============================================================
-// PROCESS PAYMENT (atomic + idempotent)
+// PROCESS PAYMENT (atomic + idempotent + shift-required)
 // ============================================================
 paymentsRouter.post('/', requirePerm('payment.create'), validateBody(payOrderSchema), async (req, res, next) => {
   try {
@@ -43,6 +43,41 @@ paymentsRouter.post('/', requirePerm('payment.create'), validateBody(payOrderSch
     const restaurantId = req.ctx!.restaurantId;
     const cashierId = req.ctx!.userId;
     const paymentId = entityId('pay');
+
+    // Pre-check: cashier must have an open shift
+    let shiftId = input.shiftId;
+    if (!shiftId) {
+      const [openShifts] = await pool.query<RowDataPacket[]>(
+        `SELECT id FROM shifts
+          WHERE restaurant_id = ? AND cashier_id = ? AND status = 'open'
+          ORDER BY opened_at DESC LIMIT 1`,
+        [restaurantId, cashierId]
+      );
+      if (openShifts.length === 0) {
+        return res.status(409).json({
+          ok: false,
+          code: 'SHIFT_REQUIRED',
+          message: 'To\'lov qabul qilish uchun smena ochiq bo\'lishi kerak. Avval smena oching.',
+        });
+      }
+      shiftId = openShifts[0].id;
+    } else {
+      // Verify shift is open and belongs to this cashier
+      const [shiftRows] = await pool.query<RowDataPacket[]>(
+        `SELECT id, status, cashier_id FROM shifts WHERE id = ? AND restaurant_id = ? LIMIT 1`,
+        [shiftId, restaurantId]
+      );
+      if (shiftRows.length === 0) {
+        return res.status(404).json({ ok: false, code: 'NOT_FOUND', message: 'Smena topilmadi' });
+      }
+      if (shiftRows[0].status !== 'open') {
+        return res.status(409).json({
+          ok: false,
+          code: 'SHIFT_CLOSED',
+          message: 'Bu smena yopiq. To\'lov qabul qilish mumkin emas.',
+        });
+      }
+    }
 
     const result = await withTransaction(async (conn) => {
       // 1. Lock order row
@@ -85,7 +120,7 @@ paymentsRouter.post('/', requirePerm('payment.create'), validateBody(payOrderSch
               payment_method, cash_amount, card_amount, click_amount, payme_amount,
               reference, idempotency_key, paid_at, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(3), NOW(3))`,
-          [paymentId, restaurantId, order.id, input.shiftId ?? null, cashierId,
+          [paymentId, restaurantId, order.id, shiftId, cashierId,
            input.subtotal, input.discountAmount, input.taxAmount, input.tipAmount, input.totalPaid, input.changeAmount,
            input.paymentMethod, input.cashAmount, input.cardAmount, input.clickAmount, input.paymeAmount,
            input.reference ?? null, input.idempotencyKey]
