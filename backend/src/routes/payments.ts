@@ -238,14 +238,66 @@ paymentsRouter.post('/', requirePerm('payment.create'), validateBody(payOrderSch
          JSON.stringify({ paymentId, method: input.paymentMethod, total: input.totalPaid })]
       );
 
-      // 12. Queue receipt print job
-      await conn.execute(
-        `INSERT INTO print_jobs
-           (id, restaurant_id, printer_id, order_id, payment_id, type, payload, status, idempotency_key, queued_at)
-         VALUES (?, ?, ?, ?, ?, 'receipt', X'1B40', 'pending', ?, NOW(3))`,
-        [entityId('pj'), restaurantId, input.cashierPrinterId,
-         order.id, paymentId, `rcpt_${input.idempotencyKey}`.slice(0, 36)]
+      // 12. Queue receipt print job with real ESC/POS payload
+      // Fetch order details + items + restaurant info for receipt
+      const [orderDetailRows] = await conn.query<RowDataPacket[]>(
+        `SELECT o.order_number, o.table_id, o.waiter_id, t.name AS table_name,
+                w.name AS waiter_name, c.name AS cashier_name, r.name AS restaurant_name,
+                r.phone AS restaurant_phone, p.paper_width
+           FROM orders o
+           LEFT JOIN tables t ON t.id = o.table_id
+           LEFT JOIN users w ON w.id = o.waiter_id
+           LEFT JOIN users c ON c.id = ?
+           LEFT JOIN restaurants r ON r.id = ?
+           LEFT JOIN printers p ON p.id = ?
+          WHERE o.id = ?`,
+        [cashierId, restaurantId, input.cashierPrinterId, order.id]
       );
+      const [orderItems] = await conn.query<RowDataPacket[]>(
+        `SELECT name, quantity, unit_price, line_total FROM order_items WHERE order_id = ? AND status <> 'cancelled'`,
+        [order.id]
+      );
+
+      if (orderDetailRows.length > 0) {
+        const od = orderDetailRows[0];
+        const { encodeReceipt } = require('../printer/escpos');
+        const receiptData = {
+          restaurantName: od.restaurant_name ?? 'Restoran',
+          restaurantPhone: od.restaurant_phone ?? '',
+          orderNumber: od.order_number,
+          tableName: od.table_name,
+          waiterName: od.waiter_name,
+          cashierName: od.cashier_name,
+          paidAt: new Date().toISOString(),
+          items: orderItems.map((it: any) => ({
+            name: it.name,
+            quantity: Number(it.quantity),
+            unitPrice: Number(it.unit_price),
+            lineTotal: Number(it.line_total),
+          })),
+          subtotal: input.subtotal,
+          discountAmount: input.discountAmount,
+          taxAmount: input.taxAmount,
+          tipAmount: input.tipAmount,
+          totalPaid: input.totalPaid,
+          paymentMethod: input.paymentMethod,
+          cashAmount: input.cashAmount,
+          cardAmount: input.cardAmount,
+          clickAmount: input.clickAmount,
+          paymeAmount: input.paymeAmount,
+          changeAmount: input.changeAmount,
+        };
+        const paperWidth = (od.paper_width === 80 ? 80 : 58) as 58 | 80;
+        const receiptPayload = encodeReceipt(receiptData, paperWidth);
+
+        await conn.execute(
+          `INSERT INTO print_jobs
+             (id, restaurant_id, printer_id, order_id, payment_id, type, payload, status, idempotency_key, queued_at)
+           VALUES (?, ?, ?, ?, ?, 'receipt', ?, 'pending', ?, NOW(3))`,
+          [entityId('pj'), restaurantId, input.cashierPrinterId,
+           order.id, paymentId, receiptPayload, `rcpt_${input.idempotencyKey}`.slice(0, 36)]
+        );
+      }
 
       return { replayed: false, paymentId, orderId: order.id };
     });

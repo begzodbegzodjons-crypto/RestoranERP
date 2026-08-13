@@ -208,3 +208,24 @@ export interface Payment {
   table_name?: string | null;
   items?: Array<{ method: string; amount: string | number }>;
 }
+
+export interface Printer {
+  id: string;
+  restaurant_id: string;
+  branch_id: string | null;
+  name: string;
+  station: 'kitchen' | 'kebab' | 'cashier' | 'bar' | 'other';
+  connection_type: 'usb' | 'lan';
+  ip_address: string | null;
+  port: number | null;
+  usb_name: string | null;
+  paper_width: 58 | 80;
+  charset: string;
+  retry_count: number;
+  timeout_ms: number;
+  enabled: boolean;
+  is_active: boolean | number;
+  last_seen_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

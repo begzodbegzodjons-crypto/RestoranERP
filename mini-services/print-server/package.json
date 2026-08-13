@@ -1,0 +1,11 @@
+{
+  "name": "print-server",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.0",
+    "dotenv": "^16.4.5"
+  }
+}

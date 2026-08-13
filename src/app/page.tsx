@@ -7,8 +7,9 @@ import { Header } from '@/components/waiter/header';
 import { WaiterApp } from '@/components/waiter/waiter-app';
 import { StationScreen } from '@/components/station/station-screen';
 import { CashierApp } from '@/components/cashier/cashier-app';
+import { PrintersAdmin } from '@/components/admin/printers-admin';
 
-type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier';
+type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'printers';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -37,27 +38,20 @@ export default function Home() {
     user.permissions.includes('station.kebab.view');
   const canCashier = user.permissions.includes('*') ||
     user.permissions.includes('payment.create');
+  const canAdmin   = user.permissions.includes('*') ||
+    user.permissions.includes('printer.manage');
 
   // Auto-route based on role
-  if (user.roleName === 'kitchen' && view === 'waiter' && !canWaiter) {
-    setView('kitchen');
-    return null;
-  }
-  if (user.roleName === 'kebab' && view === 'waiter' && !canWaiter) {
-    setView('kebab');
-    return null;
-  }
-  if (user.roleName === 'cashier' && view === 'waiter' && !canWaiter) {
-    setView('cashier');
-    return null;
-  }
+  if (user.roleName === 'kitchen' && view === 'waiter' && !canWaiter) { setView('kitchen'); return null; }
+  if (user.roleName === 'kebab' && view === 'waiter' && !canWaiter) { setView('kebab'); return null; }
+  if (user.roleName === 'cashier' && view === 'waiter' && !canWaiter) { setView('cashier'); return null; }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header
         onHome={() => setView('waiter')}
         viewSwitcher={
-          (canWaiter || canKitchen || canKebab || canCashier) ? (
+          (canWaiter || canKitchen || canKebab || canCashier || canAdmin) ? (
             <ViewSwitcher
               active={view}
               onChange={setView}
@@ -65,6 +59,7 @@ export default function Home() {
               canKitchen={canKitchen}
               canKebab={canKebab}
               canCashier={canCashier}
+              canAdmin={canAdmin}
             />
           ) : null
         }
@@ -74,7 +69,8 @@ export default function Home() {
         {view === 'kitchen' && canKitchen && <StationScreen station="kitchen" title="Oshxona ekrani" accentColor="orange" />}
         {view === 'kebab' && canKebab && <StationScreen station="kebab" title="Kabob ekrani" accentColor="red" />}
         {view === 'cashier' && canCashier && <CashierApp />}
-        {!canWaiter && !canKitchen && !canKebab && !canCashier && (
+        {view === 'printers' && canAdmin && <PrintersAdmin />}
+        {!canWaiter && !canKitchen && !canKebab && !canCashier && !canAdmin && (
           <div className="text-center py-12 text-slate-500">
             Sizda hech qanday tizimga ruxsat yo&apos;q. Administratorga murojaat qiling.
           </div>
@@ -85,7 +81,7 @@ export default function Home() {
 }
 
 function ViewSwitcher({
-  active, onChange, canWaiter, canKitchen, canKebab, canCashier,
+  active, onChange, canWaiter, canKitchen, canKebab, canCashier, canAdmin,
 }: {
   active: View;
   onChange: (v: View) => void;
@@ -93,12 +89,14 @@ function ViewSwitcher({
   canKitchen: boolean;
   canKebab: boolean;
   canCashier: boolean;
+  canAdmin: boolean;
 }) {
   const buttons: Array<{ v: View; label: string; emoji: string; show: boolean }> = [
     { v: 'waiter',  label: 'Ofitsiant', emoji: '🍽️', show: canWaiter },
     { v: 'kitchen', label: 'Oshxona',   emoji: '👨‍🍳', show: canKitchen },
     { v: 'kebab',   label: 'Kabob',     emoji: '🍢',  show: canKebab },
     { v: 'cashier', label: 'Kassir',    emoji: '💳',  show: canCashier },
+    { v: 'printers',label: 'Printer',   emoji: '🖨️',  show: canAdmin },
   ];
   const visible = buttons.filter(b => b.show);
   if (visible.length <= 1) return null;

@@ -34,6 +34,9 @@ const createPrinterSchema = z.object({
   usbName: z.string().max(255).nullable().optional(),
   paperWidth: z.number().int().refine(w => [58, 80].includes(w)).default(58),
   charset: z.string().max(20).default('cp866'),
+  retryCount: z.number().int().min(0).max(10).default(3),
+  timeoutMs: z.number().int().min(1000).max(60000).default(5000),
+  enabled: z.boolean().default(true),
 });
 
 printersRouter.get('/', requirePerm('staff.read'), async (req, res, next) => {
@@ -50,11 +53,13 @@ printersRouter.post('/', requirePerm('printer.manage'), validateBody(createPrint
   try {
     const id = entityId('prn');
     await pool.execute(
-      `INSERT INTO printers (id, restaurant_id, name, station, connection_type, ip_address, port, usb_name, paper_width, charset, is_active, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(3), NOW(3))`,
+      `INSERT INTO printers (id, restaurant_id, name, station, connection_type, ip_address, port, usb_name,
+                              paper_width, charset, retry_count, timeout_ms, enabled, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(3), NOW(3))`,
       [id, req.ctx!.restaurantId, req.body.name, req.body.station, req.body.connectionType,
        req.body.ipAddress ?? null, req.body.port ?? null, req.body.usbName ?? null,
-       req.body.paperWidth, req.body.charset]
+       req.body.paperWidth, req.body.charset, req.body.retryCount, req.body.timeoutMs,
+       req.body.enabled ? 1 : 0]
     );
     await auditReq(req, 'create', 'printer', id, null, req.body);
     return created(res, { id, ...req.body });
@@ -184,12 +189,24 @@ printersRouter.put('/print-jobs/:id/status', validateBody(updateJobStatusSchema)
 
 printersRouter.post('/:id/test', requirePerm('printer.test'), async (req, res, next) => {
   try {
+    // Fetch printer details to generate proper test payload
+    const [printerRows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, name, station, paper_width FROM printers WHERE id = ? AND restaurant_id = ?`,
+      [req.params.id, req.ctx!.restaurantId]
+    );
+    if (printerRows.length === 0) throw new NotFoundError('Printer', req.params.id);
+    const printer = printerRows[0];
+
+    // Generate ESC/POS test payload
+    const { encodeTestPrint } = require('../printer/escpos');
+    const payload = encodeTestPrint(printer.name, printer.station);
+
     const id = entityId('pj');
     await pool.execute(
       `INSERT INTO print_jobs (id, restaurant_id, printer_id, order_id, payment_id, type, payload, status, idempotency_key, queued_at)
-       VALUES (?, ?, ?, NULL, NULL, 'test', X'1B40', 'pending', ?, NOW(3))`,
-      [id, req.ctx!.restaurantId, req.params.id, `test_${Date.now()}`]
+       VALUES (?, ?, ?, NULL, NULL, 'test', ?, 'pending', ?, NOW(3))`,
+      [id, req.ctx!.restaurantId, req.params.id, payload, `test_${Date.now()}`]
     );
-    return created(res, { jobId: id, message: 'Test print queued' });
+    return created(res, { jobId: id, message: 'Test print queued', printer: printer.name });
   } catch (err) { next(err); }
 });

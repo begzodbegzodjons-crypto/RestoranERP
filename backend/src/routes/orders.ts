@@ -391,42 +391,66 @@ ordersRouter.post('/:id/send', requirePerm('order.update'), async (req, res, nex
   try {
     const result = await withTransaction(async (conn) => {
       const [orderRows] = await conn.query<RowDataPacket[]>(
-        `SELECT id, status, restaurant_id FROM orders WHERE id = ? AND restaurant_id = ? FOR UPDATE`,
+        `SELECT o.id, o.status, o.restaurant_id, o.order_number, o.table_id, o.waiter_id,
+                o.opened_at, t.name AS table_name, w.name AS waiter_name
+           FROM orders o
+           LEFT JOIN tables t ON t.id = o.table_id
+           LEFT JOIN users w ON w.id = o.waiter_id
+          WHERE o.id = ? AND o.restaurant_id = ? FOR UPDATE`,
         [req.params.id, req.ctx!.restaurantId]
       );
       if (orderRows.length === 0) throw new NotFoundError('Order', req.params.id);
+      const order = orderRows[0];
 
-      // Group pending items by station
+      // Group pending items by station (with full details for slip)
       const [items] = await conn.query<RowDataPacket[]>(
-        `SELECT id, station FROM order_items WHERE order_id = ? AND status = 'pending'`,
+        `SELECT id, name, quantity, notes, station FROM order_items WHERE order_id = ? AND status = 'pending'`,
         [req.params.id]
       );
       if (items.length === 0) throw new ConflictError('No pending items to send');
 
-      const byStation = new Map<string, string[]>();
+      const byStation = new Map<string, RowDataPacket[]>();
       for (const it of items) {
         if (!byStation.has(it.station)) byStation.set(it.station, []);
-        byStation.get(it.station)!.push(it.id);
+        byStation.get(it.station)!.push(it);
       }
 
-      // Find printer per station
+      // For each station: find printer, generate ESC/POS payload, create print job
+      const { encodeOrderSlip } = require('../printer/escpos');
       const stationPrintJobs: { station: string; jobId: string }[] = [];
-      for (const [station, itemIds] of byStation) {
+      for (const [station, stationItems] of byStation) {
         const [printerRows] = await conn.query<RowDataPacket[]>(
-          `SELECT p.id FROM printers p
+          `SELECT p.id, p.paper_width FROM printers p
             JOIN printer_routes pr ON pr.printer_id = p.id
-           WHERE p.restaurant_id = ? AND p.station = ? AND p.is_active = 1
+           WHERE p.restaurant_id = ? AND p.station = ? AND p.enabled = 1 AND p.is_active = 1
              AND pr.source_type = 'station' AND pr.station = ? AND pr.event = 'order' AND pr.is_active = 1
            ORDER BY pr.priority ASC LIMIT 1`,
           [req.ctx!.restaurantId, station, station]
         );
         if (printerRows.length === 0) continue;
         const printerId = printerRows[0].id;
+        const paperWidth = (printerRows[0].paper_width === 80 ? 80 : 58) as 58 | 80;
+
+        // Generate ESC/POS order slip
+        const slipData = {
+          orderNumber: order.order_number,
+          tableName: order.table_name,
+          waiterName: order.waiter_name,
+          openedAt: order.opened_at,
+          items: stationItems.map((it: any) => ({
+            name: it.name,
+            quantity: Number(it.quantity),
+            notes: it.notes,
+          })),
+          isAddition: order.status === 'cooking', // if already cooking, this is an addition
+        };
+        const payload = encodeOrderSlip(slipData, paperWidth);
+
         const jobId = entityId('pj');
         await conn.execute(
           `INSERT INTO print_jobs (id, restaurant_id, printer_id, order_id, payment_id, type, payload, status, idempotency_key, queued_at)
-           VALUES (?, ?, ?, ?, NULL, 'order', X'1B40', 'pending', ?, NOW(3))`,
-          [jobId, req.ctx!.restaurantId, printerId, req.params.id, uuidv4()]
+           VALUES (?, ?, ?, ?, NULL, 'order', ?, 'pending', ?, NOW(3))`,
+          [jobId, req.ctx!.restaurantId, printerId, req.params.id, payload, uuidv4()]
         );
         stationPrintJobs.push({ station, jobId });
       }
