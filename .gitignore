@@ -52,3 +52,19 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Sensitive
+.env
+.env.local
+.env.production
+backend/.env
+*.pid
+
+# Build outputs
+backend/dist/
+.next/
+
+# Logs
+*.log
+dev.log
+backend.log
+
