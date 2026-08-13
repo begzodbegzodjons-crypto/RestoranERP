@@ -9,8 +9,9 @@ import { StationScreen } from '@/components/station/station-screen';
 import { CashierApp } from '@/components/cashier/cashier-app';
 import { PrintersAdmin } from '@/components/admin/printers-admin';
 import { WarehouseApp } from '@/components/warehouse/warehouse-app';
+import { ReportsApp } from '@/components/reports/reports-app';
 
-type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'printers' | 'warehouse';
+type View = 'waiter' | 'kitchen' | 'kebab' | 'cashier' | 'printers' | 'warehouse' | 'reports';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -43,6 +44,8 @@ export default function Home() {
     user.permissions.includes('printer.manage');
   const canWarehouse = user.permissions.includes('*') ||
     user.permissions.includes('inventory.read');
+  const canReports = user.permissions.includes('*') ||
+    user.permissions.includes('report.view');
 
   // Auto-route based on role
   if (user.roleName === 'kitchen' && view === 'waiter' && !canWaiter) { setView('kitchen'); return null; }
@@ -54,7 +57,7 @@ export default function Home() {
       <Header
         onHome={() => setView('waiter')}
         viewSwitcher={
-          (canWaiter || canKitchen || canKebab || canCashier || canAdmin || canWarehouse) ? (
+          (canWaiter || canKitchen || canKebab || canCashier || canAdmin || canWarehouse || canReports) ? (
             <ViewSwitcher
               active={view}
               onChange={setView}
@@ -64,6 +67,7 @@ export default function Home() {
               canCashier={canCashier}
               canAdmin={canAdmin}
               canWarehouse={canWarehouse}
+              canReports={canReports}
             />
           ) : null
         }
@@ -75,7 +79,8 @@ export default function Home() {
         {view === 'cashier' && canCashier && <CashierApp />}
         {view === 'printers' && canAdmin && <PrintersAdmin />}
         {view === 'warehouse' && canWarehouse && <WarehouseApp />}
-        {!canWaiter && !canKitchen && !canKebab && !canCashier && !canAdmin && !canWarehouse && (
+        {view === 'reports' && canReports && <ReportsApp />}
+        {!canWaiter && !canKitchen && !canKebab && !canCashier && !canAdmin && !canWarehouse && !canReports && (
           <div className="text-center py-12 text-slate-500">
             Sizda hech qanday tizimga ruxsat yo&apos;q. Administratorga murojaat qiling.
           </div>
@@ -86,7 +91,7 @@ export default function Home() {
 }
 
 function ViewSwitcher({
-  active, onChange, canWaiter, canKitchen, canKebab, canCashier, canAdmin, canWarehouse,
+  active, onChange, canWaiter, canKitchen, canKebab, canCashier, canAdmin, canWarehouse, canReports,
 }: {
   active: View;
   onChange: (v: View) => void;
@@ -96,6 +101,7 @@ function ViewSwitcher({
   canCashier: boolean;
   canAdmin: boolean;
   canWarehouse: boolean;
+  canReports: boolean;
 }) {
   const buttons: Array<{ v: View; label: string; emoji: string; show: boolean }> = [
     { v: 'waiter',  label: 'Ofitsiant', emoji: '🍽️', show: canWaiter },
@@ -104,6 +110,7 @@ function ViewSwitcher({
     { v: 'cashier', label: 'Kassir',    emoji: '💳',  show: canCashier },
     { v: 'printers',label: 'Printer',   emoji: '🖨️',  show: canAdmin },
     { v: 'warehouse',label: 'Ombor',    emoji: '📦',  show: canWarehouse },
+    { v: 'reports', label: 'Hisobot',   emoji: '📊',  show: canReports },
   ];
   const visible = buttons.filter(b => b.show);
   if (visible.length <= 1) return null;
