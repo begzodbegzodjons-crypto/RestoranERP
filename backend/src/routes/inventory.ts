@@ -128,20 +128,21 @@ inventoryRouter.post('/:id/adjust', requirePerm('inventory.adjust'), validateBod
   try {
     const result = await withTransaction(async (conn) => {
       const [ingRows] = await conn.query<RowDataPacket[]>(
-        `SELECT id, stock, cost FROM inventory WHERE id = ? AND restaurant_id = ? AND deleted_at IS NULL FOR UPDATE`,
+        `SELECT id, stock, cost, min_stock FROM inventory WHERE id = ? AND restaurant_id = ? AND deleted_at IS NULL FOR UPDATE`,
         [req.params.id, req.ctx!.restaurantId]
       );
       if (ingRows.length === 0) throw new NotFoundError('Ingredient', req.params.id);
       const ing = ingRows[0];
+      const currentStock = Number(ing.stock);
       // For 'in', quantity is positive; for 'out'/'waste', quantity must be negative or we negate it
       let delta = req.body.quantity;
       if (req.body.type === 'out' || req.body.type === 'waste') {
         if (delta > 0) delta = -delta;
-        if (ing.stock + delta < 0) {
-          throw new ConflictError(`Insufficient stock (have ${ing.stock}, need ${-delta})`);
+        if (currentStock + delta < 0) {
+          throw new ConflictError(`Insufficient stock (have ${currentStock}, need ${-delta})`);
         }
       }
-      const newStock = ing.stock + delta;
+      const newStock = currentStock + delta;
       const unitCost = req.body.unitCost ?? ing.cost;
       await conn.execute(
         `UPDATE inventory SET stock = ?, cost = COALESCE(?, cost), updated_at = NOW(3) WHERE id = ?`,
@@ -152,7 +153,20 @@ inventoryRouter.post('/:id/adjust', requirePerm('inventory.adjust'), validateBod
          VALUES (?, ?, ?, ?, ?, ?, 'manual', ?, ?, NOW(3))`,
         [ing.id, req.ctx!.restaurantId, req.body.type, delta, unitCost, req.body.reason, ing.id, req.ctx!.userId]
       );
-      return { id: ing.id, newStock };
+      // Check min stock warning
+      const minStock = Number(ing.min_stock);
+      const isLowStock = newStock < minStock;
+      const isCritical = newStock < minStock / 2;
+
+      return {
+        id: ing.id,
+        newStock,
+        previousStock: currentStock,
+        delta,
+        lowStockWarning: isLowStock,
+        criticalWarning: isCritical,
+        minStock,
+      };
     });
     await auditReq(req, 'adjust', 'inventory', req.params.id, null, req.body);
     return ok(res, result);
@@ -287,5 +301,116 @@ inventoryRouter.delete('/recipes/:id', requirePerm('inventory.manage'), async (r
       [req.params.id, req.ctx!.restaurantId]
     );
     return ok(res, { id: req.params.id, deleted: true });
+  } catch (err) { next(err); }
+});
+
+// ============== SUPPLIERS ==============
+
+const createSupplierSchema = z.object({
+  name: z.string().min(1).max(200),
+  phone: z.string().max(30).nullable().optional(),
+  address: z.string().max(500).nullable().optional(),
+});
+
+inventoryRouter.get('/suppliers', requirePerm('inventory.read'), async (req, res, next) => {
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT * FROM suppliers WHERE restaurant_id = ? AND deleted_at IS NULL ORDER BY name`,
+      [req.ctx!.restaurantId]
+    );
+    return ok(res, rows);
+  } catch (err) { next(err); }
+});
+
+inventoryRouter.post('/suppliers', requirePerm('inventory.manage'), validateBody(createSupplierSchema), async (req, res, next) => {
+  try {
+    const id = entityId('sup');
+    await pool.execute(
+      `INSERT INTO suppliers (id, restaurant_id, name, phone, address, balance, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 0, 1, NOW(3), NOW(3))`,
+      [id, req.ctx!.restaurantId, req.body.name, req.body.phone ?? null, req.body.address ?? null]
+    );
+    await auditReq(req, 'create', 'supplier', id, null, req.body);
+    return created(res, { id, ...req.body });
+  } catch (err) { next(err); }
+});
+
+inventoryRouter.put('/suppliers/:id', requirePerm('inventory.manage'), async (req, res, next) => {
+  try {
+    await pool.execute(
+      `UPDATE suppliers SET name = COALESCE(?, name), phone = COALESCE(?, phone), address = COALESCE(?, address), updated_at = NOW(3)
+       WHERE id = ? AND restaurant_id = ?`,
+      [req.body.name ?? null, req.body.phone ?? null, req.body.address ?? null, req.params.id, req.ctx!.restaurantId]
+    );
+    return ok(res, { id: req.params.id, updated: true });
+  } catch (err) { next(err); }
+});
+
+inventoryRouter.delete('/suppliers/:id', requirePerm('inventory.manage'), async (req, res, next) => {
+  try {
+    await pool.execute(
+      `UPDATE suppliers SET is_active = 0, deleted_at = NOW(3), updated_at = NOW(3) WHERE id = ? AND restaurant_id = ?`,
+      [req.params.id, req.ctx!.restaurantId]
+    );
+    return ok(res, { id: req.params.id, deleted: true });
+  } catch (err) { next(err); }
+});
+
+// ============== EXPENSES ==============
+
+const createExpenseSchema = z.object({
+  category: z.string().min(1).max(50),
+  amount: currencySchema,
+  description: z.string().max(500).nullable().optional(),
+  expenseDate: z.string().optional(),
+});
+
+inventoryRouter.get('/expenses', requirePerm('inventory.read'), async (req, res, next) => {
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT e.*, u.name AS created_by_name
+         FROM expenses e
+         LEFT JOIN users u ON u.id = e.paid_by
+        WHERE e.restaurant_id = ?
+        ORDER BY e.expense_date DESC, e.created_at DESC LIMIT 100`,
+      [req.ctx!.restaurantId]
+    );
+    return ok(res, rows);
+  } catch (err) { next(err); }
+});
+
+inventoryRouter.post('/expenses', requirePerm('expense.manage'), validateBody(createExpenseSchema), async (req, res, next) => {
+  try {
+    const id = entityId('exp');
+    await pool.execute(
+      `INSERT INTO expenses (id, restaurant_id, branch_id, category, amount, description, paid_by, expense_date, created_at, updated_at)
+       VALUES (?, ?, NULL, ?, ?, ?, ?, ?, NOW(3), NOW(3))`,
+      [id, req.ctx!.restaurantId, req.body.category, req.body.amount,
+       req.body.description ?? null, req.ctx!.userId, req.body.expenseDate ?? new Date().toISOString().split('T')[0]]
+    );
+    await auditReq(req, 'create', 'expense', id, null, req.body);
+    return created(res, { id, ...req.body });
+  } catch (err) { next(err); }
+});
+
+inventoryRouter.delete('/expenses/:id', requirePerm('expense.manage'), async (req, res, next) => {
+  try {
+    await pool.execute(
+      `UPDATE expenses SET deleted_at = NOW(3) WHERE id = ? AND restaurant_id = ?`,
+      [req.params.id, req.ctx!.restaurantId]
+    );
+    return ok(res, { id: req.params.id, deleted: true });
+  } catch (err) { next(err); }
+});
+
+// ============== LOW STOCK ALERTS ==============
+
+inventoryRouter.get('/low-stock', requirePerm('inventory.read'), async (req, res, next) => {
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT * FROM v_low_stock_alerts WHERE restaurant_id = ? ORDER BY alert_level, shortage DESC`,
+      [req.ctx!.restaurantId]
+    );
+    return ok(res, rows);
   } catch (err) { next(err); }
 });
